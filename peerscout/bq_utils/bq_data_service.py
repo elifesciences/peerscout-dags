@@ -5,21 +5,21 @@ written by tayowonibi
 
 import logging
 import os
-
 from google.cloud import bigquery
 from google.cloud.bigquery import LoadJobConfig, Client
-
+from google.cloud.bigquery import (SourceFormat, WriteDisposition)
 LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-arguments
 def load_file_into_bq(
-    filename: str,
-    dataset_name: str,
-    table_name: str,
-    source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
-    write_mode=bigquery.WriteDisposition.WRITE_APPEND,
-    auto_detect_schema=True,
-    rows_to_skip=0,
+        filename: str,
+        dataset_name: str,
+        table_name: str,
+        source_format=SourceFormat.NEWLINE_DELIMITED_JSON,
+        write_mode=WriteDisposition.WRITE_APPEND,
+        auto_detect_schema=True,
+        rows_to_skip=0,
 ):
     """
     :param auto_detect_schema:

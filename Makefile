@@ -29,10 +29,10 @@ dev-venv: venv-create dev-install
 
 
 dev-flake8:
-	$(PYTHON) -m flake8 data_pipeline dags tests
+	$(PYTHON) -m flake8 peerscout dags tests
 
 dev-pylint:
-	$(PYTHON) -m pylint data_pipeline dags tests
+	$(PYTHON) -m pylint peerscout dags tests
 
 dev-lint: dev-flake8 dev-pylint
 

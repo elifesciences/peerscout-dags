@@ -11,7 +11,7 @@ import airflow
 from airflow.operators.python_operator import PythonOperator
 from peerscout.keyword_extract.keyword_extract import etl_keywords
 from peerscout.keyword_extract.keyword_extract_config \
-    import KeywordExtractConfig
+    import KeywordExtractConfig, ExternalTriggerConfig
 
 LOGGER = logging.getLogger(__name__)
 DAG_ID = "Extract_Keywords_From_Corpus"
@@ -22,6 +22,8 @@ DEFAULT_EXTRACT_KEYWORDS_SCHEDULE_INTERVAL = None
 
 DEPLOYMENT_ENV = "DEPLOYMENT_ENV"
 DEFAULT_DEPLOYMENT_ENV_VALUE = None
+EXTERNAL_TRIGGER_LIMIT_VALUE_KEY =\
+    "limit_row_count_value"
 
 
 def get_env_var_or_use_default(env_var_name, default_value):
@@ -42,7 +44,7 @@ def get_default_args():
         "retries": 10,
         "retry_delay": timedelta(minutes=1),
         "retry_exponential_backoff": True,
-        "provide_context": False,
+        "provide_context": True,
     }
 
 
@@ -69,6 +71,7 @@ DEFAULT_CONFIG = {
     "id_field": "id",
     "data_load_timestamp_field": "datahub_imported_timestamp",
     "table_write_append": "true",
+    "limit_row_count_value": None
 }
 
 PEERSCOUT_DAG = DAG(
@@ -82,17 +85,34 @@ PEERSCOUT_DAG = DAG(
 )
 
 
-def etl_extraction_keyword():
+def etl_extraction_keyword(**kwargs):
+    # handles the external triggers
+    externally_triggered_parameters = kwargs['dag_run'].conf or {}
+    limit_row_count_value = externally_triggered_parameters.get(
+        ExternalTriggerConfig.LIMIT_ROW_COUNT
+    )
 
-    dep_env = get_env_var_or_use_default(DEPLOYMENT_ENV,
-                                         DEFAULT_DEPLOYMENT_ENV_VALUE)
+    dep_env = (
+        externally_triggered_parameters.get(
+            ExternalTriggerConfig.BQ_DATASET_PARAM_KEY,
+            get_env_var_or_use_default(DEPLOYMENT_ENV,
+                                       DEFAULT_DEPLOYMENT_ENV_VALUE)
+        )
+
+
+    )
+    table = externally_triggered_parameters.get(
+        ExternalTriggerConfig.BQ_TABLE_PARAM_KEY
+    )
 
     with TemporaryDirectory() as tempdir:
         full_temp_file_location = Path.joinpath(
-            Path(tempdir,"downloaded_rows_data")
+            Path(tempdir, "downloaded_rows_data")
         )
         keyword_extract_config = KeywordExtractConfig(
-            DEFAULT_CONFIG, destination_dataset=dep_env
+            DEFAULT_CONFIG, destination_dataset=dep_env,
+            destination_table=table,
+            limit_count_value=limit_row_count_value
         )
         etl_keywords(keyword_extract_config, full_temp_file_location)
 
