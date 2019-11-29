@@ -1,0 +1,105 @@
+from peerscout.bq_utils.bq_query_service import BqQuery
+from peerscout.bq_utils.bq_data_service import load_file_into_bq
+from peerscout.keyword_extract.keyword_extract_config \
+    import KeywordExtractConfig
+from typing import Iterable
+import datetime
+from datetime import timezone
+import json
+import re
+from google.cloud.bigquery import WriteDisposition
+
+
+def etl_keywords(
+        keyword_extract_config: KeywordExtractConfig,
+        full_file_location: str
+):
+
+    bq_query_processing = BqQuery()
+    downloaded_data = download_data(
+        bq_query_processing,
+        keyword_extract_config.query_template,
+        keyword_extract_config.gcp_project,
+        keyword_extract_config.source_dataset,
+    )
+    timestamp_as_string = current_timestamp_as_string()
+    data_with_timestamp = add_timestamp(
+        downloaded_data,
+        keyword_extract_config.data_load_timestamp_field,
+        timestamp_as_string,
+    )
+    data_with_extracted_keywords = add_extracted_keywords(
+        data_with_timestamp,
+        keyword_extract_config.text_field,
+        keyword_extract_config.existing_keywords_field,
+    )
+    write_to_file(data_with_extracted_keywords, full_file_location)
+    write_disposition = (
+        WriteDisposition.WRITE_APPEND
+        if keyword_extract_config.table_write_append
+        else WriteDisposition.WRITE_TRUNCATE
+    )
+    load_file_into_bq(
+        filename=full_file_location,
+        table_name=keyword_extract_config.destination_table,
+        auto_detect_schema=True,
+        dataset_name=keyword_extract_config.destination_dataset,
+        write_mode=write_disposition,
+    )
+
+
+def current_timestamp_as_string():
+    """
+    :return:
+    """
+    dtobj = datetime.datetime.now(timezone.utc)
+    return dtobj.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def download_data(
+    bq_query_processing, query_template, gcp_project, source_dataset
+) -> Iterable[dict]:
+    rows = bq_query_processing.simple_query(
+        query_template, gcp_project, source_dataset)
+    print("\n\n\nROWSSSSSSSS\n", len(rows), "\n\n")
+    return rows
+
+
+def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
+    for record in record_list:
+        record[timestamp_field_name] = timestamp_as_string
+        yield record
+
+
+def write_to_file(json_list, full_temp_file_location):
+    with open(full_temp_file_location, "a") as write_file:
+        for record in json_list:
+            write_file.write(json.dumps(record, ensure_ascii=False))
+            write_file.write("\n")
+
+
+def add_extracted_keywords(
+    record_list,
+    text_field,
+    existing_keyword_field,
+    existing_keyword_split_pattern=",",
+    extracted_keyword_field_name: str = "extracted_keywords",
+):
+    for record in record_list:
+        new_keywords = simple_regex_keyword_extraction(
+            record.get(text_field, "")
+        )
+        new_keywords.extend(
+            record.get(existing_keyword_field, "").split(
+                existing_keyword_split_pattern
+            )
+        )
+        record[extracted_keyword_field_name] = new_keywords
+        yield record
+
+
+def simple_regex_keyword_extraction(
+        text: str,
+        regex_pattern=r"([a-z](?:\w|-)+)"
+):
+    return re.findall(regex_pattern, text.lower())

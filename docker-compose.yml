@@ -1,0 +1,126 @@
+version: '3'
+
+services:
+    peerscout-dags:
+        environment:
+            GOOGLE_APPLICATION_CREDENTIALS: /tmp/credentials.json
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
+        build:
+            context: .
+        image: elifesciences/peerscout-dags
+        command: ''
+
+
+    peerscout-dags-dev:
+        environment:
+            - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
+            - DEPLOYMENT_ENV=ci
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                install_dev: y
+        image:  elifesciences/peerscout-dags-dev
+        command: /bin/sh -c exit 0
+        entrypoint: []
+
+    ci-webserver:
+        depends_on:
+            - postgres
+            - ci-dask-worker
+            - ci-dask-scheduler
+        environment:
+            - DEPLOYMENT_ENV=ci
+            - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
+            - LOAD_EX=n
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+        ports:
+            - "8080:8080"
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
+        image:  elifesciences/peerscout-dags-dev
+        entrypoint: /entrypoint.sh
+        command: webserver
+
+    ci-scheduler:
+        image:  elifesciences/peerscout-dags-dev
+        depends_on:
+            - ci-webserver
+        environment:
+            - DEPLOYMENT_ENV=ci
+            - AIRFLOW_HOST=webserver
+            - AIRFLOW_PORT=8080
+            - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
+            - LOAD_EX=n
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=ci-dask-scheduler:8786
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
+        entrypoint: /entrypoint.sh
+        command: scheduler
+
+    ci-test-client:
+        image:  elifesciences/peerscout-dags-dev
+        depends_on:
+            - ci-scheduler
+        environment:
+            - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
+            - LOAD_EX=n
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=ci-dask-scheduler:8786
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+            - AIRFLOW_HOST=webserver
+            - AIRFLOW_PORT=8080
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
+        entrypoint: /entrypoint.sh
+
+    postgres:
+        image: postgres:9.6
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+
+    ci-dask-scheduler:
+        environment:
+            - DEPLOYMENT_ENV=ci
+            - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+        image: elifesciences/peerscout-dags-dev
+        hostname: ci-dask-scheduler
+        entrypoint: [ ]
+        command: ["dask-scheduler"]
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
+
+    ci-dask-worker:
+        environment:
+            - DEPLOYMENT_ENV=ci
+            - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+        depends_on:
+          - ci-dask-scheduler
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
+        image: elifesciences/peerscout-dags-dev
+        hostname: ci-dask-worker
+        entrypoint: [ ]
+        command: ["dask-worker", "tcp://ci-dask-scheduler:8786"]
