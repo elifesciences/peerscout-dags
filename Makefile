@@ -1,7 +1,8 @@
 #!/usr/bin/make -f
 
-DOCKER_COMPOSE_DEV = docker-compose
-DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
+DOCKER_COMPOSE_CI = docker-compose
+DOCKER_COMPOSE_DEV = docker-compose -f docker-compose.yml -f docker-compose.dev.override.yml
+DOCKER_COMPOSE = $(DOCKER_COMPOSE_CI)
 
 VENV = venv
 PIP = $(VENV)/bin/pip
@@ -64,9 +65,13 @@ ci-test-exclude-e2e: build-dev
 
 
 ci-end2end-test: build-dev
-	$(DOCKER_COMPOSE) run --rm  ci-test-client ./run_test.sh with-end-to-end
+	$(DOCKER_COMPOSE) run --rm  test-client ./run_test.sh with-end-to-end
 
-ci-env: build-dev
-	$(DOCKER_COMPOSE) up  ci-scheduler
+dev-env: build-dev
+	$(DOCKER_COMPOSE_DEV) up  scheduler
+
 ci-clean:
 	$(DOCKER_COMPOSE) down -v
+
+
+
