@@ -43,10 +43,8 @@ dev-unittest:
 dev-dagtest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test
 
-
-dev-integration-test:
-	pip install -e .  --no-dependencies
-	airflow upgradedb
+dev-integration-test: dev-install
+	(VENV)/bin/airflow upgradedb
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/integration_test
 
 dev-test: dev-lint dev-unittest dev-dagtest
@@ -55,14 +53,11 @@ dev-test: dev-lint dev-unittest dev-dagtest
 build:
 	$(DOCKER_COMPOSE) build peerscout-dags-image
 
-
 build-dev:
 	$(DOCKER_COMPOSE) build peerscout-dags-dev
 
-
 ci-test-exclude-e2e: build-dev
 	$(DOCKER_COMPOSE) run --rm peerscout-dags-dev ./run_test.sh
-
 
 ci-end2end-test: build-dev
 	$(DOCKER_COMPOSE) run --rm  test-client
