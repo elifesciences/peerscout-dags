@@ -2,6 +2,10 @@ FROM puckel/docker-airflow:1.10.4
 ARG install_dev
 
 USER root
+RUN apt update && apt install sudo -yqq
+RUN usermod -aG sudo airflow
+RUN echo "airflow ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
 RUN sed -i 's/LocalExecutor/SequentialExecutor/' /entrypoint.sh
 COPY requirements.txt ./
 RUN pip install --upgrade -r requirements.txt

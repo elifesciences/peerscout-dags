@@ -65,7 +65,7 @@ ci-test-exclude-e2e: build-dev
 
 
 ci-end2end-test: build-dev
-	$(DOCKER_COMPOSE) run --rm  test-client ./run_test.sh with-end-to-end
+	$(DOCKER_COMPOSE) run --rm  test-client
 	$(DOCKER_COMPOSE) down -v
 
 dev-env: build-dev
@@ -73,6 +73,3 @@ dev-env: build-dev
 
 ci-clean:
 	$(DOCKER_COMPOSE) down -v
-
-
-
