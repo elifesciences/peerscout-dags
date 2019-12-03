@@ -104,7 +104,9 @@ services:
             - ./credentials.json:/tmp/credentials.json
         image: elifesciences/peerscout-dags-dev
         hostname: dask-worker
+        ports:
+          - "8793:8793"
         entrypoint: []
         command: >
             bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /usr/local/airflow/.config/gcloud
-            && dask-worker tcp://dask-scheduler:8786"
+            && ./worker.sh tcp://dask-scheduler:8786"

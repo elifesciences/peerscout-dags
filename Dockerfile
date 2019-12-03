@@ -25,4 +25,10 @@ COPY --chown=airflow:airflow tests ./tests
 COPY --chown=airflow:airflow run_test.sh ./
 RUN if [ "${install_dev}" = "y" ]; then chmod +x run_test.sh; fi
 
+COPY --chown=airflow:airflow worker.sh ./
+RUN chmod +x worker.sh
+
+RUN mkdir -p $AIRFLOW_HOME/serve
+RUN ln -s $AIRFLOW_HOME/logs $AIRFLOW_HOME/serve/log
+
 ENTRYPOINT []
