@@ -132,7 +132,8 @@ def simple_query(project: str, dataset: str, table: str, query: str) \
     :param query:
     :return:
     """
-    bigquery_client = bigquery.Client()
+    bigquery_client = bigquery.Client(project=project) \
+        if project else bigquery.Client()
     _query = \
         query.format(project=project, dataset=dataset, table=table).strip()
     LOGGER.debug("running query:\n%s", _query)

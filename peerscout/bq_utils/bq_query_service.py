@@ -14,8 +14,9 @@ class BqQuery:
     """
     class for running queries in bigquery db
     """
-    def __init__(self):
-        self.bigquery_client = bigquery.Client()
+    def __init__(self, project_name: str = None):
+        self.bigquery_client = bigquery.Client(project=project_name) \
+            if project_name else bigquery.Client()
 
     def simple_query(
             self,

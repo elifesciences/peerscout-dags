@@ -25,7 +25,8 @@ def etl_keywords(
     :return:
     """
 
-    bq_query_processing = BqQuery()
+    bq_query_processing = BqQuery(
+        project_name=keyword_extract_config.gcp_project)
     downloaded_data = download_data(
         bq_query_processing,
         " ".join([keyword_extract_config.query_template,
@@ -56,6 +57,7 @@ def etl_keywords(
         auto_detect_schema=True,
         dataset_name=keyword_extract_config.destination_dataset,
         write_mode=write_disposition,
+        project_name=keyword_extract_config.gcp_project
     )
 
 

@@ -20,8 +20,10 @@ def load_file_into_bq(
         write_mode=WriteDisposition.WRITE_APPEND,
         auto_detect_schema=True,
         rows_to_skip=0,
+        project_name: str = None,
 ):
     """
+    :type project_name: object
     :param auto_detect_schema:
     :param filename:
     :param dataset_name:
@@ -34,7 +36,8 @@ def load_file_into_bq(
     if os.path.isfile(filename) and os.path.getsize(filename) == 0:
         LOGGER.info("File %s is empty.", filename)
         return
-    client = Client()
+    client = Client(project=project_name) \
+        if project_name else Client()
     dataset_ref = client.dataset(dataset_name)
     table_ref = dataset_ref.table(table_name)
     job_config = LoadJobConfig()
