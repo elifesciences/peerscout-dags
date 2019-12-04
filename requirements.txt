@@ -1,0 +1,5 @@
+apache-airflow[crypto,postgres,jdbc]==1.10.6
+google-cloud-bigquery==1.22.0
+dateparser==0.7.2
+dask[complete]==2.8.1
+distributed==2.8.1

@@ -1,0 +1,112 @@
+version: '3'
+
+services:
+    peerscout-dags:
+        environment:
+            GOOGLE_APPLICATION_CREDENTIALS: /tmp/credentials.json
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+        build:
+            context: .
+        image: elifesciences/peerscout-dags
+        command: ''
+
+    peerscout-dags-dev:
+        environment:
+            - DEPLOYMENT_ENV=ci
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                install_dev: y
+        image:  elifesciences/peerscout-dags-dev
+        command: /bin/sh -c exit 0
+        entrypoint: []
+
+    webserver:
+        depends_on:
+            - postgres
+            - dask-worker
+            - dask-scheduler
+        environment:
+            - DEPLOYMENT_ENV=ci
+            - LOAD_EX=n
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+        image:  elifesciences/peerscout-dags-dev
+        entrypoint: /entrypoint.sh
+        command: webserver
+
+    scheduler:
+        image:  elifesciences/peerscout-dags-dev
+        depends_on:
+            - webserver
+        environment:
+            - DEPLOYMENT_ENV=ci
+            - AIRFLOW_HOST=webserver
+            - AIRFLOW_PORT=8080
+            - LOAD_EX=n
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+        entrypoint: /entrypoint.sh
+        command: scheduler
+
+    test-client:
+        image:  elifesciences/peerscout-dags-dev
+        depends_on:
+            - scheduler
+        environment:
+            - GOOGLE_APPLICATION_CREDENTIALS=/usr/local/airflow/.config/gcloud/credentials.json
+            - LOAD_EX=n
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+            - AIRFLOW_HOST=webserver
+            - AIRFLOW_PORT=8080
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+        command: >
+            bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /usr/local/airflow/.config/gcloud
+            && ./run_test.sh with-end-to-end"
+
+    postgres:
+        image: postgres:9.6
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+
+    dask-scheduler:
+        environment:
+            - DEPLOYMENT_ENV=ci
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+        image: elifesciences/peerscout-dags-dev
+        hostname: dask-scheduler
+        entrypoint: [ ]
+        command: ["dask-scheduler"]
+
+    dask-worker:
+        environment:
+            - DEPLOYMENT_ENV=ci
+            - GOOGLE_APPLICATION_CREDENTIALS=/usr/local/airflow/.config/gcloud/credentials.json
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+        depends_on:
+          - dask-scheduler
+        volumes:
+            - ./credentials.json:/tmp/credentials.json
+        image: elifesciences/peerscout-dags-dev
+        hostname: dask-worker
+        ports:
+          - "8793:8793"
+        entrypoint: []
+        command: >
+            bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /usr/local/airflow/.config/gcloud
+            && ./worker.sh tcp://dask-scheduler:8786"
