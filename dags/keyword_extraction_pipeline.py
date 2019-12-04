@@ -10,8 +10,9 @@ from airflow import DAG
 import airflow
 from airflow.operators.python_operator import PythonOperator
 from peerscout.keyword_extract.keyword_extract import etl_keywords
-from peerscout.keyword_extract.keyword_extract_config \
-    import KeywordExtractConfig, ExternalTriggerConfig
+from peerscout.keyword_extract.keyword_extract_config import (
+    KeywordExtractConfig, ExternalTriggerConfig
+)
 
 LOGGER = logging.getLogger(__name__)
 DAG_ID = "Extract_Keywords_From_Corpus"
@@ -143,13 +144,4 @@ ETL_KEYWORD_EXTRACTION_TASK = create_python_task(
     PEERSCOUT_DAG, "etl_keyword_extraction_task",
     etl_extraction_keyword, retries=5
 )
-"""
-def tas():
-    print("TESTOMG")
 
-task = PythonVirtualenvOperator(
-            python_callable=tas,
-            python_version=3.7,
-            task_id='task',
-            dag=PEERSCOUT_DAG)
-"""

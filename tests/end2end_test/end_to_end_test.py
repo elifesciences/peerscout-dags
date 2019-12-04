@@ -4,7 +4,8 @@ test
 """
 import logging
 import time
-from tests.end2end_test.end_to_end_test_helper import AirflowAPI, simple_query
+from peerscout.bq_utils.bq_query_service import BqQuery
+from tests.end2end_test.end_to_end_test_helper import AirflowAPI
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,23 +16,30 @@ PROJECT = "elife-data-pipeline"  # change  all to env variable
 
 
 # pylint: disable=broad-except
-def test_dag_runs_data_imported():
+def test_dag_runs_data_imported(
+        dataset: str = None, table: str = None,
+        project: str = None):
     """
     :return:
     """
+    project_name = project or PROJECT
+    dataset_name = dataset or DATASET
+    table_name = table or TABLE
+    bq_query_service = BqQuery(project_name=project_name)
+
     try:
-        simple_query(
+        bq_query_service.simple_query(
             query=TestQueryTemplate.CLEAN_TABLE_QUERY,
-            project=PROJECT,
-            dataset=DATASET,
-            table=TABLE,
+            project=project_name,
+            dataset=dataset_name,
+            table=table_name,
         )
     except Exception:
         LOGGER.info("table not cleaned, maybe it does not exist")
     dag_id = "Extract_Keywords_From_Corpus"
     config = {
-        "dataset": DATASET,
-        "table": TABLE,
+        "dataset": dataset_name,
+        "table": table_name,
         "limit_row_count_value": 5
     }
     execution_date = AIRFLW_API.trigger_dag(dag_id=dag_id, conf=config)
@@ -43,20 +51,20 @@ def test_dag_runs_data_imported():
     assert not is_running
     assert AIRFLW_API.get_dag_status(dag_id, execution_date) == "success"
 
-    query_response = simple_query(
+    query_response = bq_query_service.simple_query(
         query=TestQueryTemplate.READ_COUNT_TABLE_QUERY,
-        project=PROJECT,
-        dataset=DATASET,
-        table=TABLE,
+        project=project_name,
+        dataset=dataset_name,
+        table=table_name,
     )
     assert query_response[0].get("count") > 0
 
     # clean up
-    simple_query(
+    bq_query_service.simple_query(
         query=TestQueryTemplate.CLEAN_TABLE_QUERY,
-        project=PROJECT,
-        dataset=DATASET,
-        table=TABLE,
+        project=project_name,
+        dataset=dataset_name,
+        table=table_name,
     )
 
 

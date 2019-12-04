@@ -5,10 +5,8 @@ import os
 from urllib.parse import urljoin
 import re
 import logging
-from typing import List
 import json
 import requests
-from google.cloud import bigquery
 
 LOGGER = logging.getLogger(__name__)
 
@@ -121,23 +119,3 @@ class AirflowAPI:
         response = self.dag_state(dag_id, execution_date)
         json_response = json.loads(response.text)
         return json_response.get("state").lower()
-
-
-def simple_query(project: str, dataset: str, table: str, query: str) \
-        -> List[dict]:
-    """
-    :param table:
-    :param project:
-    :param dataset:
-    :param query:
-    :return:
-    """
-    bigquery_client = bigquery.Client(project=project) \
-        if project else bigquery.Client()
-    _query = \
-        query.format(project=project, dataset=dataset, table=table).strip()
-    LOGGER.debug("running query:\n%s", _query)
-    query_job = bigquery_client.query(_query)
-    rows = [dict(row) for row in query_job]
-    LOGGER.debug("rows: %s", rows)
-    return rows
