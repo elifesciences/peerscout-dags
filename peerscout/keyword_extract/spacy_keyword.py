@@ -5,6 +5,9 @@ from spacy.language import Language
 from spacy.tokens import Doc, Span
 
 
+DEFAULT_SPACY_LANGUAGE_MODEL_NAME = "en_core_web_lg"
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language

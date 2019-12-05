@@ -4,16 +4,71 @@ utils for doing the heavy lifting job of extracting keywords
 
 import json
 import re
-from typing import Iterable
+from typing import Iterable, List
 import datetime
 from datetime import timezone
+from abc import ABC, abstractmethod
+
 from google.cloud.bigquery import WriteDisposition
+
+import spacy
+from spacy.language import Language
 
 from peerscout.bq_utils.bq_query_service import BqQuery
 from peerscout.bq_utils.bq_data_service import load_file_into_bq
 from peerscout.keyword_extract.keyword_extract_config import (
     KeywordExtractConfig
 )
+
+from peerscout.keyword_extract.spacy_keyword import (
+    SpacyKeywordExtractor as _SpacyKeywordExtractor,
+    DEFAULT_SPACY_LANGUAGE_MODEL_NAME
+)
+
+
+class KeywordExtractor(ABC):
+    @abstractmethod
+    def extract_keywords(self, text: str) -> List[str]:
+        pass
+
+
+class SimpleKeywordExtractor(KeywordExtractor):
+    def extract_keywords(self, text: str) -> List[str]:
+        return simple_regex_keyword_extraction(text)
+
+
+class SpacyKeywordExtractor(KeywordExtractor):
+    def __init__(self, language: Language):
+        self.language = language
+
+    def extract_keywords(self, text: str) -> List[str]:
+        return (
+            _SpacyKeywordExtractor(self.language)
+            .parse_text(text)
+            .compound_keywords
+            .with_individual_tokens
+            .text_list
+        )
+
+
+def get_keyword_extractor(
+        keyword_extract_config: KeywordExtractConfig) -> KeywordExtractor:
+    keyword_extractor_name = (
+        keyword_extract_config.keyword_extractor or 'spacy'
+    )
+    if keyword_extractor_name == 'simple':
+        return SimpleKeywordExtractor()
+    if keyword_extractor_name == 'spacy':
+        spacy_language_model_name = (
+            keyword_extract_config.spacy_language_model
+            or DEFAULT_SPACY_LANGUAGE_MODEL_NAME
+        )
+        return SpacyKeywordExtractor(spacy.load(
+            spacy_language_model_name
+        ))
+    raise ValueError(
+        'unsupported keyword_extractor: %s' % keyword_extractor_name
+    )
 
 
 def etl_keywords(
@@ -25,6 +80,7 @@ def etl_keywords(
     :return:
     """
 
+    keyword_extractor = get_keyword_extractor(keyword_extract_config)
     bq_query_processing = BqQuery(
         project_name=keyword_extract_config.gcp_project)
     downloaded_data = download_data(
@@ -44,6 +100,7 @@ def etl_keywords(
         data_with_timestamp,
         keyword_extract_config.text_field,
         keyword_extract_config.existing_keywords_field,
+        keyword_extractor=keyword_extractor
     )
     write_to_file(data_with_extracted_keywords, full_file_location)
     write_disposition = (
@@ -113,6 +170,7 @@ def add_extracted_keywords(
         record_list,
         text_field,
         existing_keyword_field,
+        keyword_extractor: KeywordExtractor,
         existing_keyword_split_pattern=",",
         extracted_keyword_field_name: str = "extracted_keywords",
 ):
@@ -125,7 +183,7 @@ def add_extracted_keywords(
     :return:
     """
     for record in record_list:
-        new_keywords = simple_regex_keyword_extraction(
+        new_keywords = keyword_extractor.extract_keywords(
             record.get(text_field, "")
         )
         new_keywords.extend(
