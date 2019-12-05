@@ -29,6 +29,7 @@ dev-install:
 
 dev-nlp-model-download:
 	$(PYTHON) -m spacy download en_core_web_lg
+	$(PYTHON) -m spacy download en_core_web_sm
 
 dev-venv: venv-create dev-install dev-nlp-model-download
 
