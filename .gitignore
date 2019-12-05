@@ -2,6 +2,8 @@
 /.pytest_cache
 
 credentials.json
-main.py
 peerscount_dags.egg-info
+
+# temporary dev files
+main.py
 peerscout/dag_util.py
