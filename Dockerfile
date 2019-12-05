@@ -8,8 +8,12 @@ RUN echo "airflow ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN sed -i 's/LocalExecutor/SequentialExecutor/' /entrypoint.sh
 
+# install spaCy separately to allow better caching of large language model download
 COPY requirements.spacy.txt ./
 RUN pip install -r requirements.spacy.txt
+
+# download spaCy language model
+RUN python -m spacy download en_core_web_lg
 
 COPY requirements.txt ./
 RUN pip install --upgrade -r requirements.txt

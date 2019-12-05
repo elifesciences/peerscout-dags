@@ -27,7 +27,10 @@ dev-install:
 	$(PIP) install -r requirements.dev.txt
 	$(PIP) install -e . --no-deps
 
-dev-venv: venv-create dev-install
+dev-nlp-model-download:
+	$(PYTHON) -m spacy download en_core_web_lg
+
+dev-venv: venv-create dev-install dev-nlp-model-download
 
 
 dev-flake8:
