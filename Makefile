@@ -71,6 +71,10 @@ ci-end2end-test: build-dev
 	$(DOCKER_COMPOSE) run --rm  test-client
 	$(DOCKER_COMPOSE) down -v
 
+ci-end2end-test-logs:
+	$(DOCKER_COMPOSE) exec dask-worker bash -c \
+		'cat logs/Extract_Keywords_From_Corpus/etl_keyword_extraction_task/*/1.log'
+
 dev-env: build-dev
 	$(DOCKER_COMPOSE_DEV) up  scheduler
 
