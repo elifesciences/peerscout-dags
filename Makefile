@@ -22,6 +22,7 @@ venv-activate:
 	bash -c "venv/bin/activate"
 
 dev-install:
+	$(PIP) install -r requirements.spacy.txt
 	SLUGIFY_USES_TEXT_UNIDECODE=yes $(PIP) install -r requirements.txt
 	$(PIP) install -r requirements.dev.txt
 	$(PIP) install -e . --no-deps

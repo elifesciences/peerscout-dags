@@ -7,6 +7,10 @@ RUN usermod -aG sudo airflow
 RUN echo "airflow ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN sed -i 's/LocalExecutor/SequentialExecutor/' /entrypoint.sh
+
+COPY requirements.spacy.txt ./
+RUN pip install -r requirements.spacy.txt
+
 COPY requirements.txt ./
 RUN pip install --upgrade -r requirements.txt
 RUN if [ "${install_dev}" = "y" ]; then  pip install bokeh; fi
