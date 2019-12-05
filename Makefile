@@ -45,6 +45,9 @@ dev-lint: dev-flake8 dev-pylint
 dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
 
+dev-watch:
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider $(ARGS) tests/unit_test
+
 dev-dagtest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test
 
