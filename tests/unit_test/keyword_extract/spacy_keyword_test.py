@@ -30,7 +30,9 @@ class TestSpacyKeywordDocumentParser:
     def test_should_normalize_text(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
         assert (
-            spacy_keyword_document_parser.parse_text('use advanced \n\n technology')
+            spacy_keyword_document_parser.parse_text(
+                'use advanced \n\n technology'
+            )
             .compound_keywords
             .text_list
         ) == ['advanced technology']

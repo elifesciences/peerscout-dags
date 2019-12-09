@@ -144,4 +144,3 @@ ETL_KEYWORD_EXTRACTION_TASK = create_python_task(
     PEERSCOUT_DAG, "etl_keyword_extraction_task",
     etl_extraction_keyword, retries=5
 )
-
