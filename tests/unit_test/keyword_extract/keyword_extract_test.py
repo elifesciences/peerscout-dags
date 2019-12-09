@@ -13,6 +13,12 @@ class TestSimpleKeywordExtractor:
             == ['the', 'keywords']
         )
 
+    def test_should_extract_individual_words_without_duplicates(self):
+        assert (
+            SimpleKeywordExtractor().extract_unique_keywords('keyword keyword')
+            == ['keyword']
+        )
+
 
 class TestSpacyKeywordExtractor:
     def test_should_extract_noun(self, spacy_language_en: Language):
@@ -20,5 +26,14 @@ class TestSpacyKeywordExtractor:
             SpacyKeywordExtractor(
                 language=spacy_language_en
             ).extract_keywords('use keyword')
+            == ['keyword']
+        )
+
+    def test_should_extract_individual_words_without_duplicates(
+            self, spacy_language_en: Language):
+        assert (
+            SpacyKeywordExtractor(
+                language=spacy_language_en
+            ).extract_unique_keywords('use keyword and keyword')
             == ['keyword']
         )
