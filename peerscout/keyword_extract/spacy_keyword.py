@@ -38,7 +38,7 @@ class SpacyKeywordDocument:
         return SpacyKeywordList(self.language, list(self.doc.noun_chunks))
 
 
-class SpacyKeywordExtractor:
+class SpacyKeywordDocumentParser:
     def __init__(self, language: Language):
         self.language = language
 
