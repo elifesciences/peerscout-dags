@@ -1,14 +1,8 @@
 import pytest
 
-import spacy
 from spacy.language import Language
 
 from peerscout.keyword_extract.spacy_keyword import SpacyKeywordDocumentParser
-
-
-@pytest.fixture(name="spacy_language_en", scope="session")
-def _spacy_language_en():
-    return spacy.load("en_core_web_sm")
 
 
 @pytest.fixture(name="spacy_keyword_document_parser", scope="session")
