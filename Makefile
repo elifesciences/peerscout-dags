@@ -8,6 +8,8 @@ VENV = venv
 PIP = $(VENV)/bin/pip
 PYTHON = PYTHONPATH=dags $(VENV)/bin/python
 
+NOT_SLOW_PYTEST_ARGS = -m 'not slow'
+
 
 venv-clean:
 	@if [ -d "$(VENV)" ]; then \
@@ -29,6 +31,7 @@ dev-install:
 
 dev-nlp-model-download:
 	$(PYTHON) -m spacy download en_core_web_lg
+	$(PYTHON) -m spacy download en_core_web_md
 	$(PYTHON) -m spacy download en_core_web_sm
 
 dev-venv: venv-create dev-install dev-nlp-model-download
@@ -46,7 +49,12 @@ dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
 
 dev-watch:
-	$(PYTHON) -m pytest_watch -- -p no:cacheprovider $(ARGS) tests/unit_test
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider \
+		$(ARGS) $(NOT_SLOW_PYTEST_ARGS) tests/unit_test
+
+dev-watch-slow:
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider \
+		$(ARGS) tests/unit_test
 
 dev-dagtest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test

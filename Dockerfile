@@ -14,7 +14,10 @@ RUN pip install -r requirements.spacy.txt
 
 # download spaCy language models
 RUN python -m spacy download en_core_web_lg
-RUN if [ "${install_dev}" = "y" ]; then python -m spacy download en_core_web_sm; fi
+RUN if [ "${install_dev}" = "y" ]; then \
+  python -m spacy download en_core_web_sm; \
+  python -m spacy download en_core_web_md; \
+fi
 
 COPY requirements.txt ./
 RUN pip install --upgrade -r requirements.txt
@@ -30,7 +33,7 @@ COPY --chown=airflow:airflow dags ./dags
 COPY --chown=airflow:airflow setup.py ./setup.py
 RUN pip install -e . --user --no-dependencies
 
-COPY .pylintrc ./.pylintrc
+COPY .pylintrc setup.cfg ./
 COPY --chown=airflow:airflow tests ./tests
 COPY --chown=airflow:airflow run_test.sh ./
 RUN if [ "${install_dev}" = "y" ]; then chmod +x run_test.sh; fi

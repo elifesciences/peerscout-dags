@@ -1,8 +1,12 @@
 import re
+import logging
 from typing import List
 
 from spacy.language import Language
 from spacy.tokens import Doc, Span, Token
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 DEFAULT_SPACY_LANGUAGE_MODEL_NAME = "en_core_web_lg"
@@ -73,10 +77,45 @@ class SpacyKeywordDocument:
             and not last_token.is_stop
         )
 
+    def get_conjuction_noun_chunks(self, doc: Doc) -> List[Span]:
+        noun_chunks = list(doc.noun_chunks)
+        for noun_chunk in list(noun_chunks):
+            last_noun_token = noun_chunk[-1]
+            LOGGER.debug(
+                'last_noun_token: %s (conjuncts: %s)',
+                last_noun_token, last_noun_token.conjuncts
+            )
+            for conjunction_token in last_noun_token.conjuncts:
+                conjunction_children = list(conjunction_token.children)
+                if last_noun_token not in conjunction_children:
+                    LOGGER.debug(
+                        ' '.join([
+                            'last_noun_token not in children',
+                            '("%s" ~ children %s of "%s", right: %s)',
+                        ]),
+                        last_noun_token,
+                        conjunction_children,
+                        conjunction_token,
+                        list(conjunction_token.rights)
+                    )
+                    continue
+                if conjunction_token.pos_ != 'ADJ':
+                    LOGGER.debug(
+                        'conjunction_token not ADJ: "%s" (pos: %s)',
+                        conjunction_token, conjunction_token.pos_
+                    )
+                    continue
+                conjunction_span = self.language(' '.join([
+                    conjunction_token.text, last_noun_token.text
+                ]))
+                LOGGER.debug('adding conjunction_span: %s', conjunction_span)
+                noun_chunks += [conjunction_span]
+        return noun_chunks
+
     def get_compound_keyword_spans(self) -> List[Span]:
         return [
             span
-            for span in self.doc.noun_chunks
+            for span in self.get_conjuction_noun_chunks(self.doc)
             if self.should_use_span_as_keyword(span)
         ]
 
