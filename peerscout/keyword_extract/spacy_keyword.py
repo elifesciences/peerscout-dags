@@ -2,10 +2,21 @@ import re
 from typing import List
 
 from spacy.language import Language
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc, Span, Token
 
 
 DEFAULT_SPACY_LANGUAGE_MODEL_NAME = "en_core_web_lg"
+
+
+def get_token_lemma(token: Token) -> str:
+    lemma = token.lemma_
+    if lemma.startswith('-'):
+        return token.text
+    return lemma
+
+
+def get_span_lemma(span: Span) -> str:
+    return span[:-1].text_with_ws + get_token_lemma(span[-1])
 
 
 class SpacyKeywordList:
@@ -16,6 +27,10 @@ class SpacyKeywordList:
     @property
     def text_list(self) -> List[str]:
         return [span.text for span in self.keyword_spans]
+
+    @property
+    def normalized_text_list(self) -> List[str]:
+        return [get_span_lemma(span) for span in self.keyword_spans]
 
     @property
     def with_individual_tokens(self) -> 'SpacyKeywordList':

@@ -103,3 +103,13 @@ class TestSpacyKeywordDocumentParser:
             .compound_keywords
             .text_list
         ) == ['technology']
+
+    def test_should_convert_plural_to_singular_keyword(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'we investigate technologies'
+            )
+            .compound_keywords
+            .normalized_text_list
+        ) == ['technology']
