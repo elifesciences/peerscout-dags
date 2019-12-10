@@ -25,7 +25,14 @@ def get_normalized_token_text(token: Token) -> str:
     return get_token_lemma(token)
 
 
+def get_span_without_apostrophe(span: Span) -> Span:
+    if span[-1].tag_ == 'POS':
+        span = span[:-1]
+    return span
+
+
 def get_normalized_span_text(span: Span) -> str:
+    span = get_span_without_apostrophe(span)
     return span[:-1].text_with_ws + get_normalized_token_text(span[-1])
 
 
