@@ -113,3 +113,14 @@ class TestSpacyKeywordDocumentParser:
             .compound_keywords
             .normalized_text_list
         ) == ['technology']
+
+    def test_should_normalize_keyword_spelling(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            # need to use a word that is in the small spacy model
+            spacy_keyword_document_parser.parse_text(
+                'we investigate somethin'
+            )
+            .compound_keywords
+            .normalized_text_list
+        ) == ['something']

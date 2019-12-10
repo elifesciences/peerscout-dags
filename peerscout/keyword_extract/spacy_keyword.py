@@ -19,6 +19,16 @@ def get_span_lemma(span: Span) -> str:
     return span[:-1].text_with_ws + get_token_lemma(span[-1])
 
 
+def get_normalized_token_text(token: Token) -> str:
+    if token.norm_ != token.text:
+        return token.norm_
+    return get_token_lemma(token)
+
+
+def get_normalized_span_text(span: Span) -> str:
+    return span[:-1].text_with_ws + get_normalized_token_text(span[-1])
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -30,7 +40,7 @@ class SpacyKeywordList:
 
     @property
     def normalized_text_list(self) -> List[str]:
-        return [get_span_lemma(span) for span in self.keyword_spans]
+        return [get_normalized_span_text(span) for span in self.keyword_spans]
 
     @property
     def with_individual_tokens(self) -> 'SpacyKeywordList':
