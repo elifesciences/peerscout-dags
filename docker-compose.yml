@@ -79,6 +79,11 @@ services:
             - POSTGRES_USER=airflow
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
+        healthcheck:
+            test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/5432"]
+            interval: 10s
+            timeout: 10s
+            retries: 5
 
     dask-scheduler:
         environment:
