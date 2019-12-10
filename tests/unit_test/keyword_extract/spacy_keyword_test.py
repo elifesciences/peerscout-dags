@@ -53,3 +53,53 @@ class TestSpacyKeywordDocumentParser:
             .compound_keywords
             .text_list
         ) == ['technology']
+
+    def test_should_exclude_person_name(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'In collaboration with John Smith'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['collaboration']
+
+    def test_should_exclude_country_name(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'We research technology in the United Kingdom'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['technology']
+
+    def test_should_exclude_numbers(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                r'technology that account for 123'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['technology']
+
+    def test_should_exclude_percentage(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                r'technology that account for 95%'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['technology']
+
+    def test_should_exclude_greater_than_percentage(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                r'technology that account for >95%'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['technology']
