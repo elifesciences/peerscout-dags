@@ -19,6 +19,22 @@ class TestSimpleKeywordExtractor:
             == ['keyword']
         )
 
+    def test_should_add_additional_keywords(self):
+        assert (
+            SimpleKeywordExtractor().extract_unique_keywords(
+                'keyword',
+                additional_keywords=['other']
+            ) == ['keyword', 'other']
+        )
+
+    def test_should_remove_duplicates_from_additional_keywords(self):
+        assert (
+            SimpleKeywordExtractor().extract_unique_keywords(
+                'keyword keyword',
+                additional_keywords=['keyword', 'keyword']
+            ) == ['keyword']
+        )
+
 
 class TestSpacyKeywordExtractor:
     def test_should_extract_noun(self, spacy_language_en: Language):

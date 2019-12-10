@@ -31,8 +31,12 @@ class KeywordExtractor(ABC):
     def extract_keywords(self, text: str) -> List[str]:
         pass
 
-    def extract_unique_keywords(self, text: str) -> List[str]:
-        return sorted(set(self.extract_keywords(text)))
+    def extract_unique_keywords(
+            self, text: str,
+            additional_keywords: List[str] = None) -> List[str]:
+        return sorted(set(
+            self.extract_keywords(text) + (additional_keywords or [])
+        ))
 
 
 class SimpleKeywordExtractor(KeywordExtractor):
@@ -186,13 +190,12 @@ def add_extracted_keywords(
     :return:
     """
     for record in record_list:
-        new_keywords = keyword_extractor.extract_unique_keywords(
-            record.get(text_field, "")
+        additional_keywords = record.get(existing_keyword_field, "").split(
+            existing_keyword_split_pattern
         )
-        new_keywords.extend(
-            record.get(existing_keyword_field, "").split(
-                existing_keyword_split_pattern
-            )
+        new_keywords = keyword_extractor.extract_unique_keywords(
+            record.get(text_field, ""),
+            additional_keywords=additional_keywords
         )
         record[extracted_keyword_field_name] = new_keywords
         yield record
