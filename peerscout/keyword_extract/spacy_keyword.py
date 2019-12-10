@@ -82,7 +82,9 @@ class SpacyKeywordDocument:
 
     @property
     def compound_keywords(self) -> SpacyKeywordList:
-        return SpacyKeywordList(self.language, self.get_compound_keyword_spans())
+        return SpacyKeywordList(
+            self.language, self.get_compound_keyword_spans()
+        )
 
 
 class SpacyKeywordDocumentParser:
