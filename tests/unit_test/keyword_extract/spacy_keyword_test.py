@@ -26,6 +26,12 @@ class TestGetNormalizedSpanText:
             "Parkinson's"
         )) == 'parkinson'
 
+    def test_should_to_lower_case(
+            self, spacy_language_en: Language):
+        assert get_normalized_span_text(spacy_language_en(
+            "fMRI"
+        )) == 'fmri'
+
 
 class TestSpacyKeywordDocumentParser:
     def test_should_extract_single_word_noun(
