@@ -33,9 +33,24 @@ class SpacyKeywordDocument:
         self.language = language
         self.doc = doc
 
+    def should_use_span_as_keyword(self, span: Span) -> bool:
+        last_token = span[-1]
+        return (
+            last_token.ent_type_ not in {'PERSON', 'GPE', 'PERCENT'}
+            and last_token.pos_ not in {'PRON'}
+            and not last_token.is_stop
+        )
+
+    def get_compound_keyword_spans(self) -> List[Span]:
+        return [
+            span
+            for span in self.doc.noun_chunks
+            if self.should_use_span_as_keyword(span)
+        ]
+
     @property
     def compound_keywords(self) -> SpacyKeywordList:
-        return SpacyKeywordList(self.language, list(self.doc.noun_chunks))
+        return SpacyKeywordList(self.language, self.get_compound_keyword_spans())
 
 
 class SpacyKeywordDocumentParser:

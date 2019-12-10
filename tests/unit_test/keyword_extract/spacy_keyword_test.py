@@ -45,3 +45,11 @@ class TestSpacyKeywordDocumentParser:
             .with_individual_tokens
             .text_list
         ) == {'advanced technology', 'advanced', 'technology'}
+
+    def test_should_exclude_pronouns(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text('we use technology')
+            .compound_keywords
+            .text_list
+        ) == ['technology']
