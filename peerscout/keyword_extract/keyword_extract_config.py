@@ -17,7 +17,9 @@ class KeywordExtractConfig:
             destination_dataset: str = None,
             destination_table: str = None,
             query_template: str = None,
-            limit_count_value: int = None
+            limit_count_value: int = None,
+            keyword_extractor: str = None,
+            spacy_language_model: str = None
     ):
         self.gcp_project = gcp_project or config.get("gcp_project")
         self.source_dataset = source_dataset or config.get("source_dataset")
@@ -43,6 +45,13 @@ class KeywordExtractConfig:
         )
         self.limit_return_count = " ".join(["Limit ", str(limit_count)]) \
             if limit_count else ""
+
+        self.keyword_extractor = (
+            keyword_extractor or config.get("keyword_extractor")
+        )
+        self.spacy_language_model = (
+            spacy_language_model or config.get("spacy_language_model")
+        )
 
 
 class ExternalTriggerConfig:

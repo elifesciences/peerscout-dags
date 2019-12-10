@@ -7,6 +7,15 @@ RUN usermod -aG sudo airflow
 RUN echo "airflow ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN sed -i 's/LocalExecutor/SequentialExecutor/' /entrypoint.sh
+
+# install spaCy separately to allow better caching of large language model download
+COPY requirements.spacy.txt ./
+RUN pip install -r requirements.spacy.txt
+
+# download spaCy language models
+RUN python -m spacy download en_core_web_lg
+RUN if [ "${install_dev}" = "y" ]; then python -m spacy download en_core_web_sm; fi
+
 COPY requirements.txt ./
 RUN pip install --upgrade -r requirements.txt
 RUN if [ "${install_dev}" = "y" ]; then  pip install bokeh; fi

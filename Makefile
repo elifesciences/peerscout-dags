@@ -22,11 +22,16 @@ venv-activate:
 	bash -c "venv/bin/activate"
 
 dev-install:
+	$(PIP) install -r requirements.spacy.txt
 	SLUGIFY_USES_TEXT_UNIDECODE=yes $(PIP) install -r requirements.txt
 	$(PIP) install -r requirements.dev.txt
 	$(PIP) install -e . --no-deps
 
-dev-venv: venv-create dev-install
+dev-nlp-model-download:
+	$(PYTHON) -m spacy download en_core_web_lg
+	$(PYTHON) -m spacy download en_core_web_sm
+
+dev-venv: venv-create dev-install dev-nlp-model-download
 
 
 dev-flake8:
@@ -39,6 +44,9 @@ dev-lint: dev-flake8 dev-pylint
 
 dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
+
+dev-watch:
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider $(ARGS) tests/unit_test
 
 dev-dagtest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test
@@ -62,6 +70,10 @@ ci-test-exclude-e2e: build-dev
 ci-end2end-test: build-dev
 	$(DOCKER_COMPOSE) run --rm  test-client
 	$(DOCKER_COMPOSE) down -v
+
+ci-end2end-test-logs:
+	$(DOCKER_COMPOSE) exec dask-worker bash -c \
+		'cat logs/Extract_Keywords_From_Corpus/etl_keyword_extraction_task/*/*.log'
 
 dev-env: build-dev
 	$(DOCKER_COMPOSE_DEV) up  scheduler
