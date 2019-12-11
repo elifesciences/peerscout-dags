@@ -13,11 +13,6 @@ def _spacy_keyword_document_parser(spacy_language_en: Language):
     return SpacyKeywordDocumentParser(spacy_language_en)
 
 
-@pytest.fixture(name="spacy_keyword_document_parser_md", scope="session")
-def _spacy_keyword_document_parser_md(spacy_language_en_md: Language):
-    return SpacyKeywordDocumentParser(spacy_language_en_md)
-
-
 class TestGetNormalizedSpanText:
     def test_should_convert_plural_to_singular(
             self, spacy_language_en: Language):
@@ -152,17 +147,3 @@ class TestSpacyKeywordDocumentParser:
             .compound_keywords
             .normalized_text_list
         ) == ['something']
-
-    @pytest.mark.slow
-    def test_should_extract_conjunction_nouns_with_adjective_with_comma(
-            self, spacy_keyword_document_parser_md: SpacyKeywordDocumentParser):
-        # using medium model, the dependency tree is not complete with small model
-        assert set(
-            spacy_keyword_document_parser_md.parse_text(
-                'we use advanced technique, advanced, and special technology'
-            )
-            .compound_keywords
-            .text_list
-        ) == {
-            'advanced technique', 'advanced technology', 'special technology'
-        }
