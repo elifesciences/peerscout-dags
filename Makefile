@@ -8,6 +8,8 @@ VENV = venv
 PIP = $(VENV)/bin/pip
 PYTHON = PYTHONPATH=dags $(VENV)/bin/python
 
+NOT_SLOW_PYTEST_ARGS = -m 'not slow'
+
 
 venv-clean:
 	@if [ -d "$(VENV)" ]; then \
@@ -46,7 +48,12 @@ dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
 
 dev-watch:
-	$(PYTHON) -m pytest_watch -- -p no:cacheprovider $(ARGS) tests/unit_test
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider \
+		$(ARGS) $(NOT_SLOW_PYTEST_ARGS) tests/unit_test
+
+dev-watch-slow:
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider \
+		$(ARGS) tests/unit_test
 
 dev-dagtest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test
