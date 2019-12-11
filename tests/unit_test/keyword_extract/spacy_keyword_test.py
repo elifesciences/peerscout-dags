@@ -188,3 +188,19 @@ class TestSpacyKeywordDocumentParser:
         ) == {
             'advanced technique', 'advanced technology', 'special technology'
         }
+
+    @pytest.mark.slow
+    def test_should_not_combine_two_separate_nouns_with_conjunction(
+            self,
+            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
+        # using "full" model,
+        # the dependency tree is not complete using small model
+        assert set(
+            spacy_keyword_document_parser_full.parse_text(
+                'we use technique and technology'
+            )
+            .compound_keywords
+            .text_list
+        ) == {
+            'technique', 'technology'
+        }
