@@ -10,6 +10,7 @@ PYTHON = PYTHONPATH=dags $(VENV)/bin/python
 
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 
+PYTEST_WATCH_SPACY_MODEL_MINIMAL = en_core_web_sm
 PYTEST_WATCH_SPACY_MODEL_FULL = en_core_web_md
 
 
@@ -51,11 +52,15 @@ dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
 
 dev-watch:
+	SPACY_LANGUAGE_EN_MINIMAL=$(PYTEST_WATCH_SPACY_MODEL_MINIMAL) \
 	SPACY_LANGUAGE_EN_FULL=$(PYTEST_WATCH_SPACY_MODEL_FULL) \
 	$(PYTHON) -m pytest_watch -- -p no:cacheprovider \
 		$(ARGS) $(NOT_SLOW_PYTEST_ARGS) tests/unit_test
 
 dev-watch-slow:
+	# using full model as "minimal" since we'll need to load it anyway
+	# (and share it for the whole session)
+	SPACY_LANGUAGE_EN_MINIMAL=$(PYTEST_WATCH_SPACY_MODEL_FULL) \
 	SPACY_LANGUAGE_EN_FULL=$(PYTEST_WATCH_SPACY_MODEL_FULL) \
 	$(PYTHON) -m pytest_watch -- -p no:cacheprovider \
 		$(ARGS) tests/unit_test

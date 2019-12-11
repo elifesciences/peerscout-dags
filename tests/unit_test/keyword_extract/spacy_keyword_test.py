@@ -42,7 +42,7 @@ class TestSpacyKeywordDocumentParser:
     def test_should_extract_single_word_noun(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
         assert (
-            spacy_keyword_document_parser.parse_text('use technology')
+            spacy_keyword_document_parser.parse_text('using technology')
             .compound_keywords
             .text_list
         ) == ['technology']
@@ -50,7 +50,7 @@ class TestSpacyKeywordDocumentParser:
     def test_should_extract_single_noun_with_adjective(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
         assert (
-            spacy_keyword_document_parser.parse_text('use advanced technology')
+            spacy_keyword_document_parser.parse_text('using advanced technology')
             .compound_keywords
             .text_list
         ) == ['advanced technology']
@@ -68,7 +68,7 @@ class TestSpacyKeywordDocumentParser:
     def test_should_extract_individual_tokens(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
         assert set(
-            spacy_keyword_document_parser.parse_text('use advanced technology')
+            spacy_keyword_document_parser.parse_text('using advanced technology')
             .compound_keywords
             .with_individual_tokens
             .text_list

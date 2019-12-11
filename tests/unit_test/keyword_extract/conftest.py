@@ -15,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class EnvVars:
+    SPACY_LANGUAGE_EN_MINIMAL = "SPACY_LANGUAGE_EN_MINIMAL"
     SPACY_LANGUAGE_EN_FULL = "SPACY_LANGUAGE_EN_FULL"
 
 
@@ -25,7 +26,10 @@ def _load_spacy_model(language_model_name: str) -> Language:
 
 @pytest.fixture(name="spacy_language_en", scope="session")
 def _spacy_language_en() -> Language:
-    return spacy.load("en_core_web_sm")
+    return _load_spacy_model(os.environ.get(
+        EnvVars.SPACY_LANGUAGE_EN_MINIMAL,
+        DEFAULT_SPACY_LANGUAGE_MODEL_NAME
+    ))
 
 
 @pytest.fixture(name="spacy_language_en_full", scope="session")
