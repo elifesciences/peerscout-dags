@@ -1,6 +1,6 @@
 import re
 import logging
-from typing import List
+from typing import Iterable, List, Union
 
 from spacy.language import Language
 from spacy.tokens import Doc, Span, Token
@@ -77,6 +77,39 @@ class SpacyKeywordDocument:
             and not last_token.is_stop
         )
 
+    def join_spans(self, spans: List[Span]) -> Span:
+        # there doesn't seem to be an easy way to create a span
+        # from a list of tokens. parsing the text for now.
+        # (In the future look into doc.retokenize)
+        joined_text = ' '.join([span.text for span in spans])
+        LOGGER.debug('joined_text: %s', joined_text)
+        return self.language(joined_text)
+
+    def iter_split_noun_chunk_conjunctions(
+            self, noun_chunk: Span) -> Iterable[Span]:
+        # previous_token_indices = []
+        previous_start = 0
+        previous_end = 0
+        for index, token in enumerate(noun_chunk):
+            if token.pos_ != 'CCONJ':
+                previous_end = index + 1
+                continue
+            LOGGER.debug(
+                'conjunction token "%s", previous token: %d..%d',
+                token, previous_start, previous_end
+            )
+            if previous_end > previous_start:
+                yield self.join_spans([
+                    noun_chunk[previous_start:previous_end],
+                    noun_chunk[-1:]
+                ])
+                previous_start = index + 1
+                previous_end = previous_start
+        if previous_end > previous_start:
+            remaining_span = noun_chunk[previous_start:previous_end]
+            LOGGER.debug('remaining_span: %s', remaining_span)
+            yield remaining_span
+
     def get_conjuction_noun_chunks(self, doc: Doc) -> List[Span]:
         noun_chunks = list(doc.noun_chunks)
         for noun_chunk in list(noun_chunks):
@@ -105,12 +138,16 @@ class SpacyKeywordDocument:
                         conjunction_token, conjunction_token.pos_
                     )
                     continue
-                conjunction_span = self.language(' '.join([
-                    conjunction_token.text, last_noun_token.text
-                ]))
+                conjunction_span = self.join_spans([
+                    conjunction_token, noun_chunk[-1:]
+                ])
                 LOGGER.debug('adding conjunction_span: %s', conjunction_span)
                 noun_chunks += [conjunction_span]
-        return noun_chunks
+        return [
+            split_noun_chunk
+            for noun_chunk in noun_chunks
+            for split_noun_chunk in self.iter_split_noun_chunk_conjunctions(noun_chunk)
+        ]
 
     def get_compound_keyword_spans(self) -> List[Span]:
         return [

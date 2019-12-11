@@ -172,3 +172,19 @@ class TestSpacyKeywordDocumentParser:
         ) == {
             'advanced technique', 'advanced technology', 'special technology'
         }
+
+    @pytest.mark.slow
+    def test_should_extract_conjunction_nouns_with_adjective_without_comma(
+            self,
+            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
+        # using "full" model,
+        # the dependency tree is not complete using small model
+        assert set(
+            spacy_keyword_document_parser_full.parse_text(
+                'we use advanced technique, advanced and special technology'
+            )
+            .compound_keywords
+            .text_list
+        ) == {
+            'advanced technique', 'advanced technology', 'special technology'
+        }
