@@ -7,6 +7,6 @@ pip install  --user -r $DIR/requirements.spacy.txt
 pip install  --user -r $DIR/requirements.txt
 pip install -e $DIR/ --user --no-dependencies
 
-python  -m spacy download en_core_web_lg --user
+python -m spacy download en_core_web_lg --user
 
 cp $DIR/dags $1 -r
