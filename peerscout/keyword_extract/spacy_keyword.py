@@ -1,6 +1,6 @@
 import re
 import logging
-from typing import Iterable, List, Union
+from typing import Iterable, List
 
 from spacy.language import Language
 from spacy.tokens import Doc, Span, Token
@@ -146,7 +146,9 @@ class SpacyKeywordDocument:
         return [
             split_noun_chunk
             for noun_chunk in noun_chunks
-            for split_noun_chunk in self.iter_split_noun_chunk_conjunctions(noun_chunk)
+            for split_noun_chunk in self.iter_split_noun_chunk_conjunctions(
+                noun_chunk
+            )
         ]
 
     def get_compound_keyword_spans(self) -> List[Span]:
