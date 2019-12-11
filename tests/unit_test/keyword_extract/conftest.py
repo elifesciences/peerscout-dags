@@ -49,7 +49,8 @@ def _spacy_language_en(spacy_model_cache: Dict[str, Language]) -> Language:
 
 
 @pytest.fixture(name="spacy_language_en_full", scope="session")
-def _spacy_language_en_full(spacy_model_cache: Dict[str, Language]) -> Language:
+def _spacy_language_en_full(
+        spacy_model_cache: Dict[str, Language]) -> Language:
     return _get_or_load_spacy_model(os.environ.get(
         EnvVars.SPACY_LANGUAGE_EN_FULL,
         DEFAULT_SPACY_LANGUAGE_MODEL_NAME
