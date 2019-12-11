@@ -155,10 +155,8 @@ class TestSpacyKeywordDocumentParser:
 
     @pytest.mark.slow
     def test_should_extract_conjunction_nouns_with_adjective_with_comma(
-            self,
-            spacy_keyword_document_parser_md: SpacyKeywordDocumentParser):
-        # using medium model,
-        # the dependency tree is not complete with small model
+            self, spacy_keyword_document_parser_md: SpacyKeywordDocumentParser):
+        # using medium model, the dependency tree is not complete with small model
         assert set(
             spacy_keyword_document_parser_md.parse_text(
                 'we use advanced technique, advanced, and special technology'
