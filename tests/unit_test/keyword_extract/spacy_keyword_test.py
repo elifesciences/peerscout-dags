@@ -44,11 +44,17 @@ class TestGetNormalizedSpanText:
             "Parkinson's"
         )) == 'parkinson'
 
-    def test_should_to_lower_case(
+    def test_should_convert_single_token_to_lower_case(
             self, spacy_language_en: Language):
         assert get_normalized_span_text(spacy_language_en(
             "fMRI"
         )) == 'fmri'
+
+    def test_should_convert_multiple_token_span_to_lower_case(
+            self, spacy_language_en: Language):
+        assert get_normalized_span_text(spacy_language_en(
+            "Advanced Technology"
+        )) == 'advanced technology'
 
 
 class TestIsConjunctionToken:

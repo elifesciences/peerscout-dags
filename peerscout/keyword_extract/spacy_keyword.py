@@ -37,7 +37,9 @@ def get_span_without_apostrophe(span: Span) -> Span:
 
 def get_normalized_span_text(span: Span) -> str:
     span = get_span_without_apostrophe(span)
-    return span[:-1].text_with_ws + get_normalized_token_text(span[-1])
+    return (
+        span[:-1].text_with_ws + get_normalized_token_text(span[-1])
+    ).lower()
 
 
 def is_conjunction_token(token: Token) -> bool:
