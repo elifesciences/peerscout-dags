@@ -54,7 +54,7 @@ class SpacyKeywordExtractor(KeywordExtractor):
             .parse_text(text)
             .compound_keywords
             .with_individual_tokens
-            .text_list
+            .normalized_text_list
         )
 
 

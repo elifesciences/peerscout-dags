@@ -41,7 +41,7 @@ class TestSpacyKeywordExtractor:
         assert (
             SpacyKeywordExtractor(
                 language=spacy_language_en
-            ).extract_keywords('use keyword')
+            ).extract_keywords('using keyword')
             == ['keyword']
         )
 
@@ -50,6 +50,6 @@ class TestSpacyKeywordExtractor:
         assert (
             SpacyKeywordExtractor(
                 language=spacy_language_en
-            ).extract_unique_keywords('use keyword and keyword')
+            ).extract_unique_keywords('using keyword and keyword')
             == ['keyword']
         )
