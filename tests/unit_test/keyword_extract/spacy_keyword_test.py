@@ -6,6 +6,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     get_span_without_apostrophe,
     get_normalized_span_text,
     is_conjunction_token,
+    join_spans,
     SpacyKeywordDocumentParser
 )
 
@@ -54,6 +55,17 @@ class TestIsConjunctionToken:
             is_conjunction_token(token)
             for token in spacy_language_en('this and that')
         ] == [False, True, False]
+
+class TestJoinSpans:
+    def test_should_join_two_spans(
+            self, spacy_language_en: Language):
+        assert join_spans(
+            [
+                spacy_language_en('the joined'),
+                spacy_language_en('span')
+            ],
+            language=spacy_language_en
+        ).text == 'the joined span'
 
 class TestSpacyKeywordDocumentParser:
     def test_should_extract_single_word_noun(

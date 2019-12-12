@@ -44,6 +44,15 @@ def is_conjunction_token(token: Token) -> bool:
     return token.pos_ == 'CCONJ'
 
 
+def join_spans(spans: List[Span], language: Language) -> Span:
+    # there doesn't seem to be an easy way to create a span
+    # from a list of tokens. parsing the text for now.
+    # (In the future look into doc.retokenize)
+    joined_text = ' '.join([span.text for span in spans])
+    LOGGER.debug('joined_text: %s', joined_text)
+    return language(joined_text)
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -82,12 +91,7 @@ class SpacyKeywordDocument:
         )
 
     def join_spans(self, spans: List[Span]) -> Span:
-        # there doesn't seem to be an easy way to create a span
-        # from a list of tokens. parsing the text for now.
-        # (In the future look into doc.retokenize)
-        joined_text = ' '.join([span.text for span in spans])
-        LOGGER.debug('joined_text: %s', joined_text)
-        return self.language(joined_text)
+        return join_spans(spans, language=self.language)
 
     def iter_split_noun_chunk_conjunctions(
             self, noun_chunk: Span) -> Iterable[Span]:
