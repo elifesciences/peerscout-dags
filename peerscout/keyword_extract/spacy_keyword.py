@@ -87,7 +87,6 @@ class SpacyKeywordDocument:
 
     def iter_split_noun_chunk_conjunctions(
             self, noun_chunk: Span) -> Iterable[Span]:
-        # previous_token_indices = []
         previous_start = 0
         previous_end = 0
         for index, token in enumerate(noun_chunk):
