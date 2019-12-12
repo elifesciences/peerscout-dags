@@ -79,6 +79,51 @@ def iter_split_noun_chunk_conjunctions(
         yield remaining_span
 
 
+def get_conjuction_noun_chunks(
+        doc: Doc,
+        language: Language) -> List[Span]:
+    noun_chunks = list(doc.noun_chunks)
+    for noun_chunk in list(noun_chunks):
+        last_noun_token = noun_chunk[-1]
+        LOGGER.debug(
+            'last_noun_token: %s (conjuncts: %s)',
+            last_noun_token, last_noun_token.conjuncts
+        )
+        for conjunction_token in last_noun_token.conjuncts:
+            conjunction_children = list(conjunction_token.children)
+            if last_noun_token not in conjunction_children:
+                LOGGER.debug(
+                    ' '.join([
+                        'last_noun_token not in children',
+                        '("%s" ~ children %s of "%s", right: %s)',
+                    ]),
+                    last_noun_token,
+                    conjunction_children,
+                    conjunction_token,
+                    list(conjunction_token.rights)
+                )
+                continue
+            if conjunction_token.pos_ != 'ADJ':
+                LOGGER.debug(
+                    'conjunction_token not ADJ: "%s" (pos: %s)',
+                    conjunction_token, conjunction_token.pos_
+                )
+                continue
+            conjunction_span = join_spans([
+                conjunction_token, noun_chunk[-1:]
+            ], language=language)
+            LOGGER.debug('adding conjunction_span: %s', conjunction_span)
+            noun_chunks += [conjunction_span]
+    return [
+        split_noun_chunk
+        for noun_chunk in noun_chunks
+        for split_noun_chunk in iter_split_noun_chunk_conjunctions(
+            noun_chunk,
+            language=language
+        )
+    ]
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -126,45 +171,7 @@ class SpacyKeywordDocument:
         )
 
     def get_conjuction_noun_chunks(self, doc: Doc) -> List[Span]:
-        noun_chunks = list(doc.noun_chunks)
-        for noun_chunk in list(noun_chunks):
-            last_noun_token = noun_chunk[-1]
-            LOGGER.debug(
-                'last_noun_token: %s (conjuncts: %s)',
-                last_noun_token, last_noun_token.conjuncts
-            )
-            for conjunction_token in last_noun_token.conjuncts:
-                conjunction_children = list(conjunction_token.children)
-                if last_noun_token not in conjunction_children:
-                    LOGGER.debug(
-                        ' '.join([
-                            'last_noun_token not in children',
-                            '("%s" ~ children %s of "%s", right: %s)',
-                        ]),
-                        last_noun_token,
-                        conjunction_children,
-                        conjunction_token,
-                        list(conjunction_token.rights)
-                    )
-                    continue
-                if conjunction_token.pos_ != 'ADJ':
-                    LOGGER.debug(
-                        'conjunction_token not ADJ: "%s" (pos: %s)',
-                        conjunction_token, conjunction_token.pos_
-                    )
-                    continue
-                conjunction_span = self.join_spans([
-                    conjunction_token, noun_chunk[-1:]
-                ])
-                LOGGER.debug('adding conjunction_span: %s', conjunction_span)
-                noun_chunks += [conjunction_span]
-        return [
-            split_noun_chunk
-            for noun_chunk in noun_chunks
-            for split_noun_chunk in self.iter_split_noun_chunk_conjunctions(
-                noun_chunk
-            )
-        ]
+        return get_conjuction_noun_chunks(doc, language=self.language)
 
     def get_compound_keyword_spans(self) -> List[Span]:
         return [

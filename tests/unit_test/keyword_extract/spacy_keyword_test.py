@@ -8,6 +8,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     is_conjunction_token,
     join_spans,
     iter_split_noun_chunk_conjunctions,
+    get_conjuction_noun_chunks,
     SpacyKeywordDocumentParser
 )
 
@@ -84,6 +85,29 @@ class TestIterSplitNounChunkConjunctions:
             spacy_language_en('advanced and special technology'),
             language=spacy_language_en
         )] == ['advanced technology', 'special technology']
+
+
+class TestGetConjuctionNounChunks:
+    def test_should_not_split_noun_chunk_without_conjunctions(
+            self, spacy_language_en: Language):
+        assert [span.text for span in get_conjuction_noun_chunks(
+            spacy_language_en('advanced technology'),
+            language=spacy_language_en
+        )] == ['advanced technology']
+
+    def test_should_split_and_join_noun_chunk_on_conjunction_without_comma(
+            self, spacy_language_en: Language):
+        assert [span.text for span in get_conjuction_noun_chunks(
+            spacy_language_en('advanced and special technology'),
+            language=spacy_language_en
+        )] == ['advanced technology', 'special technology']
+
+    def test_should_split_and_join_noun_chunk_on_conjunction_with_comma(
+            self, spacy_language_en: Language):
+        assert {span.text for span in get_conjuction_noun_chunks(
+            spacy_language_en('advanced, and special technology'),
+            language=spacy_language_en
+        )} == {'advanced technology', 'special technology'}
 
 
 class TestSpacyKeywordDocumentParser:
