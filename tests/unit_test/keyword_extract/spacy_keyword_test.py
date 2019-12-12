@@ -3,6 +3,7 @@ import pytest
 from spacy.language import Language
 
 from peerscout.keyword_extract.spacy_keyword import (
+    get_span_without_apostrophe,
     get_normalized_span_text,
     is_conjunction_token,
     SpacyKeywordDocumentParser
@@ -18,6 +19,13 @@ def _spacy_keyword_document_parser(spacy_language_en: Language):
 def _spacy_keyword_document_parser_full(spacy_language_en_full: Language):
     return SpacyKeywordDocumentParser(spacy_language_en_full)
 
+
+class TestGetSpanWithoutApostrophe:
+    def test_should_remove_apostrophe(
+            self, spacy_language_en: Language):
+        assert get_span_without_apostrophe(spacy_language_en(
+            "Johnson's"
+        )).text == "Johnson"
 
 class TestGetNormalizedSpanText:
     def test_should_convert_plural_to_singular(
@@ -42,10 +50,9 @@ class TestGetNormalizedSpanText:
 class TestIsConjunctionToken:
     def test_should_return_true_for_and_token_only(
             self, spacy_language_en: Language):
-        doc = spacy_language_en('this and that')
         assert [
             is_conjunction_token(token)
-            for token in doc
+            for token in spacy_language_en('this and that')
         ] == [False, True, False]
 
 class TestSpacyKeywordDocumentParser:
