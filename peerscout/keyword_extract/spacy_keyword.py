@@ -40,6 +40,10 @@ def get_normalized_span_text(span: Span) -> str:
     return span[:-1].text_with_ws + get_normalized_token_text(span[-1])
 
 
+def is_conjunction_token(token: Token) -> bool:
+    return token.pos_ == 'CCONJ'
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -90,7 +94,7 @@ class SpacyKeywordDocument:
         previous_start = 0
         previous_end = 0
         for index, token in enumerate(noun_chunk):
-            if token.pos_ != 'CCONJ':
+            if not is_conjunction_token(token):
                 previous_end = index + 1
                 continue
             LOGGER.debug(
