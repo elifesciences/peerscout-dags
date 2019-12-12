@@ -164,12 +164,6 @@ class SpacyKeywordDocument:
     def join_spans(self, spans: List[Span]) -> Span:
         return join_spans(spans, language=self.language)
 
-    def iter_split_noun_chunk_conjunctions(
-            self, noun_chunk: Span) -> Iterable[Span]:
-        return iter_split_noun_chunk_conjunctions(
-            noun_chunk, language=self.language
-        )
-
     def get_conjuction_noun_chunks(self, doc: Doc) -> List[Span]:
         return get_conjuction_noun_chunks(doc, language=self.language)
 
