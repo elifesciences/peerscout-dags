@@ -30,6 +30,7 @@ class TestGetSpanWithoutApostrophe:
             "Johnson's"
         )).text == "Johnson"
 
+
 class TestGetNormalizedSpanText:
     def test_should_convert_plural_to_singular(
             self, spacy_language_en: Language):
