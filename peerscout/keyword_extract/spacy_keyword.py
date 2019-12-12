@@ -95,12 +95,11 @@ def get_conjuction_noun_chunks(
                 LOGGER.debug(
                     ' '.join([
                         'last_noun_token not in children',
-                        '("%s" ~ children %s of "%s", right: %s)',
+                        '("%s" ~ children %s of "%s")',
                     ]),
                     last_noun_token,
                     conjunction_children,
-                    conjunction_token,
-                    list(conjunction_token.rights)
+                    conjunction_token
                 )
                 continue
             if conjunction_token.pos_ != 'ADJ':
