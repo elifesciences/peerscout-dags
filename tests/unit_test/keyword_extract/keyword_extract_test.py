@@ -3,7 +3,8 @@ from spacy.language import Language
 from peerscout.keyword_extract.keyword_extract import (
     to_unique_keywords,
     SimpleKeywordExtractor,
-    SpacyKeywordExtractor
+    SpacyKeywordExtractor,
+    add_extracted_keywords
 )
 
 
@@ -79,3 +80,18 @@ class TestSpacyKeywordExtractor:
             ).extract_unique_keywords('using keyword and keyword')
             == ['keyword']
         )
+
+
+class TestAddExtractedKeywords:
+    def test_should_extract_keywords_with_existing_keywords(self):
+        records = [{'text': 'the keywords', 'existing_keywords': 'existing'}]
+        records_with_keywords = list(add_extracted_keywords(
+            records,
+            text_field='text',
+            existing_keyword_field='existing_keywords',
+            extracted_keyword_field_name='extracted_keywords',
+            keyword_extractor=SimpleKeywordExtractor()
+        ))
+        assert set(records_with_keywords[0]['extracted_keywords']) == {
+            'the', 'keywords', 'existing'
+        }
