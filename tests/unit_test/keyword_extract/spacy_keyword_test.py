@@ -4,6 +4,7 @@ from spacy.language import Language
 
 from peerscout.keyword_extract.spacy_keyword import (
     get_normalized_span_text,
+    is_conjunction_token,
     SpacyKeywordDocumentParser
 )
 
@@ -37,6 +38,15 @@ class TestGetNormalizedSpanText:
             "fMRI"
         )) == 'fmri'
 
+
+class TestIsConjunctionToken:
+    def test_should_return_true_for_and_token_only(
+            self, spacy_language_en: Language):
+        doc = spacy_language_en('this and that')
+        assert [
+            is_conjunction_token(token)
+            for token in doc
+        ] == [False, True, False]
 
 class TestSpacyKeywordDocumentParser:
     def test_should_extract_single_word_noun(
