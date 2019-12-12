@@ -118,6 +118,16 @@ class TestGetConjuctionNounChunks:
 
 
 class TestSpacyKeywordDocumentParser:
+    def test_should_parse_multiple_documents(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert [
+            keyword_document.doc.text
+            for keyword_document in (
+                spacy_keyword_document_parser
+                .iter_parse_text_list(['using technology', 'using approach'])
+            )
+        ] == ['using technology', 'using approach']
+
     def test_should_extract_single_word_noun(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
         assert (

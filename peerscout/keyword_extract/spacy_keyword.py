@@ -190,3 +190,10 @@ class SpacyKeywordDocumentParser:
             self.language,
             self.language(self.normalize_text(text))
         )
+
+    def iter_parse_text_list(
+            self, text_list: Iterable[str]) -> Iterable[SpacyKeywordDocument]:
+        return (
+            self.parse_text(text)
+            for text in text_list
+        )
