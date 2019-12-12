@@ -26,17 +26,33 @@ from peerscout.keyword_extract.spacy_keyword import (
 )
 
 
+def to_unique_keywords(
+        keywords: List[str],
+        additional_keywords: List[str] = None) -> List[str]:
+    return sorted(set(
+        keywords + (additional_keywords or [])
+    ))
+
+
 class KeywordExtractor(ABC):
     @abstractmethod
     def extract_keywords(self, text: str) -> List[str]:
         pass
 
+    def iter_extract_keywords(
+            self, text_list: Iterable[str]) -> Iterable[List[str]]:
+        return (
+            self.extract_keywords(text)
+            for text in text_list
+        )
+
     def extract_unique_keywords(
             self, text: str,
             additional_keywords: List[str] = None) -> List[str]:
-        return sorted(set(
-            self.extract_keywords(text) + (additional_keywords or [])
-        ))
+        return to_unique_keywords(
+            self.extract_keywords(text),
+            additional_keywords=additional_keywords
+        )
 
 
 class SimpleKeywordExtractor(KeywordExtractor):

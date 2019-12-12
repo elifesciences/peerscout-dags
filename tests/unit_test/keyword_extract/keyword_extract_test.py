@@ -1,9 +1,35 @@
 from spacy.language import Language
 
 from peerscout.keyword_extract.keyword_extract import (
+    to_unique_keywords,
     SimpleKeywordExtractor,
     SpacyKeywordExtractor
 )
+
+
+class TestToUniqueKeywords:
+    def test_should_remove_duplicates_from_keywords(self):
+        assert (
+            to_unique_keywords(['keyword', 'keyword'])
+            == ['keyword']
+        )
+
+    def test_should_add_additional_keywords(self):
+        assert (
+            to_unique_keywords(
+                ['keyword'],
+                additional_keywords=['other']
+            ) == ['keyword', 'other']
+        )
+
+    def test_should_remove_duplicates_from_additional_keywords(self):
+        assert (
+            to_unique_keywords(
+                ['keyword', 'keyword'],
+                additional_keywords=['keyword', 'keyword']
+            )
+            == ['keyword']
+        )
 
 
 class TestSimpleKeywordExtractor:
