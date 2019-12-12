@@ -10,6 +10,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     iter_split_noun_chunk_conjunctions,
     get_conjuction_noun_chunks,
     iter_individual_keyword_spans,
+    iter_shorter_keyword_spans,
     SpacyKeywordDocumentParser
 )
 
@@ -139,6 +140,36 @@ class TestIterIndividualKeywordSpans:
             spacy_language_en('very advanced technology'),
             language=spacy_language_en
         )] == ['very', 'advanced', 'technology']
+
+
+class TestIterShorterKeywordSpans:
+    def test_should_return_no_results_if_keyword_is_not_compound(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_shorter_keyword_spans(
+            spacy_language_en('technology'),
+            language=spacy_language_en
+        )] == []
+
+    def test_should_return_no_results_for_two_word_keyword(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_shorter_keyword_spans(
+            spacy_language_en('advanced technology'),
+            language=spacy_language_en
+        )] == []
+
+    def test_should_return_last_two_words_for_three_word_keyword(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_shorter_keyword_spans(
+            spacy_language_en('very advanced technology'),
+            language=spacy_language_en
+        )] == ['advanced technology']
+
+    def test_should_return_last_three_and_two_words_for_four_word_keyword(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_shorter_keyword_spans(
+            spacy_language_en('very extra advanced technology'),
+            language=spacy_language_en
+        )] == ['extra advanced technology', 'advanced technology']
 
 
 class TestSpacyKeywordDocumentParser:

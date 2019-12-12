@@ -134,6 +134,14 @@ def iter_individual_keyword_spans(
             yield language(individual_keyword)
 
 
+def iter_shorter_keyword_spans(
+        keyword_span: Span,
+        language: Language) -> Iterable[Span]:
+    individual_keywords = keyword_span.text.split(' ')
+    for start in range(1, len(individual_keywords) - 1):
+        yield language(' '.join(individual_keywords[start:]))
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
