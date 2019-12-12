@@ -212,6 +212,32 @@ class TestSpacyKeywordDocumentParser:
             .text_list
         ) == {'advanced technology', 'advanced', 'technology'}
 
+    def test_should_extract_short_keywords(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert set(
+            spacy_keyword_document_parser.parse_text(
+                'using very advanced technology'
+            )
+            .compound_keywords
+            .with_shorter_keywords
+            .text_list
+        ) == {'very advanced technology', 'advanced technology'}
+
+    def test_should_extract_individual_tokens_and_short_keywords(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert set(
+            spacy_keyword_document_parser.parse_text(
+                'using very advanced technology'
+            )
+            .compound_keywords
+            .with_individual_tokens
+            .with_shorter_keywords
+            .text_list
+        ) == {
+            'very advanced technology', 'advanced technology',
+            'very', 'advanced', 'technology'
+        }
+
     def test_should_exclude_pronouns(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
         assert (

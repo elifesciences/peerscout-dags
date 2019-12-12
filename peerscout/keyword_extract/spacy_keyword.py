@@ -167,6 +167,18 @@ class SpacyKeywordList:
         ]
         return SpacyKeywordList(self.language, keyword_spans)
 
+    @property
+    def with_shorter_keywords(self) -> 'SpacyKeywordList':
+        keyword_spans = self.keyword_spans + [
+            individual_keyword_span
+            for keyword_span in self.keyword_spans
+            for individual_keyword_span in iter_shorter_keyword_spans(
+                keyword_span,
+                language=self.language
+            )
+        ]
+        return SpacyKeywordList(self.language, keyword_spans)
+
 
 class SpacyKeywordDocument:
     def __init__(self, language: Language, doc: Doc):
