@@ -53,6 +53,32 @@ def join_spans(spans: List[Span], language: Language) -> Span:
     return language(joined_text)
 
 
+def iter_split_noun_chunk_conjunctions(
+        noun_chunk: Span,
+        language: Language) -> Iterable[Span]:
+    previous_start = 0
+    previous_end = 0
+    for index, token in enumerate(noun_chunk):
+        if not is_conjunction_token(token):
+            previous_end = index + 1
+            continue
+        LOGGER.debug(
+            'conjunction token "%s", previous token: %d..%d',
+            token, previous_start, previous_end
+        )
+        if previous_end > previous_start:
+            yield join_spans([
+                noun_chunk[previous_start:previous_end],
+                noun_chunk[-1:]
+            ], language=language)
+            previous_start = index + 1
+            previous_end = previous_start
+    if previous_end > previous_start:
+        remaining_span = noun_chunk[previous_start:previous_end]
+        LOGGER.debug('remaining_span: %s', remaining_span)
+        yield remaining_span
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -95,27 +121,9 @@ class SpacyKeywordDocument:
 
     def iter_split_noun_chunk_conjunctions(
             self, noun_chunk: Span) -> Iterable[Span]:
-        previous_start = 0
-        previous_end = 0
-        for index, token in enumerate(noun_chunk):
-            if not is_conjunction_token(token):
-                previous_end = index + 1
-                continue
-            LOGGER.debug(
-                'conjunction token "%s", previous token: %d..%d',
-                token, previous_start, previous_end
-            )
-            if previous_end > previous_start:
-                yield self.join_spans([
-                    noun_chunk[previous_start:previous_end],
-                    noun_chunk[-1:]
-                ])
-                previous_start = index + 1
-                previous_end = previous_start
-        if previous_end > previous_start:
-            remaining_span = noun_chunk[previous_start:previous_end]
-            LOGGER.debug('remaining_span: %s', remaining_span)
-            yield remaining_span
+        return iter_split_noun_chunk_conjunctions(
+            noun_chunk, language=self.language
+        )
 
     def get_conjuction_noun_chunks(self, doc: Doc) -> List[Span]:
         noun_chunks = list(doc.noun_chunks)

@@ -7,6 +7,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     get_normalized_span_text,
     is_conjunction_token,
     join_spans,
+    iter_split_noun_chunk_conjunctions,
     SpacyKeywordDocumentParser
 )
 
@@ -56,6 +57,7 @@ class TestIsConjunctionToken:
             for token in spacy_language_en('this and that')
         ] == [False, True, False]
 
+
 class TestJoinSpans:
     def test_should_join_two_spans(
             self, spacy_language_en: Language):
@@ -66,6 +68,23 @@ class TestJoinSpans:
             ],
             language=spacy_language_en
         ).text == 'the joined span'
+
+
+class TestIterSplitNounChunkConjunctions:
+    def test_should_not_split_noun_chunk_without_conjunctions(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_split_noun_chunk_conjunctions(
+            spacy_language_en('advanced technology'),
+            language=spacy_language_en
+        )] == ['advanced technology']
+
+    def test_should_split_and_join_noun_chunk_on_conjunction(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_split_noun_chunk_conjunctions(
+            spacy_language_en('advanced and special technology'),
+            language=spacy_language_en
+        )] == ['advanced technology', 'special technology']
+
 
 class TestSpacyKeywordDocumentParser:
     def test_should_extract_single_word_noun(
