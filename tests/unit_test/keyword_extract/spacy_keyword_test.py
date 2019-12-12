@@ -9,6 +9,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     join_spans,
     iter_split_noun_chunk_conjunctions,
     get_conjuction_noun_chunks,
+    iter_individual_keyword_spans,
     SpacyKeywordDocumentParser
 )
 
@@ -115,6 +116,29 @@ class TestGetConjuctionNounChunks:
             spacy_language_en('advanced, and special technology'),
             language=spacy_language_en
         )} == {'advanced technology', 'special technology'}
+
+
+class TestIterIndividualKeywordSpans:
+    def test_should_return_no_results_if_keyword_is_not_compound(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_individual_keyword_spans(
+            spacy_language_en('technology'),
+            language=spacy_language_en
+        )] == []
+
+    def test_should_return_individual_words_from_compound_keyword(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_individual_keyword_spans(
+            spacy_language_en('advanced technology'),
+            language=spacy_language_en
+        )] == ['advanced', 'technology']
+
+    def test_should_only_return_individual_words_from_larger_compound_keyword(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_individual_keyword_spans(
+            spacy_language_en('very advanced technology'),
+            language=spacy_language_en
+        )] == ['very', 'advanced', 'technology']
 
 
 class TestSpacyKeywordDocumentParser:

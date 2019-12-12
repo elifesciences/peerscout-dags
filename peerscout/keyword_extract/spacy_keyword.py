@@ -125,6 +125,15 @@ def get_conjuction_noun_chunks(
     ]
 
 
+def iter_individual_keyword_spans(
+        keyword_span: Span,
+        language: Language) -> Iterable[Span]:
+    individual_keywords = keyword_span.text.split(' ')
+    if len(individual_keywords) > 1:
+        for individual_keyword in individual_keywords:
+            yield language(individual_keyword)
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -140,12 +149,14 @@ class SpacyKeywordList:
 
     @property
     def with_individual_tokens(self) -> 'SpacyKeywordList':
-        keyword_spans = self.keyword_spans.copy()
-        for keyword_span in keyword_spans:
-            individual_keywords = keyword_span.text.split(' ')
-            if len(individual_keywords) > 1:
-                for individual_keyword in individual_keywords:
-                    keyword_spans.append(self.language(individual_keyword))
+        keyword_spans = self.keyword_spans + [
+            individual_keyword_span
+            for keyword_span in self.keyword_spans
+            for individual_keyword_span in iter_individual_keyword_spans(
+                keyword_span,
+                language=self.language
+            )
+        ]
         return SpacyKeywordList(self.language, keyword_spans)
 
 
