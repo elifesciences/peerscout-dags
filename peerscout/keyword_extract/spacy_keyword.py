@@ -161,9 +161,6 @@ class SpacyKeywordDocument:
             and not last_token.is_stop
         )
 
-    def join_spans(self, spans: List[Span]) -> Span:
-        return join_spans(spans, language=self.language)
-
     def get_conjuction_noun_chunks(self, doc: Doc) -> List[Span]:
         return get_conjuction_noun_chunks(doc, language=self.language)
 
