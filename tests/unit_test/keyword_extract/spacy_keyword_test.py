@@ -11,6 +11,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     get_conjuction_noun_chunks,
     iter_individual_keyword_spans,
     iter_shorter_keyword_spans,
+    SpacyKeywordList,
     SpacyKeywordDocumentParser
 )
 
@@ -170,6 +171,74 @@ class TestIterShorterKeywordSpans:
             spacy_language_en('very extra advanced technology'),
             language=spacy_language_en
         )] == ['extra advanced technology', 'advanced technology']
+
+
+class TestSpacyKeywordList:
+    def test_should_extract_individual_tokens_from_single_keyword_span(
+            self, spacy_language_en: Language):
+        assert set(
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('advanced technology')
+                ]
+            )
+            .with_individual_tokens
+            .text_list
+        ) == {'advanced technology', 'advanced', 'technology'}
+
+    def test_should_extract_individual_tokens_from_multiple_keyword_spans(
+            self, spacy_language_en: Language):
+        assert set(
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('advanced technology'),
+                    spacy_language_en('special approach')
+                ]
+            )
+            .with_individual_tokens
+            .text_list
+        ) == {
+            'advanced technology',
+            'special approach',
+            'advanced',
+            'technology',
+            'special',
+            'approach'
+        }
+
+    def test_should_extract_shorter_keywords_from_single_keyword_span(
+            self, spacy_language_en: Language):
+        assert set(
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('very advanced technology')
+                ]
+            )
+            .with_shorter_keywords
+            .text_list
+        ) == {'very advanced technology', 'advanced technology'}
+
+    def test_should_extract_shorter_keywords_from_multiple_keyword_spans(
+            self, spacy_language_en: Language):
+        assert set(
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('very advanced technology'),
+                    spacy_language_en('super special approach')
+                ]
+            )
+            .with_shorter_keywords
+            .text_list
+        ) == {
+            'very advanced technology',
+            'super special approach',
+            'advanced technology',
+            'special approach'
+        }
 
 
 class TestSpacyKeywordDocumentParser:
