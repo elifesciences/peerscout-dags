@@ -125,6 +125,23 @@ def get_conjuction_noun_chunks(
     ]
 
 
+def iter_individual_keyword_spans(
+        keyword_span: Span,
+        language: Language) -> Iterable[Span]:
+    individual_keywords = keyword_span.text.split(' ')
+    if len(individual_keywords) > 1:
+        for individual_keyword in individual_keywords:
+            yield language(individual_keyword)
+
+
+def iter_shorter_keyword_spans(
+        keyword_span: Span,
+        language: Language) -> Iterable[Span]:
+    individual_keywords = keyword_span.text.split(' ')
+    for start in range(1, len(individual_keywords) - 1):
+        yield language(' '.join(individual_keywords[start:]))
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -138,15 +155,34 @@ class SpacyKeywordList:
     def normalized_text_list(self) -> List[str]:
         return [get_normalized_span_text(span) for span in self.keyword_spans]
 
+    def with_additional_keyword_spans(
+            self, additional_keyword_spans: List[Span]) -> 'SpacyKeywordList':
+        return SpacyKeywordList(
+            self.language,
+            self.keyword_spans + additional_keyword_spans
+        )
+
     @property
     def with_individual_tokens(self) -> 'SpacyKeywordList':
-        keyword_spans = self.keyword_spans.copy()
-        for keyword_span in keyword_spans:
-            individual_keywords = keyword_span.text.split(' ')
-            if len(individual_keywords) > 1:
-                for individual_keyword in individual_keywords:
-                    keyword_spans.append(self.language(individual_keyword))
-        return SpacyKeywordList(self.language, keyword_spans)
+        return self.with_additional_keyword_spans([
+            individual_keyword_span
+            for keyword_span in self.keyword_spans
+            for individual_keyword_span in iter_individual_keyword_spans(
+                keyword_span,
+                language=self.language
+            )
+        ])
+
+    @property
+    def with_shorter_keywords(self) -> 'SpacyKeywordList':
+        return self.with_additional_keyword_spans([
+            shorter_keyword_span
+            for keyword_span in self.keyword_spans
+            for shorter_keyword_span in iter_shorter_keyword_spans(
+                keyword_span,
+                language=self.language
+            )
+        ])
 
 
 class SpacyKeywordDocument:

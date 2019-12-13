@@ -62,6 +62,7 @@ class SpacyKeywordExtractor(KeywordExtractor):
             document
             .compound_keywords
             .with_individual_tokens
+            .with_shorter_keywords
             .normalized_text_list
         )
 

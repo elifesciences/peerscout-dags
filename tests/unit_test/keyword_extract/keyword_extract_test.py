@@ -63,7 +63,15 @@ class TestSimpleKeywordExtractor:
 
 
 class TestSpacyKeywordExtractor:
-    def test_should_extract_multiple_keywords(
+    def test_should_normalize_keywords(self, spacy_language_en: Language):
+        assert (
+            list(SpacyKeywordExtractor(
+                language=spacy_language_en
+            ).iter_extract_keywords(['using technologies']))
+            == [['technology']]
+        )
+
+    def test_should_extract_individual_words_without_duplicates(
             self, spacy_language_en: Language):
         assert (
             list(
@@ -80,6 +88,20 @@ class TestSpacyKeywordExtractor:
             language=spacy_language_en
         ).iter_extract_keywords(['using keyword', 'other keyword']))
         spacy_keyword_document_parser_mock.iter_parse_text_list.assert_called()
+
+    def test_should_extract_individual_words_and_shorter_keywords(
+            self, spacy_language_en: Language):
+        assert set(
+            list(SpacyKeywordExtractor(
+                language=spacy_language_en
+            ).iter_extract_keywords(['using very advanced technology']))[0]
+        ) == {
+            'very advanced technology',
+            'advanced technology',
+            'very',
+            'advanced',
+            'technology'
+        }
 
 
 class TestParseKeywordList:
