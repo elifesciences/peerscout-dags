@@ -90,6 +90,9 @@ class TestParseKeywordList:
     def test_should_return_empty_list_if_keywords_str_is_empty(self):
         assert parse_keyword_list('') == []
 
+    def test_should_return_empty_list_if_keywords_str_is_blank(self):
+        assert parse_keyword_list(' ') == []
+
     def test_should_return_keywords_split_by_separator(self):
         assert (
             parse_keyword_list('keyword1,keyword2')

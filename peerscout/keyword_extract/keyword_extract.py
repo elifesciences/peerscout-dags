@@ -191,7 +191,7 @@ def write_to_file(json_list, full_temp_file_location):
 
 
 def parse_keyword_list(keywords_str: str, separator: str = ","):
-    if not keywords_str:
+    if not keywords_str or not keywords_str.strip():
         return []
     return [
         keyword.strip()
