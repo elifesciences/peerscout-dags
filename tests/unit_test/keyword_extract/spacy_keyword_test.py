@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from spacy.language import Language
@@ -21,6 +23,11 @@ def _spacy_keyword_document_parser(spacy_language_en: Language):
 @pytest.fixture(name="spacy_keyword_document_parser_full", scope="session")
 def _spacy_keyword_document_parser_full(spacy_language_en_full: Language):
     return SpacyKeywordDocumentParser(spacy_language_en_full)
+
+
+@pytest.fixture(name="spacy_language_mock")
+def _spacy_language_mock():
+    return MagicMock(name="language")
 
 
 class TestGetSpanWithoutApostrophe:
@@ -127,6 +134,14 @@ class TestSpacyKeywordDocumentParser:
                 .iter_parse_text_list(['using technology', 'using approach'])
             )
         ] == ['using technology', 'using approach']
+
+    def test_should_call_language_pipe(
+            self, spacy_language_mock: MagicMock):
+        text_list = ['using technology', 'using approach']
+        list(SpacyKeywordDocumentParser(
+            language=spacy_language_mock
+        ).iter_parse_text_list(text_list))
+        spacy_language_mock.pipe.assert_called_with(text_list)
 
     def test_should_extract_single_word_noun(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):

@@ -194,6 +194,9 @@ class SpacyKeywordDocumentParser:
     def iter_parse_text_list(
             self, text_list: Iterable[str]) -> Iterable[SpacyKeywordDocument]:
         return (
-            self.parse_text(text)
-            for text in text_list
+            SpacyKeywordDocument(
+                self.language,
+                doc
+            )
+            for doc in self.language.pipe(text_list)
         )
