@@ -190,11 +190,11 @@ def write_to_file(json_list, full_temp_file_location):
 
 
 def add_extracted_keywords(
-        record_list,
-        text_field,
-        existing_keyword_field,
+        record_list: Iterable[dict],
+        text_field: str,
+        existing_keyword_field: str,
         keyword_extractor: KeywordExtractor,
-        existing_keyword_split_pattern=",",
+        existing_keyword_split_pattern: str = ",",
         extracted_keyword_field_name: str = "extracted_keywords",
 ):
     """
