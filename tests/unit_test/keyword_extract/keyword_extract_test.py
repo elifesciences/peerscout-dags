@@ -4,6 +4,7 @@ from peerscout.keyword_extract.keyword_extract import (
     to_unique_keywords,
     SimpleKeywordExtractor,
     SpacyKeywordExtractor,
+    parse_keyword_list,
     add_extracted_keywords
 )
 
@@ -82,6 +83,20 @@ class TestSpacyKeywordExtractor:
         )
 
 
+class TestParseKeywordList:
+    def test_should_return_empty_list_if_keywords_str_is_none(self):
+        assert parse_keyword_list("") == []
+
+    def test_should_return_empty_list_if_keywords_str_is_empty(self):
+        assert parse_keyword_list('') == []
+
+    def test_should_return_keywords_split_by_separator(self):
+        assert (
+            parse_keyword_list('keyword1,keyword2')
+            == ['keyword1', 'keyword2']
+        )
+
+
 class TestAddExtractedKeywords:
     def test_should_extract_keywords_with_existing_keywords(self):
         records = [{'text': 'the keywords', 'existing_keywords': 'existing'}]
@@ -94,4 +109,17 @@ class TestAddExtractedKeywords:
         ))
         assert set(records_with_keywords[0]['extracted_keywords']) == {
             'the', 'keywords', 'existing'
+        }
+
+    def test_should_extract_keywords_without_existing_keywords(self):
+        records = [{'text': 'the keywords'}]
+        records_with_keywords = list(add_extracted_keywords(
+            records,
+            text_field='text',
+            existing_keyword_field='existing_keywords',
+            extracted_keyword_field_name='extracted_keywords',
+            keyword_extractor=SimpleKeywordExtractor()
+        ))
+        assert set(records_with_keywords[0]['extracted_keywords']) == {
+            'the', 'keywords'
         }

@@ -190,6 +190,12 @@ def write_to_file(json_list, full_temp_file_location):
             write_file.write("\n")
 
 
+def parse_keyword_list(keywords_str: str, separator: str = ","):
+    if not keywords_str:
+        return []
+    return keywords_str.split(separator)
+
+
 def add_extracted_keywords(
         record_list: Iterable[dict],
         text_field: str,
@@ -205,8 +211,9 @@ def add_extracted_keywords(
     )
     text_keywords_list = keyword_extractor.iter_extract_keywords(text_list)
     for record, keywords in zip(record_list, text_keywords_list):
-        additional_keywords = record.get(existing_keyword_field, "").split(
-            existing_keyword_split_pattern
+        additional_keywords = parse_keyword_list(
+            record.get(existing_keyword_field, ""),
+            separator=existing_keyword_split_pattern
         )
         new_keywords = to_unique_keywords(
             keywords,
