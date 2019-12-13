@@ -96,6 +96,12 @@ class TestParseKeywordList:
             == ['keyword1', 'keyword2']
         )
 
+    def test_should_strip_blank_around_keywords(self):
+        assert (
+            parse_keyword_list(' keyword1 , keyword2 ')
+            == ['keyword1', 'keyword2']
+        )
+
 
 class TestAddExtractedKeywords:
     def test_should_extract_keywords_with_existing_keywords(self):
