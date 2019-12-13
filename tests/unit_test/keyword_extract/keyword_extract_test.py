@@ -145,3 +145,16 @@ class TestAddExtractedKeywords:
         assert set(records_with_keywords[0]['extracted_keywords']) == {
             'the', 'keywords'
         }
+
+    def test_should_extract_keywords_from_iterable(self):
+        records = [{'text': 'the keywords', 'existing_keywords': 'existing'}]
+        records_with_keywords = list(add_extracted_keywords(
+            (record for record in records),
+            text_field='text',
+            existing_keyword_field='existing_keywords',
+            extracted_keyword_field_name='extracted_keywords',
+            keyword_extractor=SimpleKeywordExtractor()
+        ))
+        assert set(records_with_keywords[0]['extracted_keywords']) == {
+            'the', 'keywords', 'existing'
+        }
