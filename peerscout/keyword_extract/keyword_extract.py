@@ -6,6 +6,7 @@ import json
 import re
 from typing import Iterable, List
 import datetime
+from itertools import tee
 from datetime import timezone
 from abc import ABC, abstractmethod
 
@@ -205,12 +206,18 @@ def add_extracted_keywords(
     :param extracted_keyword_field_name:
     :return:
     """
-    for record in record_list:
+    text_record_list, record_list = tee(record_list, 2)
+    text_list = (
+        record.get(text_field, "")
+        for record in text_record_list
+    )
+    text_keywords_list = keyword_extractor.iter_extract_keywords(text_list)
+    for record, keywords in zip(record_list, text_keywords_list):
         additional_keywords = record.get(existing_keyword_field, "").split(
             existing_keyword_split_pattern
         )
-        new_keywords = keyword_extractor.extract_unique_keywords(
-            record.get(text_field, ""),
+        new_keywords = to_unique_keywords(
+            keywords,
             additional_keywords=additional_keywords
         )
         record[extracted_keyword_field_name] = new_keywords
