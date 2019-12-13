@@ -198,14 +198,6 @@ def add_extracted_keywords(
         existing_keyword_split_pattern: str = ",",
         extracted_keyword_field_name: str = "extracted_keywords",
 ):
-    """
-    :param record_list:
-    :param text_field:
-    :param existing_keyword_field:
-    :param existing_keyword_split_pattern:
-    :param extracted_keyword_field_name:
-    :return:
-    """
     text_record_list, record_list = tee(record_list, 2)
     text_list = (
         record.get(text_field, "")
