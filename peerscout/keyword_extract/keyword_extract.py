@@ -76,13 +76,7 @@ class SpacyKeywordExtractor(KeywordExtractor):
             )
 
     def extract_keywords(self, text: str) -> List[str]:
-        return (
-            self.parser
-            .parse_text(text)
-            .compound_keywords
-            .with_individual_tokens
-            .normalized_text_list
-        )
+        return list(self.iter_extract_keywords([text]))[0]
 
 
 def get_keyword_extractor(
