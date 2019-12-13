@@ -1,5 +1,10 @@
+from unittest.mock import patch, MagicMock
+
+import pytest
+
 from spacy.language import Language
 
+import peerscout.keyword_extract.keyword_extract as keyword_extract_module
 from peerscout.keyword_extract.keyword_extract import (
     to_unique_keywords,
     SimpleKeywordExtractor,
@@ -7,6 +12,19 @@ from peerscout.keyword_extract.keyword_extract import (
     parse_keyword_list,
     add_extracted_keywords
 )
+
+
+@pytest.fixture(name="spacy_keyword_document_parser_class_mock")
+def _spacy_keyword_document_parser_class_mock():
+    with patch.object(
+            keyword_extract_module, "SpacyKeywordDocumentParser") as mock:
+        yield mock
+
+
+@pytest.fixture(name="spacy_keyword_document_parser_mock")
+def _spacy_keyword_document_parser_mock(
+        spacy_keyword_document_parser_class_mock: MagicMock):
+    return spacy_keyword_document_parser_class_mock.return_value
 
 
 class TestToUniqueKeywords:
@@ -81,6 +99,14 @@ class TestSpacyKeywordExtractor:
             ).extract_unique_keywords('using keyword and keyword')
             == ['keyword']
         )
+
+    def test_should_call_iter_parse_text_list(
+            self, spacy_language_en: Language,
+            spacy_keyword_document_parser_mock: MagicMock):
+        list(SpacyKeywordExtractor(
+            language=spacy_language_en
+        ).iter_extract_keywords(['using keyword', 'other keyword']))
+        spacy_keyword_document_parser_mock.iter_parse_text_list.assert_called()
 
 
 class TestParseKeywordList:

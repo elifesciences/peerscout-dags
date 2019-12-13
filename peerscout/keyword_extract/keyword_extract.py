@@ -63,11 +63,21 @@ class SimpleKeywordExtractor(KeywordExtractor):
 
 class SpacyKeywordExtractor(KeywordExtractor):
     def __init__(self, language: Language):
-        self.language = language
+        self.parser = SpacyKeywordDocumentParser(language)
+
+    def iter_extract_keywords(
+            self, text_list: Iterable[str]) -> Iterable[List[str]]:
+        for document in self.parser.iter_parse_text_list(text_list):
+            yield (
+                document
+                .compound_keywords
+                .with_individual_tokens
+                .normalized_text_list
+            )
 
     def extract_keywords(self, text: str) -> List[str]:
         return (
-            SpacyKeywordDocumentParser(self.language)
+            self.parser
             .parse_text(text)
             .compound_keywords
             .with_individual_tokens
