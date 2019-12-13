@@ -170,9 +170,9 @@ class SpacyKeywordList:
     @property
     def with_shorter_keywords(self) -> 'SpacyKeywordList':
         keyword_spans = self.keyword_spans + [
-            individual_keyword_span
+            shorter_keyword_span
             for keyword_span in self.keyword_spans
-            for individual_keyword_span in iter_shorter_keyword_spans(
+            for shorter_keyword_span in iter_shorter_keyword_spans(
                 keyword_span,
                 language=self.language
             )
