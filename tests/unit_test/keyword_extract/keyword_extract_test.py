@@ -81,6 +81,14 @@ class TestSimpleKeywordExtractor:
             ) == ['keyword']
         )
 
+    def test_should_extract_multiple_keywords(self):
+        assert (
+            list(
+                SimpleKeywordExtractor()
+                .iter_extract_keywords(['the keyword', 'other keyword'])
+            ) == [['the', 'keyword'], ['other', 'keyword']]
+        )
+
 
 class TestSpacyKeywordExtractor:
     def test_should_extract_noun(self, spacy_language_en: Language):
@@ -98,6 +106,16 @@ class TestSpacyKeywordExtractor:
                 language=spacy_language_en
             ).extract_unique_keywords('using keyword and keyword')
             == ['keyword']
+        )
+
+    def test_should_extract_multiple_keywords(
+            self, spacy_language_en: Language):
+        assert (
+            list(
+                SpacyKeywordExtractor(
+                    language=spacy_language_en
+                ).iter_extract_keywords(['using keyword', 'using technology'])
+            ) == [['keyword'], ['technology']]
         )
 
     def test_should_call_iter_parse_text_list(
