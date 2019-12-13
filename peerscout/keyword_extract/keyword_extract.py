@@ -36,9 +36,8 @@ def to_unique_keywords(
 
 
 class KeywordExtractor(ABC):
-    @abstractmethod
     def extract_keywords(self, text: str) -> List[str]:
-        pass
+        return list(self.iter_extract_keywords([text]))[0]
 
     @abstractmethod
     def iter_extract_keywords(
@@ -50,12 +49,9 @@ class SimpleKeywordExtractor(KeywordExtractor):
     def iter_extract_keywords(
             self, text_list: Iterable[str]) -> Iterable[List[str]]:
         return (
-            self.extract_keywords(text)
+            simple_regex_keyword_extraction(text)
             for text in text_list
         )
-
-    def extract_keywords(self, text: str) -> List[str]:
-        return simple_regex_keyword_extraction(text)
 
 
 class SpacyKeywordExtractor(KeywordExtractor):
@@ -71,9 +67,6 @@ class SpacyKeywordExtractor(KeywordExtractor):
                 .with_individual_tokens
                 .normalized_text_list
             )
-
-    def extract_keywords(self, text: str) -> List[str]:
-        return list(self.iter_extract_keywords([text]))[0]
 
 
 def get_keyword_extractor(
