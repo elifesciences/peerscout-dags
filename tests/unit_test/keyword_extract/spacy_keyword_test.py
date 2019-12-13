@@ -141,7 +141,7 @@ class TestSpacyKeywordDocumentParser:
         list(SpacyKeywordDocumentParser(
             language=spacy_language_mock
         ).iter_parse_text_list(text_list))
-        spacy_language_mock.pipe.assert_called_with(text_list)
+        spacy_language_mock.pipe.assert_called()
 
     def test_should_extract_single_word_noun(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
