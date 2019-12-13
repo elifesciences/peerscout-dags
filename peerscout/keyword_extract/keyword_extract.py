@@ -45,14 +45,6 @@ class KeywordExtractor(ABC):
             self, text_list: Iterable[str]) -> Iterable[List[str]]:
         pass
 
-    def extract_unique_keywords(
-            self, text: str,
-            additional_keywords: List[str] = None) -> List[str]:
-        return to_unique_keywords(
-            self.extract_keywords(text),
-            additional_keywords=additional_keywords
-        )
-
 
 class SimpleKeywordExtractor(KeywordExtractor):
     def iter_extract_keywords(
