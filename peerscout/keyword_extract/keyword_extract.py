@@ -70,8 +70,10 @@ class SpacyKeywordExtractor(KeywordExtractor):
 
     def iter_extract_keywords(
             self, text_list: Iterable[str]) -> Iterable[List[str]]:
-        for document in self.parser.iter_parse_text_list(text_list):
-            yield self.get_keyword_list_from_document(document)
+        return (
+            self.get_keyword_list_from_document(document)
+            for document in self.parser.iter_parse_text_list(text_list)
+        )
 
 
 def get_keyword_extractor(
