@@ -221,8 +221,20 @@ class SpacyKeywordDocumentParser:
     def normalize_text(self, text: str) -> str:
         return re.sub(r'\s+', ' ', text).strip()
 
+    def normalize_text_list(self, text_list: Iterable[str]) -> Iterable[str]:
+        return (self.normalize_text(text) for text in text_list)
+
     def parse_text(self, text: str) -> SpacyKeywordDocument:
-        return SpacyKeywordDocument(
-            self.language,
-            self.language(self.normalize_text(text))
+        return list(self.iter_parse_text_list([text]))[0]
+
+    def iter_parse_text_list(
+            self, text_list: Iterable[str]) -> Iterable[SpacyKeywordDocument]:
+        return (
+            SpacyKeywordDocument(
+                self.language,
+                doc
+            )
+            for doc in self.language.pipe(
+                self.normalize_text_list(text_list)
+            )
         )

@@ -6,6 +6,7 @@ import json
 import re
 from typing import Iterable, List
 import datetime
+from itertools import tee
 from datetime import timezone
 from abc import ABC, abstractmethod
 
@@ -21,41 +22,55 @@ from peerscout.keyword_extract.keyword_extract_config import (
 )
 
 from peerscout.keyword_extract.spacy_keyword import (
+    SpacyKeywordDocument,
     SpacyKeywordDocumentParser,
     DEFAULT_SPACY_LANGUAGE_MODEL_NAME
 )
 
 
+def to_unique_keywords(
+        keywords: List[str],
+        additional_keywords: List[str] = None) -> List[str]:
+    return sorted(set(
+        keywords + (additional_keywords or [])
+    ))
+
+
 class KeywordExtractor(ABC):
     @abstractmethod
-    def extract_keywords(self, text: str) -> List[str]:
+    def iter_extract_keywords(
+            self, text_list: Iterable[str]) -> Iterable[List[str]]:
         pass
-
-    def extract_unique_keywords(
-            self, text: str,
-            additional_keywords: List[str] = None) -> List[str]:
-        return sorted(set(
-            self.extract_keywords(text) + (additional_keywords or [])
-        ))
 
 
 class SimpleKeywordExtractor(KeywordExtractor):
-    def extract_keywords(self, text: str) -> List[str]:
-        return simple_regex_keyword_extraction(text)
+    def iter_extract_keywords(
+            self, text_list: Iterable[str]) -> Iterable[List[str]]:
+        return (
+            simple_regex_keyword_extraction(text)
+            for text in text_list
+        )
 
 
 class SpacyKeywordExtractor(KeywordExtractor):
     def __init__(self, language: Language):
-        self.language = language
+        self.parser = SpacyKeywordDocumentParser(language)
 
-    def extract_keywords(self, text: str) -> List[str]:
+    def get_keyword_list_from_document(
+            self, document: SpacyKeywordDocument) -> List[str]:
         return (
-            SpacyKeywordDocumentParser(self.language)
-            .parse_text(text)
+            document
             .compound_keywords
             .with_individual_tokens
             .with_shorter_keywords
             .normalized_text_list
+        )
+
+    def iter_extract_keywords(
+            self, text_list: Iterable[str]) -> Iterable[List[str]]:
+        return (
+            self.get_keyword_list_from_document(document)
+            for document in self.parser.iter_parse_text_list(text_list)
         )
 
 
@@ -174,28 +189,36 @@ def write_to_file(json_list, full_temp_file_location):
             write_file.write("\n")
 
 
+def parse_keyword_list(keywords_str: str, separator: str = ","):
+    if not keywords_str or not keywords_str.strip():
+        return []
+    return [
+        keyword.strip()
+        for keyword in keywords_str.split(separator)
+    ]
+
+
 def add_extracted_keywords(
-        record_list,
-        text_field,
-        existing_keyword_field,
+        record_list: Iterable[dict],
+        text_field: str,
+        existing_keyword_field: str,
         keyword_extractor: KeywordExtractor,
-        existing_keyword_split_pattern=",",
+        existing_keyword_split_pattern: str = ",",
         extracted_keyword_field_name: str = "extracted_keywords",
 ):
-    """
-    :param record_list:
-    :param text_field:
-    :param existing_keyword_field:
-    :param existing_keyword_split_pattern:
-    :param extracted_keyword_field_name:
-    :return:
-    """
-    for record in record_list:
-        additional_keywords = record.get(existing_keyword_field, "").split(
-            existing_keyword_split_pattern
+    text_record_list, record_list = tee(record_list, 2)
+    text_list = (
+        record.get(text_field, "")
+        for record in text_record_list
+    )
+    text_keywords_list = keyword_extractor.iter_extract_keywords(text_list)
+    for record, keywords in zip(record_list, text_keywords_list):
+        additional_keywords = parse_keyword_list(
+            record.get(existing_keyword_field, ""),
+            separator=existing_keyword_split_pattern
         )
-        new_keywords = keyword_extractor.extract_unique_keywords(
-            record.get(text_field, ""),
+        new_keywords = to_unique_keywords(
+            keywords,
             additional_keywords=additional_keywords
         )
         record[extracted_keyword_field_name] = new_keywords
