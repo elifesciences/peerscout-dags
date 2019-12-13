@@ -37,9 +37,6 @@ def to_unique_keywords(
 
 
 class KeywordExtractor(ABC):
-    def extract_keywords(self, text: str) -> List[str]:
-        return list(self.iter_extract_keywords([text]))[0]
-
     @abstractmethod
     def iter_extract_keywords(
             self, text_list: Iterable[str]) -> Iterable[List[str]]:

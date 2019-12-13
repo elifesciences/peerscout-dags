@@ -53,12 +53,6 @@ class TestToUniqueKeywords:
 
 
 class TestSimpleKeywordExtractor:
-    def test_should_extract_individual_words(self):
-        assert (
-            SimpleKeywordExtractor().extract_keywords('the keywords')
-            == ['the', 'keywords']
-        )
-
     def test_should_extract_multiple_keywords(self):
         assert (
             list(
@@ -69,14 +63,6 @@ class TestSimpleKeywordExtractor:
 
 
 class TestSpacyKeywordExtractor:
-    def test_should_extract_noun(self, spacy_language_en: Language):
-        assert (
-            SpacyKeywordExtractor(
-                language=spacy_language_en
-            ).extract_keywords('using keyword')
-            == ['keyword']
-        )
-
     def test_should_extract_multiple_keywords(
             self, spacy_language_en: Language):
         assert (
