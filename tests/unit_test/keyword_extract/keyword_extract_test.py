@@ -45,6 +45,14 @@ class TestSpacyKeywordExtractor:
             == ['keyword']
         )
 
+    def test_should_normalize_keywords(self, spacy_language_en: Language):
+        assert (
+            SpacyKeywordExtractor(
+                language=spacy_language_en
+            ).extract_keywords('using technologies')
+            == ['technology']
+        )
+
     def test_should_extract_individual_words_without_duplicates(
             self, spacy_language_en: Language):
         assert (
@@ -53,3 +61,17 @@ class TestSpacyKeywordExtractor:
             ).extract_unique_keywords('using keyword and keyword')
             == ['keyword']
         )
+
+    def test_should_extract_individual_words_and_shorter_keywords(
+            self, spacy_language_en: Language):
+        assert set(
+            SpacyKeywordExtractor(
+                language=spacy_language_en
+            ).extract_keywords('using very advanced technology')
+        ) == {
+            'very advanced technology',
+            'advanced technology',
+            'very',
+            'advanced',
+            'technology'
+        }
