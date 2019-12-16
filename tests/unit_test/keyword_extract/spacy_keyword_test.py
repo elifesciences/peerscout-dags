@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from spacy.language import Language
+from spacy.tokens import Span
 
 from peerscout.keyword_extract.spacy_keyword import (
     get_span_without_apostrophe,
@@ -10,6 +11,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     is_conjunction_token,
     join_spans,
     get_text_list,
+    get_noun_chunk_for_noun_token,
     get_noun_chunks,
     iter_split_noun_chunk_conjunctions,
     get_conjuction_noun_chunks,
@@ -88,6 +90,16 @@ class TestJoinSpans:
             ],
             language=spacy_language_en
         ).text == 'the joined span'
+
+
+class TestGetNounChunkForNounToken:
+    def test_should_return_span_for_noun_token(
+            self, spacy_language_en: Language):
+        doc = spacy_language_en('using technology')
+        technology_token = doc[-1]
+        noun_chunk = get_noun_chunk_for_noun_token(technology_token)
+        assert noun_chunk.text == 'technology'
+        assert isinstance(noun_chunk, Span)
 
 
 class TestGetNounChunks:
