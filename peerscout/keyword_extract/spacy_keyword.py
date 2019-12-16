@@ -46,6 +46,10 @@ def is_conjunction_token(token: Token) -> bool:
     return token.pos_ == 'CCONJ'
 
 
+def get_text_list(spans: List[Span]) -> List[str]:
+    return [span.text for span in spans]
+
+
 def join_spans(spans: List[Span], language: Language) -> Span:
     # there doesn't seem to be an easy way to create a span
     # from a list of tokens. parsing the text for now.
@@ -53,6 +57,37 @@ def join_spans(spans: List[Span], language: Language) -> Span:
     joined_text = ' '.join([span.text for span in spans])
     LOGGER.debug('joined_text: %s', joined_text)
     return language(joined_text)
+
+
+def get_noun_tokens(doc: Doc) -> List[Token]:
+    return [token for token in doc if token.pos_ == 'NOUN']
+
+
+def get_noun_chunk_for_noun_token(noun_token: Token) -> Span:
+    index = noun_token.i
+    return noun_token.doc[index:index + 1]
+
+
+def get_noun_chunks(doc: Doc) -> List[Span]:
+    # prefer using spacy's noun chunks, add noun chunks not covered by spacy
+    noun_chunks = list(doc.noun_chunks)
+    included_noun_tokens = {token for span in noun_chunks for token in span}
+    noun_tokens_not_already_in_noun_chunks = [
+        noun_token
+        for noun_token in get_noun_tokens(doc)
+        if noun_token not in included_noun_tokens
+    ]
+    LOGGER.debug(
+        'included_noun_tokens: %s',
+        included_noun_tokens
+    )
+    LOGGER.debug(
+        'noun_tokens_not_already_in_noun_chunks: %s',
+        noun_tokens_not_already_in_noun_chunks
+    )
+    for noun_token in noun_tokens_not_already_in_noun_chunks:
+        noun_chunks.append(get_noun_chunk_for_noun_token(noun_token))
+    return noun_chunks
 
 
 def iter_split_noun_chunk_conjunctions(
@@ -84,7 +119,7 @@ def iter_split_noun_chunk_conjunctions(
 def get_conjuction_noun_chunks(
         doc: Doc,
         language: Language) -> List[Span]:
-    noun_chunks = list(doc.noun_chunks)
+    noun_chunks = get_noun_chunks(doc)
     for noun_chunk in list(noun_chunks):
         last_noun_token = noun_chunk[-1]
         LOGGER.debug(
@@ -156,7 +191,7 @@ class SpacyKeywordList:
 
     @property
     def text_list(self) -> List[str]:
-        return [span.text for span in self.keyword_spans]
+        return get_text_list(self.keyword_spans)
 
     @property
     def normalized_text_list(self) -> List[str]:

@@ -9,6 +9,8 @@ from peerscout.keyword_extract.spacy_keyword import (
     get_normalized_span_text,
     is_conjunction_token,
     join_spans,
+    get_text_list,
+    get_noun_chunks,
     iter_split_noun_chunk_conjunctions,
     get_conjuction_noun_chunks,
     iter_individual_keyword_spans,
@@ -86,6 +88,33 @@ class TestJoinSpans:
             ],
             language=spacy_language_en
         ).text == 'the joined span'
+
+
+class TestGetNounChunks:
+    def test_should_return_simple_noun_chunk(
+            self, spacy_language_en: Language):
+        assert get_text_list(get_noun_chunks(spacy_language_en(
+            'using technology'
+        ))) == ['technology']
+
+    def test_should_return_two_noun_chunk_separated_by_and(
+            self, spacy_language_en: Language):
+        assert get_text_list(get_noun_chunks(spacy_language_en(
+            'using technology and approach'
+        ))) == ['technology', 'approach']
+
+    def test_should_return_two_noun_chunk_separated_by_comma_in_sentence(
+            self, spacy_language_en: Language):
+        assert get_text_list(get_noun_chunks(spacy_language_en(
+            'using technology, approach'
+        ))) == ['technology', 'approach']
+
+    @pytest.mark.slow
+    def test_should_return_two_noun_chunk_separated_by_comma_no_sentence(
+            self, spacy_language_en_full: Language):
+        assert get_text_list(get_noun_chunks(spacy_language_en_full(
+            'technology, approach'
+        ))) == ['technology', 'approach']
 
 
 class TestIterSplitNounChunkConjunctions:
@@ -484,3 +513,14 @@ class TestSpacyKeywordDocumentParser:
         ) == {
             'technique', 'technology'
         }
+
+    @pytest.mark.slow
+    def test_should_extract_multiple_keywords_separated_by_comma_as_list(
+            self,
+            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser_full
+            .parse_text('technology, approach')
+            .compound_keywords
+            .text_list
+        ) == ['technology', 'approach']
