@@ -166,6 +166,8 @@ def iter_individual_keyword_spans(
     individual_keywords = keyword_span.text.split(' ')
     if len(individual_keywords) > 1:
         for individual_keyword in individual_keywords:
+            if len(individual_keyword) < 2:
+                continue
             yield language(individual_keyword)
 
 

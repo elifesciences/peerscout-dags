@@ -205,6 +205,13 @@ class TestIterIndividualKeywordSpans:
             language=spacy_language_en
         )] == ['very', 'advanced', 'technology']
 
+    def test_should_ignore_single_word_words(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_individual_keyword_spans(
+            spacy_language_en('M strain'),
+            language=spacy_language_en
+        )] == ['strain']
+
 
 class TestIterShorterKeywordSpans:
     def test_should_return_no_results_if_keyword_is_not_compound(
