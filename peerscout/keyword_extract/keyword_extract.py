@@ -61,6 +61,7 @@ class SpacyKeywordExtractor(KeywordExtractor):
         return (
             document
             .compound_keywords
+            .with_lstripped_stop_words
             .with_individual_tokens
             .with_shorter_keywords
             .normalized_text_list
