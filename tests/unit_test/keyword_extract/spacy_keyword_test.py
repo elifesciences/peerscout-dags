@@ -17,6 +17,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     get_conjuction_noun_chunks,
     iter_individual_keyword_spans,
     iter_shorter_keyword_spans,
+    lstrip_stop_words,
     SpacyKeywordList,
     SpacyKeywordDocumentParser
 )
@@ -226,6 +227,20 @@ class TestIterShorterKeywordSpans:
             spacy_language_en('very extra advanced technology'),
             language=spacy_language_en
         )] == ['extra advanced technology', 'advanced technology']
+
+
+class TestLstripStopWords:
+    def test_should_strip_leading_stop_words(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words(spacy_language_en(
+            'the advanced technology'
+        )).text == 'advanced technology'
+
+    def test_should_not_strip_non_stop_words(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words(spacy_language_en(
+            'advanced technology'
+        )).text == 'advanced technology'
 
 
 class TestSpacyKeywordList:
