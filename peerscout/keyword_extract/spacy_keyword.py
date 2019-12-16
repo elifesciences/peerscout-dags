@@ -24,7 +24,7 @@ def get_span_lemma(span: Span) -> str:
 
 
 def get_normalized_token_text(token: Token) -> str:
-    if token.norm_ != token.text:
+    if token.norm_.lower() != token.text.lower():
         return token.norm_
     return get_token_lemma(token)
 

@@ -72,6 +72,12 @@ class TestGetNormalizedSpanText:
             "Advanced Technology"
         )) == 'advanced technology'
 
+    def test_should_use_lemma_if_norm_equals_text_case_insensitive(
+            self, spacy_language_en: Language):
+        assert get_normalized_span_text(spacy_language_en(
+            "Technologies"
+        )) == 'technology'
+
 
 class TestIsConjunctionToken:
     def test_should_return_true_for_and_token_only(
