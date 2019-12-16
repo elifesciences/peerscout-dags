@@ -267,6 +267,13 @@ class TestLstripStopWordsAndPunct:
             "Pakinsons's disease"
         )).text == "Pakinsons's disease"
 
+    def test_should_not_strip_hyphen_i(
+            self, spacy_language_en: Language):
+        # "I" is considered a stop word but that is not what is meant here
+        assert lstrip_stop_words_and_punc(spacy_language_en(
+            "MHC-I molecule"
+        )).text == "MHC-I molecule"
+
 
 class TestNormalizeText:
     def test_should_replace_line_feed_with_space(self):

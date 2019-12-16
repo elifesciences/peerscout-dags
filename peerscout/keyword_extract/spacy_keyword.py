@@ -182,6 +182,10 @@ def lstrip_stop_words_and_punc(span: Span) -> Span:
         token = span[index]
         if token.pos_ == 'PART':
             continue
+        if list(token.children):
+            continue
+        if token.text == '-':
+            continue
         if token.is_stop or token.pos_ == 'PUNCT':
             LOGGER.debug(
                 'stripping span at token "%s" (pos: %s, stop: %s)',
