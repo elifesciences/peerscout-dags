@@ -188,7 +188,11 @@ def lstrip_stop_words_and_punc(span: Span) -> Span:
             continue
         if token.text == '-':
             continue
-        if token.is_stop or token.pos_ == 'PUNCT':
+        if (
+                token.is_stop
+                or token.pos_ == 'PUNCT'
+                or token.text_with_ws.endswith('. ')):
+
             LOGGER.debug(
                 'stripping span at token "%s" (pos: %s, stop: %s)',
                 token, token.pos_, token.is_stop

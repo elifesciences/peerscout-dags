@@ -281,6 +281,12 @@ class TestLstripStopWordsAndPunct:
             "MHC-I molecule"
         )).text == "MHC-I molecule"
 
+    def test_should_strip_eg(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words_and_punc(spacy_language_en(
+            "e.g. technology"
+        )).text == "technology"
+
 
 class TestNormalizeText:
     def test_should_replace_line_feed_with_space(self):
