@@ -192,7 +192,10 @@ def lstrip_stop_words_and_punc(span: Span) -> Span:
 
 
 def normalize_text(text: str) -> str:
-    return re.sub(r'\s+', ' ', text).strip()
+    return re.sub(
+        r'\s+', ' ',
+        text.replace('/', ', ')
+    ).strip()
 
 
 class SpacyKeywordList:

@@ -272,6 +272,9 @@ class TestNormalizeText:
     def test_should_strip_surrounding_whitespace(self):
         assert normalize_text(' \nthe keyword\n ') == 'the keyword'
 
+    def test_should_replace_slash_with_comma(self):
+        assert normalize_text('the/keyword') == 'the, keyword'
+
 
 class TestSpacyKeywordList:
     def test_should_extract_individual_tokens_from_single_keyword_span(
