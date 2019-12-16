@@ -242,6 +242,24 @@ class TestLstripStopWords:
             'advanced technology'
         )).text == 'advanced technology'
 
+    def test_should_strip_comma(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words(spacy_language_en(
+            ', advanced technology'
+        )).text == 'advanced technology'
+
+    def test_should_strip_brackets(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words(spacy_language_en(
+            '(1) advanced technology'
+        )).text == 'advanced technology'
+
+    def test_should_not_strip_apostrophe(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words(spacy_language_en(
+            "Pakinsons's disease"
+        )).text == "Pakinsons's disease"
+
 
 class TestSpacyKeywordList:
     def test_should_extract_individual_tokens_from_single_keyword_span(

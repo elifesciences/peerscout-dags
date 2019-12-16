@@ -179,7 +179,14 @@ def iter_shorter_keyword_spans(
 
 def lstrip_stop_words(span: Span) -> Span:
     for index in reversed(range(0, len(span))):
-        if span[index].is_stop:
+        token = span[index]
+        if token.pos_ == 'PART':
+            continue
+        if token.is_stop or token.pos_ == 'PUNCT':
+            LOGGER.debug(
+                'stripping span at token "%s" (pos: %s, stop: %s)',
+                token, token.pos_, token.is_stop
+            )
             return span[index + 1:]
     return span
 
