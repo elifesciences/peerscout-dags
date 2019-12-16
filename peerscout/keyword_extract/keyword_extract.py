@@ -22,7 +22,6 @@ from peerscout.keyword_extract.keyword_extract_config import (
 )
 
 from peerscout.keyword_extract.spacy_keyword import (
-    SpacyKeywordDocument,
     SpacyKeywordDocumentParser,
     DEFAULT_SPACY_LANGUAGE_MODEL_NAME
 )
@@ -56,21 +55,10 @@ class SpacyKeywordExtractor(KeywordExtractor):
     def __init__(self, language: Language):
         self.parser = SpacyKeywordDocumentParser(language)
 
-    def get_keyword_list_from_document(
-            self, document: SpacyKeywordDocument) -> List[str]:
-        return (
-            document
-            .compound_keywords
-            .with_lstripped_stop_words_and_punct
-            .with_individual_tokens
-            .with_shorter_keywords
-            .normalized_text_list
-        )
-
     def iter_extract_keywords(
             self, text_list: Iterable[str]) -> Iterable[List[str]]:
         return (
-            self.get_keyword_list_from_document(document)
+            document.get_keyword_str_list()
             for document in self.parser.iter_parse_text_list(text_list)
         )
 

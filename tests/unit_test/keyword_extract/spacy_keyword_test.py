@@ -370,6 +370,16 @@ class TestSpacyKeywordList:
         ) == ['advanced technology']
 
 
+class TestSpacyKeywordDocument:
+    def test_should_get_keyword_str_list_with_defaults(
+            self,
+            spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        document = spacy_keyword_document_parser.parse_text(
+            'using technology'
+        )
+        assert document.get_keyword_str_list() == ['technology']
+
+
 class TestSpacyKeywordDocumentParser:
     def test_should_parse_multiple_documents(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):

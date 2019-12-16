@@ -282,6 +282,24 @@ class SpacyKeywordDocument:
             self.language, self.get_compound_keyword_spans()
         )
 
+    def get_keyword_str_list(  # pylint: disable=redefined-outer-name
+            self,
+            strip_stop_words_and_punct: bool = True,
+            individual_tokens: bool = True,
+            shorter_keywords: bool = True,
+            normalize_text: bool = True) -> List[str]:
+
+        keyword_list = self.compound_keywords
+        if strip_stop_words_and_punct:
+            keyword_list = keyword_list.with_lstripped_stop_words_and_punct
+        if individual_tokens:
+            keyword_list = keyword_list.with_individual_tokens
+        if shorter_keywords:
+            keyword_list = keyword_list.with_shorter_keywords
+        if normalize_text:
+            return keyword_list.normalized_text_list
+        return keyword_list.text_list
+
 
 class SpacyKeywordDocumentParser:
     def __init__(self, language: Language):
