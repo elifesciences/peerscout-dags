@@ -142,6 +142,13 @@ def iter_shorter_keyword_spans(
         yield language(' '.join(individual_keywords[start:]))
 
 
+def lstrip_stop_words(span: Span) -> Span:
+    for index in reversed(range(0, len(span))):
+        if span[index].is_stop:
+            return span[index + 1:]
+    return span
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -155,11 +162,20 @@ class SpacyKeywordList:
     def normalized_text_list(self) -> List[str]:
         return [get_normalized_span_text(span) for span in self.keyword_spans]
 
+    def with_keyword_spans(
+            self, keyword_spans: List[Span]) -> 'SpacyKeywordList':
+        return SpacyKeywordList(self.language, keyword_spans)
+
     def with_additional_keyword_spans(
             self, additional_keyword_spans: List[Span]) -> 'SpacyKeywordList':
-        return SpacyKeywordList(
-            self.language,
+        return self.with_keyword_spans(
             self.keyword_spans + additional_keyword_spans
+        )
+
+    @property
+    def with_lstripped_stop_words(self) -> 'SpacyKeywordList':
+        return self.with_keyword_spans(
+            list(map(lstrip_stop_words, self.keyword_spans))
         )
 
     @property

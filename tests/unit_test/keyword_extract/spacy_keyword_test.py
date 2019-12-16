@@ -247,6 +247,32 @@ class TestSpacyKeywordList:
             'special approach'
         }
 
+    def test_should_strip_leading_stop_words(
+            self, spacy_language_en: Language):
+        assert (
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('the advanced technology')
+                ]
+            )
+            .with_lstripped_stop_words
+            .text_list
+        ) == ['advanced technology']
+
+    def test_should_not_strip_non_stop_words(
+            self, spacy_language_en: Language):
+        assert (
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('advanced technology')
+                ]
+            )
+            .with_lstripped_stop_words
+            .text_list
+        ) == ['advanced technology']
+
 
 class TestSpacyKeywordDocumentParser:
     def test_should_parse_multiple_documents(
