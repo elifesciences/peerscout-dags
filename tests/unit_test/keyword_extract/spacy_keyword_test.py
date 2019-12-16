@@ -18,6 +18,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     iter_individual_keyword_spans,
     iter_shorter_keyword_spans,
     lstrip_stop_words_and_punc,
+    normalize_text,
     SpacyKeywordList,
     SpacyKeywordDocumentParser
 )
@@ -259,6 +260,17 @@ class TestLstripStopWordsAndPunct:
         assert lstrip_stop_words_and_punc(spacy_language_en(
             "Pakinsons's disease"
         )).text == "Pakinsons's disease"
+
+
+class TestNormalizeText:
+    def test_should_replace_line_feed_with_space(self):
+        assert normalize_text('the\nkeyword') == 'the keyword'
+
+    def test_should_replace_muliple_whitepace_with_single_space(self):
+        assert normalize_text('the \t\n\t keyword') == 'the keyword'
+
+    def test_should_strip_surrounding_whitespace(self):
+        assert normalize_text(' \nthe keyword\n ') == 'the keyword'
 
 
 class TestSpacyKeywordList:

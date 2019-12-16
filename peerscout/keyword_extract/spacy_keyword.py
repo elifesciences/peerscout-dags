@@ -191,6 +191,10 @@ def lstrip_stop_words_and_punc(span: Span) -> Span:
     return span
 
 
+def normalize_text(text: str) -> str:
+    return re.sub(r'\s+', ' ', text).strip()
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -276,11 +280,8 @@ class SpacyKeywordDocumentParser:
     def __init__(self, language: Language):
         self.language = language
 
-    def normalize_text(self, text: str) -> str:
-        return re.sub(r'\s+', ' ', text).strip()
-
     def normalize_text_list(self, text_list: Iterable[str]) -> Iterable[str]:
-        return (self.normalize_text(text) for text in text_list)
+        return (normalize_text(text) for text in text_list)
 
     def parse_text(self, text: str) -> SpacyKeywordDocument:
         return list(self.iter_parse_text_list([text]))[0]
