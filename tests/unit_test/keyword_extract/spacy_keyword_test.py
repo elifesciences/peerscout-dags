@@ -167,6 +167,13 @@ class TestGetConjuctionNounChunks:
             language=spacy_language_en
         )} == {'advanced technology', 'special technology'}
 
+    def test_should_return_two_noun_chunk_separated_by_comma_no_sentence(
+            self, spacy_language_en: Language):
+        assert {span.text for span in get_conjuction_noun_chunks(
+            spacy_language_en('advanced technology, special approach'),
+            language=spacy_language_en
+        )} == {'advanced technology', 'special approach'}
+
 
 class TestIterIndividualKeywordSpans:
     def test_should_return_no_results_if_keyword_is_not_compound(
