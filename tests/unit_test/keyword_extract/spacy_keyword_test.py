@@ -341,19 +341,6 @@ class TestSpacyKeywordList:
             .text_list
         ) == ['advanced technology']
 
-    def test_should_not_strip_non_stop_words(
-            self, spacy_language_en: Language):
-        assert (
-            SpacyKeywordList(
-                language=spacy_language_en,
-                keyword_spans=[
-                    spacy_language_en('advanced technology')
-                ]
-            )
-            .with_lstripped_stop_words_and_punct
-            .text_list
-        ) == ['advanced technology']
-
 
 class TestSpacyKeywordDocumentParser:
     def test_should_parse_multiple_documents(
