@@ -177,7 +177,7 @@ def iter_shorter_keyword_spans(
         yield language(' '.join(individual_keywords[start:]))
 
 
-def lstrip_stop_words(span: Span) -> Span:
+def lstrip_stop_words_and_punc(span: Span) -> Span:
     for index in reversed(range(0, len(span))):
         token = span[index]
         if token.pos_ == 'PART':
@@ -215,9 +215,9 @@ class SpacyKeywordList:
         )
 
     @property
-    def with_lstripped_stop_words(self) -> 'SpacyKeywordList':
+    def with_lstripped_stop_words_and_punct(self) -> 'SpacyKeywordList':
         return self.with_keyword_spans(
-            list(map(lstrip_stop_words, self.keyword_spans))
+            list(map(lstrip_stop_words_and_punc, self.keyword_spans))
         )
 
     @property

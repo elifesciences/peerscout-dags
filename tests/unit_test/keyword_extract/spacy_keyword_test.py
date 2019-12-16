@@ -17,7 +17,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     get_conjuction_noun_chunks,
     iter_individual_keyword_spans,
     iter_shorter_keyword_spans,
-    lstrip_stop_words,
+    lstrip_stop_words_and_punc,
     SpacyKeywordList,
     SpacyKeywordDocumentParser
 )
@@ -229,34 +229,34 @@ class TestIterShorterKeywordSpans:
         )] == ['extra advanced technology', 'advanced technology']
 
 
-class TestLstripStopWords:
+class TestLstripStopWordsAndPunct:
     def test_should_strip_leading_stop_words(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words(spacy_language_en(
+        assert lstrip_stop_words_and_punc(spacy_language_en(
             'the advanced technology'
         )).text == 'advanced technology'
 
     def test_should_not_strip_non_stop_words(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words(spacy_language_en(
+        assert lstrip_stop_words_and_punc(spacy_language_en(
             'advanced technology'
         )).text == 'advanced technology'
 
     def test_should_strip_comma(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words(spacy_language_en(
+        assert lstrip_stop_words_and_punc(spacy_language_en(
             ', advanced technology'
         )).text == 'advanced technology'
 
     def test_should_strip_brackets(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words(spacy_language_en(
+        assert lstrip_stop_words_and_punc(spacy_language_en(
             '(1) advanced technology'
         )).text == 'advanced technology'
 
     def test_should_not_strip_apostrophe(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words(spacy_language_en(
+        assert lstrip_stop_words_and_punc(spacy_language_en(
             "Pakinsons's disease"
         )).text == "Pakinsons's disease"
 
@@ -337,7 +337,7 @@ class TestSpacyKeywordList:
                     spacy_language_en('the advanced technology')
                 ]
             )
-            .with_lstripped_stop_words
+            .with_lstripped_stop_words_and_punct
             .text_list
         ) == ['advanced technology']
 
@@ -350,7 +350,7 @@ class TestSpacyKeywordList:
                     spacy_language_en('advanced technology')
                 ]
             )
-            .with_lstripped_stop_words
+            .with_lstripped_stop_words_and_punct
             .text_list
         ) == ['advanced technology']
 
