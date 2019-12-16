@@ -19,6 +19,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     iter_shorter_keyword_spans,
     lstrip_stop_words_and_punc,
     normalize_text,
+    SpacyExclusionSet,
     SpacyKeywordList,
     SpacyKeywordDocumentParser
 )
@@ -302,6 +303,32 @@ class TestNormalizeText:
         assert normalize_text('the/keyword') == 'the, keyword'
 
 
+class TestSpacyExclusionSet:
+    def test_should_not_match_different_word(
+            self, spacy_language_en: Language):
+        assert not SpacyExclusionSet({'interest'}).contains_span(
+            spacy_language_en('technology')
+        )
+
+    def test_should_match_exact_word(
+            self, spacy_language_en: Language):
+        assert SpacyExclusionSet({'interest'}).contains_span(
+            spacy_language_en('interest')
+        )
+
+    def test_should_match_last_word(
+            self, spacy_language_en: Language):
+        assert SpacyExclusionSet({'interest'}).contains_span(
+            spacy_language_en('research interest')
+        )
+
+    def test_should_match_normalized_word(
+            self, spacy_language_en: Language):
+        assert SpacyExclusionSet({'technology'}).contains_span(
+            spacy_language_en('technologies')
+        )
+
+
 class TestSpacyKeywordList:
     def test_should_extract_individual_tokens_from_single_keyword_span(
             self, spacy_language_en: Language):
@@ -382,6 +409,20 @@ class TestSpacyKeywordList:
             .text_list
         ) == ['advanced technology']
 
+    def test_should_exclude_keywords(
+            self, spacy_language_en: Language):
+        assert (
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('technology'),
+                    spacy_language_en('lab')
+                ]
+            )
+            .exclude(SpacyExclusionSet({'lab'}))
+            .text_list
+        ) == ['technology']
+
 
 class TestSpacyKeywordDocument:
     def test_should_get_keyword_str_list_with_defaults(
@@ -391,6 +432,16 @@ class TestSpacyKeywordDocument:
             'using technology'
         )
         assert document.get_keyword_str_list() == ['technology']
+
+    def test_can_pass_exclusion_set_to_get_keyword_str_list(
+            self,
+            spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        document = spacy_keyword_document_parser.parse_text(
+            'using technology'
+        )
+        assert document.get_keyword_str_list(
+            exclude=SpacyExclusionSet({'technology'})
+        ) == []
 
 
 class TestSpacyKeywordDocumentParser:

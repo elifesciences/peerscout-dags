@@ -1,6 +1,6 @@
 import re
 import logging
-from typing import Iterable, List
+from typing import Iterable, List, Set
 
 from spacy.language import Language
 from spacy.tokens import Doc, Span, Token
@@ -208,6 +208,18 @@ def normalize_text(text: str) -> str:
     ).strip()
 
 
+class SpacyExclusionSet:
+    def __init__(self, exclusion_list: Set[str]):
+        self.exclusion_list = exclusion_list
+
+    def contains_span(self, span: Span) -> bool:
+        last_token = span[-1]
+        return (
+            last_token.text in self.exclusion_list
+            or get_normalized_token_text(last_token) in self.exclusion_list
+        )
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -230,6 +242,13 @@ class SpacyKeywordList:
         return self.with_keyword_spans(
             self.keyword_spans + additional_keyword_spans
         )
+
+    def exclude(self, exclusion_set: SpacyExclusionSet) -> 'SpacyKeywordList':
+        return self.with_keyword_spans([
+            keyword_span
+            for keyword_span in self.keyword_spans
+            if not exclusion_set.contains_span(keyword_span)
+        ])
 
     @property
     def with_lstripped_stop_words_and_punct(self) -> 'SpacyKeywordList':
@@ -293,11 +312,14 @@ class SpacyKeywordDocument:
             strip_stop_words_and_punct: bool = True,
             individual_tokens: bool = True,
             shorter_keywords: bool = True,
-            normalize_text: bool = True) -> List[str]:
+            normalize_text: bool = True,
+            exclude: SpacyExclusionSet = None) -> List[str]:
 
         keyword_list = self.compound_keywords
         if strip_stop_words_and_punct:
             keyword_list = keyword_list.with_lstripped_stop_words_and_punct
+        if exclude:
+            keyword_list = keyword_list.exclude(exclude)
         if individual_tokens:
             keyword_list = keyword_list.with_individual_tokens
         if shorter_keywords:
