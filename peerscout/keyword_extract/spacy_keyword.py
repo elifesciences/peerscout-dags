@@ -179,7 +179,7 @@ def iter_shorter_keyword_spans(
         yield language(' '.join(individual_keywords[start:]))
 
 
-def lstrip_stop_words_and_punc(span: Span) -> Span:
+def lstrip_stop_words_and_punct(span: Span) -> Span:
     for index in reversed(range(0, len(span))):
         token = span[index]
         if token.pos_ == 'PART':
@@ -199,6 +199,20 @@ def lstrip_stop_words_and_punc(span: Span) -> Span:
             )
             return span[index + 1:]
     return span
+
+
+def rstrip_punct(span: Span) -> Span:
+    if not span:
+        return span
+    if span[-1].pos_ == 'PUNCT':
+        return span[:-1]
+    return span
+
+
+def strip_stop_words_and_punct(span: Span) -> Span:
+    return rstrip_punct(
+        lstrip_stop_words_and_punct(span)
+    )
 
 
 def normalize_text(text: str) -> str:
@@ -251,9 +265,9 @@ class SpacyKeywordList:
         ])
 
     @property
-    def with_lstripped_stop_words_and_punct(self) -> 'SpacyKeywordList':
+    def with_stripped_stop_words_and_punct(self) -> 'SpacyKeywordList':
         return self.with_keyword_spans(
-            list(map(lstrip_stop_words_and_punc, self.keyword_spans))
+            list(map(strip_stop_words_and_punct, self.keyword_spans))
         )
 
     @property
@@ -317,7 +331,7 @@ class SpacyKeywordDocument:
 
         keyword_list = self.compound_keywords
         if strip_stop_words_and_punct:
-            keyword_list = keyword_list.with_lstripped_stop_words_and_punct
+            keyword_list = keyword_list.with_stripped_stop_words_and_punct
         if exclude:
             keyword_list = keyword_list.exclude(exclude)
         if individual_tokens:

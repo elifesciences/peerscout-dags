@@ -17,7 +17,9 @@ from peerscout.keyword_extract.spacy_keyword import (
     get_conjuction_noun_chunks,
     iter_individual_keyword_spans,
     iter_shorter_keyword_spans,
-    lstrip_stop_words_and_punc,
+    lstrip_stop_words_and_punct,
+    rstrip_punct,
+    strip_stop_words_and_punct,
     normalize_text,
     SpacyExclusionSet,
     SpacyKeywordList,
@@ -247,46 +249,68 @@ class TestIterShorterKeywordSpans:
 class TestLstripStopWordsAndPunct:
     def test_should_strip_leading_stop_words(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words_and_punc(spacy_language_en(
+        assert lstrip_stop_words_and_punct(spacy_language_en(
             'the advanced technology'
         )).text == 'advanced technology'
 
     def test_should_not_strip_non_stop_words(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words_and_punc(spacy_language_en(
+        assert lstrip_stop_words_and_punct(spacy_language_en(
             'advanced technology'
         )).text == 'advanced technology'
 
     def test_should_strip_comma(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words_and_punc(spacy_language_en(
+        assert lstrip_stop_words_and_punct(spacy_language_en(
             ', advanced technology'
         )).text == 'advanced technology'
 
     def test_should_strip_brackets(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words_and_punc(spacy_language_en(
+        assert lstrip_stop_words_and_punct(spacy_language_en(
             '(1) advanced technology'
         )).text == 'advanced technology'
 
     def test_should_not_strip_apostrophe(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words_and_punc(spacy_language_en(
+        assert lstrip_stop_words_and_punct(spacy_language_en(
             "Pakinsons's disease"
         )).text == "Pakinsons's disease"
 
     def test_should_not_strip_hyphen_i(
             self, spacy_language_en: Language):
         # "I" is considered a stop word but that is not what is meant here
-        assert lstrip_stop_words_and_punc(spacy_language_en(
+        assert lstrip_stop_words_and_punct(spacy_language_en(
             "MHC-I molecule"
         )).text == "MHC-I molecule"
 
     def test_should_strip_eg(
             self, spacy_language_en: Language):
-        assert lstrip_stop_words_and_punc(spacy_language_en(
+        assert lstrip_stop_words_and_punct(spacy_language_en(
             "e.g. technology"
         )).text == "technology"
+
+
+class TestRstripPunct:
+    def test_should_strip_leading_stop_words(
+            self, spacy_language_en: Language):
+        assert strip_stop_words_and_punct(spacy_language_en(
+            'the technology'
+        )).text == 'technology'
+
+    def test_should_strip_tailing_closing_bracket(
+            self, spacy_language_en: Language):
+        assert rstrip_punct(spacy_language_en(
+            'technology)'
+        )).text == 'technology'
+
+
+class TestStripStopWordsAndPunct:
+    def test_should_strip_tailing_closing_bracket(
+            self, spacy_language_en: Language):
+        assert rstrip_punct(spacy_language_en(
+            'technology)'
+        )).text == 'technology'
 
 
 class TestNormalizeText:
@@ -405,7 +429,7 @@ class TestSpacyKeywordList:
                     spacy_language_en('the advanced technology')
                 ]
             )
-            .with_lstripped_stop_words_and_punct
+            .with_stripped_stop_words_and_punct
             .text_list
         ) == ['advanced technology']
 
