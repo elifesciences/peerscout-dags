@@ -11,6 +11,7 @@ from spacy.symbols import (  # pylint: disable=no-name-in-module
     POS,
 
     # pos
+    ADJ,
     CCONJ,
     NOUN,
     PART,
@@ -62,6 +63,10 @@ def get_normalized_span_text(span: Span) -> str:
 
 def is_conjunction_token(token: Token) -> bool:
     return token.pos == CCONJ
+
+
+def is_adjective_token(token: Token) -> bool:
+    return token.pos == ADJ
 
 
 def get_text_list(spans: List[Span]) -> List[str]:
@@ -157,9 +162,9 @@ def get_conjuction_noun_chunks(
                     conjunction_token
                 )
                 continue
-            if conjunction_token.pos_ != 'ADJ':
+            if not is_adjective_token(conjunction_token):
                 LOGGER.debug(
-                    'conjunction_token not ADJ: "%s" (pos: %s)',
+                    'conjunction_token not adjective: "%s" (pos: %s)',
                     conjunction_token, conjunction_token.pos_
                 )
                 continue
