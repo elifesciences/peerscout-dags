@@ -344,14 +344,7 @@ class SpacyKeywordDocument:
     def __init__(self, language: Language, doc: Doc):
         self.language = language
         self.doc = doc
-
-    def should_use_span_as_keyword(self, span: Span) -> bool:
-        last_token = span[-1]
-        return (
-            last_token.ent_type not in {DATE, PERSON, GPE, PERCENT}
-            and not is_pronoun_token(last_token)
-            and not last_token.is_stop
-        )
+        self.default_exclude = SpacyExclusionSet(set())
 
     def get_compound_keyword_spans(self) -> List[Span]:
         return [
@@ -359,7 +352,7 @@ class SpacyKeywordDocument:
             for span in get_conjuction_noun_chunks(
                 self.doc, language=self.language
             )
-            if self.should_use_span_as_keyword(span)
+            if not self.default_exclude.should_exclude(span)
         ]
 
     @property
