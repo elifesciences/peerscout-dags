@@ -3,16 +3,25 @@ from unittest.mock import MagicMock
 import pytest
 
 from spacy.language import Language
+from spacy.tokens import Span
 
 from peerscout.keyword_extract.spacy_keyword import (
     get_span_without_apostrophe,
     get_normalized_span_text,
     is_conjunction_token,
     join_spans,
+    get_text_list,
+    get_noun_chunk_for_noun_token,
+    get_noun_chunks,
     iter_split_noun_chunk_conjunctions,
     get_conjuction_noun_chunks,
     iter_individual_keyword_spans,
     iter_shorter_keyword_spans,
+    lstrip_stop_words_and_punct,
+    rstrip_punct,
+    strip_stop_words_and_punct,
+    normalize_text,
+    SpacyExclusionSet,
     SpacyKeywordList,
     SpacyKeywordDocumentParser
 )
@@ -66,6 +75,12 @@ class TestGetNormalizedSpanText:
             "Advanced Technology"
         )) == 'advanced technology'
 
+    def test_should_use_lemma_if_norm_equals_text_case_insensitive(
+            self, spacy_language_en: Language):
+        assert get_normalized_span_text(spacy_language_en(
+            "Technologies"
+        )) == 'technology'
+
 
 class TestIsConjunctionToken:
     def test_should_return_true_for_and_token_only(
@@ -86,6 +101,43 @@ class TestJoinSpans:
             ],
             language=spacy_language_en
         ).text == 'the joined span'
+
+
+class TestGetNounChunkForNounToken:
+    def test_should_return_span_for_noun_token(
+            self, spacy_language_en: Language):
+        doc = spacy_language_en('using technology')
+        technology_token = doc[-1]
+        noun_chunk = get_noun_chunk_for_noun_token(technology_token)
+        assert noun_chunk.text == 'technology'
+        assert isinstance(noun_chunk, Span)
+
+
+class TestGetNounChunks:
+    def test_should_return_simple_noun_chunk(
+            self, spacy_language_en: Language):
+        assert get_text_list(get_noun_chunks(spacy_language_en(
+            'using technology'
+        ))) == ['technology']
+
+    def test_should_return_two_noun_chunk_separated_by_and(
+            self, spacy_language_en: Language):
+        assert get_text_list(get_noun_chunks(spacy_language_en(
+            'using technology and approach'
+        ))) == ['technology', 'approach']
+
+    def test_should_return_two_noun_chunk_separated_by_comma_in_sentence(
+            self, spacy_language_en: Language):
+        assert get_text_list(get_noun_chunks(spacy_language_en(
+            'using technology, approach'
+        ))) == ['technology', 'approach']
+
+    @pytest.mark.slow
+    def test_should_return_two_noun_chunk_separated_by_comma_no_sentence(
+            self, spacy_language_en_full: Language):
+        assert get_text_list(get_noun_chunks(spacy_language_en_full(
+            'technology, approach'
+        ))) == ['technology', 'approach']
 
 
 class TestIterSplitNounChunkConjunctions:
@@ -126,6 +178,13 @@ class TestGetConjuctionNounChunks:
             language=spacy_language_en
         )} == {'advanced technology', 'special technology'}
 
+    def test_should_return_two_noun_chunk_separated_by_comma_no_sentence(
+            self, spacy_language_en: Language):
+        assert {span.text for span in get_conjuction_noun_chunks(
+            spacy_language_en('advanced technology, special approach'),
+            language=spacy_language_en
+        )} == {'advanced technology', 'special approach'}
+
 
 class TestIterIndividualKeywordSpans:
     def test_should_return_no_results_if_keyword_is_not_compound(
@@ -148,6 +207,13 @@ class TestIterIndividualKeywordSpans:
             spacy_language_en('very advanced technology'),
             language=spacy_language_en
         )] == ['very', 'advanced', 'technology']
+
+    def test_should_ignore_single_word_words(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_individual_keyword_spans(
+            spacy_language_en('M strain'),
+            language=spacy_language_en
+        )] == ['strain']
 
 
 class TestIterShorterKeywordSpans:
@@ -178,6 +244,113 @@ class TestIterShorterKeywordSpans:
             spacy_language_en('very extra advanced technology'),
             language=spacy_language_en
         )] == ['extra advanced technology', 'advanced technology']
+
+
+class TestLstripStopWordsAndPunct:
+    def test_should_strip_leading_stop_words(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words_and_punct(spacy_language_en(
+            'the advanced technology'
+        )).text == 'advanced technology'
+
+    def test_should_not_strip_non_stop_words(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words_and_punct(spacy_language_en(
+            'advanced technology'
+        )).text == 'advanced technology'
+
+    def test_should_strip_comma(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words_and_punct(spacy_language_en(
+            ', advanced technology'
+        )).text == 'advanced technology'
+
+    def test_should_strip_brackets(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words_and_punct(spacy_language_en(
+            '(1) advanced technology'
+        )).text == 'advanced technology'
+
+    def test_should_not_strip_apostrophe(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words_and_punct(spacy_language_en(
+            "Pakinsons's disease"
+        )).text == "Pakinsons's disease"
+
+    def test_should_not_strip_hyphen_i(
+            self, spacy_language_en: Language):
+        # "I" is considered a stop word but that is not what is meant here
+        assert lstrip_stop_words_and_punct(spacy_language_en(
+            "MHC-I molecule"
+        )).text == "MHC-I molecule"
+
+    def test_should_strip_eg(
+            self, spacy_language_en: Language):
+        assert lstrip_stop_words_and_punct(spacy_language_en(
+            "e.g. technology"
+        )).text == "technology"
+
+
+class TestRstripPunct:
+    def test_should_strip_leading_stop_words(
+            self, spacy_language_en: Language):
+        assert strip_stop_words_and_punct(spacy_language_en(
+            'the technology'
+        )).text == 'technology'
+
+    def test_should_strip_tailing_closing_bracket(
+            self, spacy_language_en: Language):
+        assert rstrip_punct(spacy_language_en(
+            'technology)'
+        )).text == 'technology'
+
+
+class TestStripStopWordsAndPunct:
+    def test_should_strip_tailing_closing_bracket(
+            self, spacy_language_en: Language):
+        assert rstrip_punct(spacy_language_en(
+            'technology)'
+        )).text == 'technology'
+
+
+class TestNormalizeText:
+    def test_should_replace_line_feed_with_space(self):
+        assert normalize_text('the\nkeyword') == 'the keyword'
+
+    def test_should_replace_muliple_whitepace_with_single_space(self):
+        assert normalize_text('the \t\n\t keyword') == 'the keyword'
+
+    def test_should_strip_surrounding_whitespace(self):
+        assert normalize_text(' \nthe keyword\n ') == 'the keyword'
+
+    def test_should_replace_slash_with_comma(self):
+        assert normalize_text('the/keyword') == 'the, keyword'
+
+
+class TestSpacyExclusionSet:
+    def test_should_not_match_different_word(
+            self, spacy_language_en: Language):
+        assert not SpacyExclusionSet({'interest'}).should_exclude(
+            spacy_language_en('technology')
+        )
+
+    def test_should_match_exact_word(
+            self, spacy_language_en: Language):
+        assert SpacyExclusionSet({'interest'}).should_exclude(
+            spacy_language_en('interest')
+        )
+
+    def test_should_match_last_word(
+            self, spacy_language_en: Language):
+        assert SpacyExclusionSet({'interest'}).should_exclude(
+            spacy_language_en('research interest')
+        )
+
+    def test_should_match_normalized_word(
+            self, spacy_language_en: Language):
+        assert SpacyExclusionSet({'technology'}).should_exclude(
+            spacy_language_en('technologies')
+        )
 
 
 class TestSpacyKeywordList:
@@ -246,6 +419,53 @@ class TestSpacyKeywordList:
             'advanced technology',
             'special approach'
         }
+
+    def test_should_strip_leading_stop_words(
+            self, spacy_language_en: Language):
+        assert (
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('the advanced technology')
+                ]
+            )
+            .with_stripped_stop_words_and_punct
+            .text_list
+        ) == ['advanced technology']
+
+    def test_should_exclude_keywords(
+            self, spacy_language_en: Language):
+        assert (
+            SpacyKeywordList(
+                language=spacy_language_en,
+                keyword_spans=[
+                    spacy_language_en('technology'),
+                    spacy_language_en('lab')
+                ]
+            )
+            .exclude(SpacyExclusionSet({'lab'}))
+            .text_list
+        ) == ['technology']
+
+
+class TestSpacyKeywordDocument:
+    def test_should_get_keyword_str_list_with_defaults(
+            self,
+            spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        document = spacy_keyword_document_parser.parse_text(
+            'using technology'
+        )
+        assert document.get_keyword_str_list() == ['technology']
+
+    def test_can_pass_exclusion_set_to_get_keyword_str_list(
+            self,
+            spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        document = spacy_keyword_document_parser.parse_text(
+            'using technology'
+        )
+        assert document.get_keyword_str_list(
+            exclude=SpacyExclusionSet({'technology'})
+        ) == []
 
 
 class TestSpacyKeywordDocumentParser:
@@ -458,3 +678,14 @@ class TestSpacyKeywordDocumentParser:
         ) == {
             'technique', 'technology'
         }
+
+    @pytest.mark.slow
+    def test_should_extract_multiple_keywords_separated_by_comma_as_list(
+            self,
+            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser_full
+            .parse_text('technology, approach')
+            .compound_keywords
+            .text_list
+        ) == ['technology', 'approach']

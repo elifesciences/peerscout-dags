@@ -1,9 +1,28 @@
 import re
 import logging
-from typing import Iterable, List
+from typing import Iterable, List, Set
 
 from spacy.language import Language
 from spacy.tokens import Doc, Span, Token
+
+# spaCy's numeric ids (e.g. for pos rather than pos_)
+from spacy.symbols import (  # pylint: disable=no-name-in-module
+    # tag
+    POS,
+
+    # pos
+    ADJ,
+    CCONJ,
+    NOUN,
+    PART,
+    PUNCT,
+    PRON,
+
+    # ent_typ
+    PERSON,
+    GPE,
+    PERCENT
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -24,13 +43,13 @@ def get_span_lemma(span: Span) -> str:
 
 
 def get_normalized_token_text(token: Token) -> str:
-    if token.norm_ != token.text:
+    if token.norm_.lower() != token.text.lower():
         return token.norm_
     return get_token_lemma(token)
 
 
 def get_span_without_apostrophe(span: Span) -> Span:
-    if span[-1].tag_ == 'POS':
+    if span[-1].tag == POS:
         span = span[:-1]
     return span
 
@@ -43,7 +62,23 @@ def get_normalized_span_text(span: Span) -> str:
 
 
 def is_conjunction_token(token: Token) -> bool:
-    return token.pos_ == 'CCONJ'
+    return token.pos == CCONJ
+
+
+def is_adjective_token(token: Token) -> bool:
+    return token.pos == ADJ
+
+
+def is_particle_token(token: Token) -> bool:
+    return token.pos == PART
+
+
+def is_pronoun_token(token: Token) -> bool:
+    return token.pos == PRON
+
+
+def get_text_list(spans: List[Span]) -> List[str]:
+    return [span.text for span in spans]
 
 
 def join_spans(spans: List[Span], language: Language) -> Span:
@@ -53,6 +88,37 @@ def join_spans(spans: List[Span], language: Language) -> Span:
     joined_text = ' '.join([span.text for span in spans])
     LOGGER.debug('joined_text: %s', joined_text)
     return language(joined_text)
+
+
+def get_noun_tokens(doc: Doc) -> List[Token]:
+    return [token for token in doc if token.pos == NOUN]
+
+
+def get_noun_chunk_for_noun_token(noun_token: Token) -> Span:
+    index = noun_token.i
+    return noun_token.doc[index:index + 1]
+
+
+def get_noun_chunks(doc: Doc) -> List[Span]:
+    # prefer using spacy's noun chunks, add noun chunks not covered by spacy
+    noun_chunks = list(doc.noun_chunks)
+    included_noun_tokens = {token for span in noun_chunks for token in span}
+    noun_tokens_not_already_in_noun_chunks = [
+        noun_token
+        for noun_token in get_noun_tokens(doc)
+        if noun_token not in included_noun_tokens
+    ]
+    LOGGER.debug(
+        'included_noun_tokens: %s',
+        included_noun_tokens
+    )
+    LOGGER.debug(
+        'noun_tokens_not_already_in_noun_chunks: %s',
+        noun_tokens_not_already_in_noun_chunks
+    )
+    for noun_token in noun_tokens_not_already_in_noun_chunks:
+        noun_chunks.append(get_noun_chunk_for_noun_token(noun_token))
+    return noun_chunks
 
 
 def iter_split_noun_chunk_conjunctions(
@@ -84,7 +150,7 @@ def iter_split_noun_chunk_conjunctions(
 def get_conjuction_noun_chunks(
         doc: Doc,
         language: Language) -> List[Span]:
-    noun_chunks = list(doc.noun_chunks)
+    noun_chunks = get_noun_chunks(doc)
     for noun_chunk in list(noun_chunks):
         last_noun_token = noun_chunk[-1]
         LOGGER.debug(
@@ -104,9 +170,9 @@ def get_conjuction_noun_chunks(
                     conjunction_token
                 )
                 continue
-            if conjunction_token.pos_ != 'ADJ':
+            if not is_adjective_token(conjunction_token):
                 LOGGER.debug(
-                    'conjunction_token not ADJ: "%s" (pos: %s)',
+                    'conjunction_token not adjective: "%s" (pos: %s)',
                     conjunction_token, conjunction_token.pos_
                 )
                 continue
@@ -131,6 +197,8 @@ def iter_individual_keyword_spans(
     individual_keywords = keyword_span.text.split(' ')
     if len(individual_keywords) > 1:
         for individual_keyword in individual_keywords:
+            if len(individual_keyword) < 2:
+                continue
             yield language(individual_keyword)
 
 
@@ -142,6 +210,61 @@ def iter_shorter_keyword_spans(
         yield language(' '.join(individual_keywords[start:]))
 
 
+def lstrip_stop_words_and_punct(span: Span) -> Span:
+    for index in reversed(range(0, len(span))):
+        token = span[index]
+        if is_particle_token(token):
+            continue
+        if list(token.children):
+            continue
+        if token.text == '-':
+            continue
+        if (
+                token.is_stop
+                or token.pos == PUNCT
+                or token.text_with_ws.endswith('. ')):
+
+            LOGGER.debug(
+                'stripping span at token "%s" (pos: %s, stop: %s)',
+                token, token.pos_, token.is_stop
+            )
+            return span[index + 1:]
+    return span
+
+
+def rstrip_punct(span: Span) -> Span:
+    if not span:
+        return span
+    if span[-1].pos == PUNCT:
+        return span[:-1]
+    return span
+
+
+def strip_stop_words_and_punct(span: Span) -> Span:
+    return rstrip_punct(
+        lstrip_stop_words_and_punct(span)
+    )
+
+
+def normalize_text(text: str) -> str:
+    return re.sub(
+        r'\s+', ' ',
+        text.replace('/', ', ')
+    ).strip()
+
+
+class SpacyExclusionSet:
+    def __init__(self, exclusion_list: Set[str]):
+        self.exclusion_list = exclusion_list
+
+    def should_exclude(self, span: Span) -> bool:
+        last_token = span[-1]
+        return (
+            last_token.text in self.exclusion_list
+            or get_normalized_token_text(last_token) in self.exclusion_list
+        )
+
+
 class SpacyKeywordList:
     def __init__(self, language: Language, keyword_spans: List[Span]):
         self.language = language
@@ -149,17 +272,33 @@ class SpacyKeywordList:
 
     @property
     def text_list(self) -> List[str]:
-        return [span.text for span in self.keyword_spans]
+        return get_text_list(self.keyword_spans)
 
     @property
     def normalized_text_list(self) -> List[str]:
         return [get_normalized_span_text(span) for span in self.keyword_spans]
 
+    def with_keyword_spans(
+            self, keyword_spans: List[Span]) -> 'SpacyKeywordList':
+        return SpacyKeywordList(self.language, keyword_spans)
+
     def with_additional_keyword_spans(
             self, additional_keyword_spans: List[Span]) -> 'SpacyKeywordList':
-        return SpacyKeywordList(
-            self.language,
+        return self.with_keyword_spans(
             self.keyword_spans + additional_keyword_spans
+        )
+
+    def exclude(self, exclusion_set: SpacyExclusionSet) -> 'SpacyKeywordList':
+        return self.with_keyword_spans([
+            keyword_span
+            for keyword_span in self.keyword_spans
+            if not exclusion_set.should_exclude(keyword_span)
+        ])
+
+    @property
+    def with_stripped_stop_words_and_punct(self) -> 'SpacyKeywordList':
+        return self.with_keyword_spans(
+            list(map(strip_stop_words_and_punct, self.keyword_spans))
         )
 
     @property
@@ -193,8 +332,8 @@ class SpacyKeywordDocument:
     def should_use_span_as_keyword(self, span: Span) -> bool:
         last_token = span[-1]
         return (
-            last_token.ent_type_ not in {'PERSON', 'GPE', 'PERCENT'}
-            and last_token.pos_ not in {'PRON'}
+            last_token.ent_type not in {PERSON, GPE, PERCENT}
+            and not is_pronoun_token(last_token)
             and not last_token.is_stop
         )
 
@@ -213,16 +352,34 @@ class SpacyKeywordDocument:
             self.language, self.get_compound_keyword_spans()
         )
 
+    def get_keyword_str_list(  # pylint: disable=redefined-outer-name
+            self,
+            strip_stop_words_and_punct: bool = True,
+            individual_tokens: bool = True,
+            shorter_keywords: bool = True,
+            normalize_text: bool = True,
+            exclude: SpacyExclusionSet = None) -> List[str]:
+
+        keyword_list = self.compound_keywords
+        if strip_stop_words_and_punct:
+            keyword_list = keyword_list.with_stripped_stop_words_and_punct
+        if exclude:
+            keyword_list = keyword_list.exclude(exclude)
+        if individual_tokens:
+            keyword_list = keyword_list.with_individual_tokens
+        if shorter_keywords:
+            keyword_list = keyword_list.with_shorter_keywords
+        if normalize_text:
+            return keyword_list.normalized_text_list
+        return keyword_list.text_list
+
 
 class SpacyKeywordDocumentParser:
     def __init__(self, language: Language):
         self.language = language
 
-    def normalize_text(self, text: str) -> str:
-        return re.sub(r'\s+', ' ', text).strip()
-
     def normalize_text_list(self, text_list: Iterable[str]) -> Iterable[str]:
-        return (self.normalize_text(text) for text in text_list)
+        return (normalize_text(text) for text in text_list)
 
     def parse_text(self, text: str) -> SpacyKeywordDocument:
         return list(self.iter_parse_text_list([text]))[0]

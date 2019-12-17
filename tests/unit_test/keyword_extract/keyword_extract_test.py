@@ -94,11 +94,11 @@ class TestSpacyKeywordExtractor:
         assert set(
             list(SpacyKeywordExtractor(
                 language=spacy_language_en
-            ).iter_extract_keywords(['using very advanced technology']))[0]
+            ).iter_extract_keywords(['using extra advanced technology']))[0]
         ) == {
-            'very advanced technology',
+            'extra advanced technology',
             'advanced technology',
-            'very',
+            'extra',
             'advanced',
             'technology'
         }
