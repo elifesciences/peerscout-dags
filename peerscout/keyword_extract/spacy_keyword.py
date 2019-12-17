@@ -255,16 +255,30 @@ def normalize_text(text: str) -> str:
     ).strip()
 
 
+DEFAULT_EXCLUDED_ENTITY_TYPES = {CARDINAL, DATE, PERSON, GPE, PERCENT}
+
+
+def _coalesce(*args):
+    for value in args:
+        if value is not None:
+            return value
+    return None
+
+
 class SpacyExclusionSet:
     def __init__(
             self,
-            exclusion_list: Set[str] = None):
+            exclusion_list: Set[str] = None,
+            exclude_entity_types: Set[int] = None):
         self.exclusion_list = exclusion_list or set()
+        self.exclude_entity_types = _coalesce(
+            exclude_entity_types, DEFAULT_EXCLUDED_ENTITY_TYPES
+        )
 
     def should_use_span_as_keyword(self, span: Span) -> bool:
         last_token = span[-1]
         return (
-            last_token.ent_type not in {CARDINAL, DATE, PERSON, GPE, PERCENT}
+            last_token.ent_type not in self.exclude_entity_types
             and not is_pronoun_token(last_token)
             and not last_token.is_stop
         )
