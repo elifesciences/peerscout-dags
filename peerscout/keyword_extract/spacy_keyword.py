@@ -19,6 +19,7 @@ from spacy.symbols import (  # pylint: disable=no-name-in-module
     PRON,
 
     # ent_typ
+    DATE,
     PERSON,
     GPE,
     PERCENT
@@ -332,7 +333,7 @@ class SpacyKeywordDocument:
     def should_use_span_as_keyword(self, span: Span) -> bool:
         last_token = span[-1]
         return (
-            last_token.ent_type not in {PERSON, GPE, PERCENT}
+            last_token.ent_type not in {DATE, PERSON, GPE, PERCENT}
             and not is_pronoun_token(last_token)
             and not last_token.is_stop
         )

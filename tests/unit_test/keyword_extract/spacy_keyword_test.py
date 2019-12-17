@@ -590,6 +590,16 @@ class TestSpacyKeywordDocumentParser:
             .text_list
         ) == ['technology']
 
+    def test_should_number_of_years(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                r'technology is 10 years old'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['technology']
+
     def test_should_exclude_percentage(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
         assert (
