@@ -18,7 +18,8 @@ from spacy.symbols import (  # pylint: disable=no-name-in-module
     PUNCT,
     PRON,
 
-    # ent_typ
+    # ent_type
+    CARDINAL,
     DATE,
     PERSON,
     GPE,
@@ -258,7 +259,21 @@ class SpacyExclusionSet:
     def __init__(self, exclusion_list: Set[str]):
         self.exclusion_list = exclusion_list
 
+    def should_use_span_as_keyword(self, span: Span) -> bool:
+        last_token = span[-1]
+        return (
+            last_token.ent_type not in {CARDINAL, DATE, PERSON, GPE, PERCENT}
+            and not is_pronoun_token(last_token)
+            and not last_token.is_stop
+        )
+
     def should_exclude(self, span: Span) -> bool:
+        LOGGER.debug(
+            'should_exclude: %s (pos: %s, ent_type: %s)',
+            span, span[-1].pos_, span[-1].ent_type_
+        )
+        if not self.should_use_span_as_keyword(span):
+            return True
         last_token = span[-1]
         return (
             last_token.text in self.exclusion_list
@@ -361,15 +376,18 @@ class SpacyKeywordDocument:
             normalize_text: bool = True,
             exclude: SpacyExclusionSet = None) -> List[str]:
 
+        if exclude is None:
+            exclude = SpacyExclusionSet(set())
+
         keyword_list = self.compound_keywords
         if strip_stop_words_and_punct:
             keyword_list = keyword_list.with_stripped_stop_words_and_punct
-        if exclude:
-            keyword_list = keyword_list.exclude(exclude)
+        keyword_list = keyword_list.exclude(exclude)
         if individual_tokens:
             keyword_list = keyword_list.with_individual_tokens
         if shorter_keywords:
             keyword_list = keyword_list.with_shorter_keywords
+        keyword_list = keyword_list.exclude(exclude)
         if normalize_text:
             return keyword_list.normalized_text_list
         return keyword_list.text_list

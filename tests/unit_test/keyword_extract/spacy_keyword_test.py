@@ -467,6 +467,15 @@ class TestSpacyKeywordDocument:
             exclude=SpacyExclusionSet({'technology'})
         ) == []
 
+    def test_should_exclude_numbers_from_individual_token_of_compound_keyword(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert set(
+            spacy_keyword_document_parser.parse_text(
+                r'using 123 technology'
+            )
+            .get_keyword_str_list(individual_tokens=True)
+        ) == {'123 technology', 'technology'}
+
 
 class TestSpacyKeywordDocumentParser:
     def test_should_parse_multiple_documents(
