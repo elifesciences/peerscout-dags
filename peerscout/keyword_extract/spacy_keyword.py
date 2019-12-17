@@ -383,11 +383,13 @@ class SpacyKeywordDocument:
         keyword_list = self.compound_keywords
         if strip_stop_words_and_punct:
             keyword_list = keyword_list.with_stripped_stop_words_and_punct
+        # exclude whole keyword spans
         keyword_list = keyword_list.exclude(exclude)
         if individual_tokens:
             keyword_list = keyword_list.with_individual_tokens
         if shorter_keywords:
             keyword_list = keyword_list.with_shorter_keywords
+        # exclude potential individual keywords
         keyword_list = keyword_list.exclude(exclude)
         if normalize_text:
             return keyword_list.normalized_text_list
