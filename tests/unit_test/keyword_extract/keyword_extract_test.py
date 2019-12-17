@@ -1,4 +1,5 @@
 from unittest.mock import patch, MagicMock
+from copy import deepcopy
 
 import pytest
 
@@ -166,3 +167,15 @@ class TestAddExtractedKeywords:
         assert set(records_with_keywords[0]['extracted_keywords']) == {
             'the', 'keywords', 'existing'
         }
+
+    def test_should_not_change_passed_in_records(self):
+        records = [{'text': 'the keywords'}]
+        records_copy = deepcopy(records)
+        list(add_extracted_keywords(
+            records,
+            text_field='text',
+            existing_keyword_field='existing_keywords',
+            extracted_keyword_field_name='extracted_keywords',
+            keyword_extractor=SimpleKeywordExtractor()
+        ))
+        assert records == records_copy
