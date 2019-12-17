@@ -256,8 +256,10 @@ def normalize_text(text: str) -> str:
 
 
 class SpacyExclusionSet:
-    def __init__(self, exclusion_list: Set[str]):
-        self.exclusion_list = exclusion_list
+    def __init__(
+            self,
+            exclusion_list: Set[str] = None):
+        self.exclusion_list = exclusion_list or set()
 
     def should_use_span_as_keyword(self, span: Span) -> bool:
         last_token = span[-1]
@@ -368,7 +370,7 @@ class SpacyKeywordDocument:
             exclude: SpacyExclusionSet = None) -> List[str]:
 
         if exclude is None:
-            exclude = SpacyExclusionSet(set())
+            exclude = SpacyExclusionSet()
 
         keyword_list = self.compound_keywords
         if strip_stop_words_and_punct:
