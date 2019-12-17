@@ -449,6 +449,130 @@ class TestSpacyKeywordList:
 
 
 class TestSpacyKeywordDocument:
+    def test_should_extract_single_word_noun(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text('using technology')
+            .compound_keywords
+            .text_list
+        ) == ['technology']
+
+    def test_should_extract_single_noun_with_adjective(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'using advanced technology'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['advanced technology']
+
+    def test_should_normalize_text(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'use advanced \n\n technology'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['advanced technology']
+
+    def test_should_extract_individual_tokens(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert set(
+            spacy_keyword_document_parser.parse_text(
+                'using advanced technology'
+            )
+            .compound_keywords
+            .with_individual_tokens
+            .text_list
+        ) == {'advanced technology', 'advanced', 'technology'}
+
+    def test_should_extract_short_keywords(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert set(
+            spacy_keyword_document_parser.parse_text(
+                'using very advanced technology'
+            )
+            .compound_keywords
+            .with_shorter_keywords
+            .text_list
+        ) == {'very advanced technology', 'advanced technology'}
+
+    def test_should_extract_individual_tokens_and_short_keywords(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert set(
+            spacy_keyword_document_parser.parse_text(
+                'using very advanced technology'
+            )
+            .compound_keywords
+            .with_individual_tokens
+            .with_shorter_keywords
+            .text_list
+        ) == {
+            'very advanced technology', 'advanced technology',
+            'very', 'advanced', 'technology'
+        }
+
+    @pytest.mark.slow
+    def test_should_extract_conjunction_nouns_with_adjective_with_comma(
+            self,
+            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
+        # using "full" model,
+        # the dependency tree is not complete using small model
+        assert set(
+            spacy_keyword_document_parser_full.parse_text(
+                'we use advanced technique, advanced, and special technology'
+            )
+            .compound_keywords
+            .text_list
+        ) == {
+            'advanced technique', 'advanced technology', 'special technology'
+        }
+
+    @pytest.mark.slow
+    def test_should_extract_conjunction_nouns_with_adjective_without_comma(
+            self,
+            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
+        # using "full" model,
+        # the dependency tree is not complete using small model
+        assert set(
+            spacy_keyword_document_parser_full.parse_text(
+                'we use advanced technique, advanced and special technology'
+            )
+            .compound_keywords
+            .text_list
+        ) == {
+            'advanced technique', 'advanced technology', 'special technology'
+        }
+
+    @pytest.mark.slow
+    def test_should_not_combine_two_separate_nouns_with_conjunction(
+            self,
+            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
+        # using "full" model,
+        # the dependency tree is not complete using small model
+        assert set(
+            spacy_keyword_document_parser_full.parse_text(
+                'we use technique and technology'
+            )
+            .compound_keywords
+            .text_list
+        ) == {
+            'technique', 'technology'
+        }
+
+    @pytest.mark.slow
+    def test_should_extract_multiple_keywords_separated_by_comma_as_list(
+            self,
+            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser_full
+            .parse_text('technology, approach')
+            .compound_keywords
+            .text_list
+        ) == ['technology', 'approach']
+
     def test_should_get_keyword_str_list_with_defaults(
             self,
             spacy_keyword_document_parser: SpacyKeywordDocumentParser):
@@ -575,127 +699,3 @@ class TestSpacyKeywordDocumentParser:
             language=spacy_language_mock
         ).iter_parse_text_list(text_list))
         spacy_language_mock.pipe.assert_called()
-
-    def test_should_extract_single_word_noun(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text('using technology')
-            .compound_keywords
-            .text_list
-        ) == ['technology']
-
-    def test_should_extract_single_noun_with_adjective(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                'using advanced technology'
-            )
-            .compound_keywords
-            .text_list
-        ) == ['advanced technology']
-
-    def test_should_normalize_text(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                'use advanced \n\n technology'
-            )
-            .compound_keywords
-            .text_list
-        ) == ['advanced technology']
-
-    def test_should_extract_individual_tokens(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert set(
-            spacy_keyword_document_parser.parse_text(
-                'using advanced technology'
-            )
-            .compound_keywords
-            .with_individual_tokens
-            .text_list
-        ) == {'advanced technology', 'advanced', 'technology'}
-
-    def test_should_extract_short_keywords(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert set(
-            spacy_keyword_document_parser.parse_text(
-                'using very advanced technology'
-            )
-            .compound_keywords
-            .with_shorter_keywords
-            .text_list
-        ) == {'very advanced technology', 'advanced technology'}
-
-    def test_should_extract_individual_tokens_and_short_keywords(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert set(
-            spacy_keyword_document_parser.parse_text(
-                'using very advanced technology'
-            )
-            .compound_keywords
-            .with_individual_tokens
-            .with_shorter_keywords
-            .text_list
-        ) == {
-            'very advanced technology', 'advanced technology',
-            'very', 'advanced', 'technology'
-        }
-
-    @pytest.mark.slow
-    def test_should_extract_conjunction_nouns_with_adjective_with_comma(
-            self,
-            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
-        # using "full" model,
-        # the dependency tree is not complete using small model
-        assert set(
-            spacy_keyword_document_parser_full.parse_text(
-                'we use advanced technique, advanced, and special technology'
-            )
-            .compound_keywords
-            .text_list
-        ) == {
-            'advanced technique', 'advanced technology', 'special technology'
-        }
-
-    @pytest.mark.slow
-    def test_should_extract_conjunction_nouns_with_adjective_without_comma(
-            self,
-            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
-        # using "full" model,
-        # the dependency tree is not complete using small model
-        assert set(
-            spacy_keyword_document_parser_full.parse_text(
-                'we use advanced technique, advanced and special technology'
-            )
-            .compound_keywords
-            .text_list
-        ) == {
-            'advanced technique', 'advanced technology', 'special technology'
-        }
-
-    @pytest.mark.slow
-    def test_should_not_combine_two_separate_nouns_with_conjunction(
-            self,
-            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
-        # using "full" model,
-        # the dependency tree is not complete using small model
-        assert set(
-            spacy_keyword_document_parser_full.parse_text(
-                'we use technique and technology'
-            )
-            .compound_keywords
-            .text_list
-        ) == {
-            'technique', 'technology'
-        }
-
-    @pytest.mark.slow
-    def test_should_extract_multiple_keywords_separated_by_comma_as_list(
-            self,
-            spacy_keyword_document_parser_full: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser_full
-            .parse_text('technology, approach')
-            .compound_keywords
-            .text_list
-        ) == ['technology', 'approach']
