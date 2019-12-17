@@ -476,6 +476,86 @@ class TestSpacyKeywordDocument:
             .get_keyword_str_list(individual_tokens=True)
         ) == {'123 technology', 'technology'}
 
+    def test_should_exclude_numbers(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                r'technology that account for 123'
+            )
+            .get_keyword_str_list()
+        ) == ['technology']
+
+    def test_should_number_of_years(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                r'technology is 10 years old'
+            )
+            .get_keyword_str_list()
+        ) == ['technology']
+
+    def test_should_exclude_percentage(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                r'technology that account for 95%'
+            )
+            .get_keyword_str_list()
+        ) == ['technology']
+
+    def test_should_exclude_greater_than_percentage(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                r'technology that account for >95%'
+            )
+            .get_keyword_str_list()
+        ) == ['technology']
+
+    def test_should_exclude_pronouns(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text('we use technology')
+            .get_keyword_str_list()
+        ) == ['technology']
+
+    def test_should_exclude_person_name(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'In collaboration with John Smith'
+            )
+            .get_keyword_str_list()
+        ) == ['collaboration']
+
+    def test_should_exclude_country_name(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'We research technology in the United Kingdom'
+            )
+            .get_keyword_str_list()
+        ) == ['technology']
+
+    def test_should_convert_plural_to_singular_keyword(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'we investigate technologies'
+            )
+            .get_keyword_str_list(normalize_text=True)
+        ) == ['technology']
+
+    def test_should_normalize_keyword_spelling(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            # need to use a word that is in the small spacy model
+            spacy_keyword_document_parser.parse_text(
+                'we investigate somethin'
+            )
+            .get_keyword_str_list(normalize_text=True)
+        ) == ['something']
+
 
 class TestSpacyKeywordDocumentParser:
     def test_should_parse_multiple_documents(
@@ -560,95 +640,6 @@ class TestSpacyKeywordDocumentParser:
             'very advanced technology', 'advanced technology',
             'very', 'advanced', 'technology'
         }
-
-    def test_should_exclude_pronouns(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text('we use technology')
-            .compound_keywords
-            .text_list
-        ) == ['technology']
-
-    def test_should_exclude_person_name(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                'In collaboration with John Smith'
-            )
-            .compound_keywords
-            .text_list
-        ) == ['collaboration']
-
-    def test_should_exclude_country_name(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                'We research technology in the United Kingdom'
-            )
-            .compound_keywords
-            .text_list
-        ) == ['technology']
-
-    def test_should_exclude_numbers(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                r'technology that account for 123'
-            )
-            .compound_keywords
-            .text_list
-        ) == ['technology']
-
-    def test_should_number_of_years(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                r'technology is 10 years old'
-            )
-            .compound_keywords
-            .text_list
-        ) == ['technology']
-
-    def test_should_exclude_percentage(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                r'technology that account for 95%'
-            )
-            .compound_keywords
-            .text_list
-        ) == ['technology']
-
-    def test_should_exclude_greater_than_percentage(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                r'technology that account for >95%'
-            )
-            .compound_keywords
-            .text_list
-        ) == ['technology']
-
-    def test_should_convert_plural_to_singular_keyword(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            spacy_keyword_document_parser.parse_text(
-                'we investigate technologies'
-            )
-            .compound_keywords
-            .normalized_text_list
-        ) == ['technology']
-
-    def test_should_normalize_keyword_spelling(
-            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
-        assert (
-            # need to use a word that is in the small spacy model
-            spacy_keyword_document_parser.parse_text(
-                'we investigate somethin'
-            )
-            .compound_keywords
-            .normalized_text_list
-        ) == ['something']
 
     @pytest.mark.slow
     def test_should_extract_conjunction_nouns_with_adjective_with_comma(

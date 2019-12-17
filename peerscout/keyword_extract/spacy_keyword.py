@@ -344,7 +344,6 @@ class SpacyKeywordDocument:
     def __init__(self, language: Language, doc: Doc):
         self.language = language
         self.doc = doc
-        self.default_exclude = SpacyExclusionSet(set())
 
     def get_compound_keyword_spans(self) -> List[Span]:
         return [
@@ -352,7 +351,6 @@ class SpacyKeywordDocument:
             for span in get_conjuction_noun_chunks(
                 self.doc, language=self.language
             )
-            if not self.default_exclude.should_exclude(span)
         ]
 
     @property
