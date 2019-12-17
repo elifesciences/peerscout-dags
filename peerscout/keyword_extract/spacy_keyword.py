@@ -5,6 +5,24 @@ from typing import Iterable, List, Set
 from spacy.language import Language
 from spacy.tokens import Doc, Span, Token
 
+# spaCy's numeric ids (e.g. for pos rather than pos_)
+from spacy.symbols import (  # pylint: disable=no-name-in-module
+    # tag
+    POS,
+
+    # pos
+    CCONJ,
+    NOUN,
+    PART,
+    PUNCT,
+    PRON,
+
+    # ent_typ
+    PERSON,
+    GPE,
+    PERCENT
+)
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +48,7 @@ def get_normalized_token_text(token: Token) -> str:
 
 
 def get_span_without_apostrophe(span: Span) -> Span:
-    if span[-1].tag_ == 'POS':
+    if span[-1].tag == POS:
         span = span[:-1]
     return span
 
@@ -43,7 +61,7 @@ def get_normalized_span_text(span: Span) -> str:
 
 
 def is_conjunction_token(token: Token) -> bool:
-    return token.pos_ == 'CCONJ'
+    return token.pos == CCONJ
 
 
 def get_text_list(spans: List[Span]) -> List[str]:
@@ -60,7 +78,7 @@ def join_spans(spans: List[Span], language: Language) -> Span:
 
 
 def get_noun_tokens(doc: Doc) -> List[Token]:
-    return [token for token in doc if token.pos_ == 'NOUN']
+    return [token for token in doc if token.pos == NOUN]
 
 
 def get_noun_chunk_for_noun_token(noun_token: Token) -> Span:
@@ -182,7 +200,7 @@ def iter_shorter_keyword_spans(
 def lstrip_stop_words_and_punct(span: Span) -> Span:
     for index in reversed(range(0, len(span))):
         token = span[index]
-        if token.pos_ == 'PART':
+        if token.pos == PART:
             continue
         if list(token.children):
             continue
@@ -190,7 +208,7 @@ def lstrip_stop_words_and_punct(span: Span) -> Span:
             continue
         if (
                 token.is_stop
-                or token.pos_ == 'PUNCT'
+                or token.pos == PUNCT
                 or token.text_with_ws.endswith('. ')):
 
             LOGGER.debug(
@@ -204,7 +222,7 @@ def lstrip_stop_words_and_punct(span: Span) -> Span:
 def rstrip_punct(span: Span) -> Span:
     if not span:
         return span
-    if span[-1].pos_ == 'PUNCT':
+    if span[-1].pos == PUNCT:
         return span[:-1]
     return span
 
@@ -301,8 +319,8 @@ class SpacyKeywordDocument:
     def should_use_span_as_keyword(self, span: Span) -> bool:
         last_token = span[-1]
         return (
-            last_token.ent_type_ not in {'PERSON', 'GPE', 'PERCENT'}
-            and last_token.pos_ not in {'PRON'}
+            last_token.ent_type not in {PERSON, GPE, PERCENT}
+            and last_token.pos not in {PRON}
             and not last_token.is_stop
         )
 
