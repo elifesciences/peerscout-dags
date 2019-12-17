@@ -283,7 +283,6 @@ class SpacyExclusionSet:
         last_token = span[-1]
         return (
             last_token.ent_type not in self.exclude_entity_types
-            and not (not self.exclude_pronoun or is_pronoun_token(last_token))
         )
 
     def should_exclude(self, span: Span) -> bool:
@@ -295,6 +294,8 @@ class SpacyExclusionSet:
             return True
         last_token = span[-1]
         if self.exclude_stop_words and last_token.is_stop:
+            return True
+        if self.exclude_pronoun and is_pronoun_token(last_token):
             return True
         return (
             last_token.text in self.exclusion_list
