@@ -69,6 +69,10 @@ def is_adjective_token(token: Token) -> bool:
     return token.pos == ADJ
 
 
+def is_particle_token(token: Token) -> bool:
+    return token.pos == PART
+
+
 def get_text_list(spans: List[Span]) -> List[str]:
     return [span.text for span in spans]
 
@@ -205,7 +209,7 @@ def iter_shorter_keyword_spans(
 def lstrip_stop_words_and_punct(span: Span) -> Span:
     for index in reversed(range(0, len(span))):
         token = span[index]
-        if token.pos == PART:
+        if is_particle_token(token):
             continue
         if list(token.children):
             continue
