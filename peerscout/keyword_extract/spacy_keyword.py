@@ -265,7 +265,7 @@ def _coalesce(*args):
     return None
 
 
-class SpacyExclusionSet:
+class SpacyExclusion:
     def __init__(
             self,
             exclusion_list: Set[str] = None,
@@ -320,7 +320,7 @@ class SpacyKeywordList:
             self.keyword_spans + additional_keyword_spans
         )
 
-    def exclude(self, exclusion_set: SpacyExclusionSet) -> 'SpacyKeywordList':
+    def exclude(self, exclusion_set: SpacyExclusion) -> 'SpacyKeywordList':
         return self.with_keyword_spans([
             keyword_span
             for keyword_span in self.keyword_spans
@@ -381,10 +381,10 @@ class SpacyKeywordDocument:
             individual_tokens: bool = True,
             shorter_keywords: bool = True,
             normalize_text: bool = True,
-            exclude: SpacyExclusionSet = None) -> List[str]:
+            exclude: SpacyExclusion = None) -> List[str]:
 
         if exclude is None:
-            exclude = SpacyExclusionSet()
+            exclude = SpacyExclusion()
 
         keyword_list = self.compound_keywords
         if strip_stop_words_and_punct:

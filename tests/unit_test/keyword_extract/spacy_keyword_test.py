@@ -21,7 +21,7 @@ from peerscout.keyword_extract.spacy_keyword import (
     rstrip_punct,
     strip_stop_words_and_punct,
     normalize_text,
-    SpacyExclusionSet,
+    SpacyExclusion,
     SpacyKeywordList,
     SpacyKeywordDocumentParser
 )
@@ -330,25 +330,25 @@ class TestNormalizeText:
 class TestSpacyExclusionSet:
     def test_should_not_match_different_word(
             self, spacy_language_en: Language):
-        assert not SpacyExclusionSet({'interest'}).should_exclude(
+        assert not SpacyExclusion({'interest'}).should_exclude(
             spacy_language_en('technology')
         )
 
     def test_should_match_exact_word(
             self, spacy_language_en: Language):
-        assert SpacyExclusionSet({'interest'}).should_exclude(
+        assert SpacyExclusion({'interest'}).should_exclude(
             spacy_language_en('interest')
         )
 
     def test_should_match_last_word(
             self, spacy_language_en: Language):
-        assert SpacyExclusionSet({'interest'}).should_exclude(
+        assert SpacyExclusion({'interest'}).should_exclude(
             spacy_language_en('research interest')
         )
 
     def test_should_match_normalized_word(
             self, spacy_language_en: Language):
-        assert SpacyExclusionSet({'technology'}).should_exclude(
+        assert SpacyExclusion({'technology'}).should_exclude(
             spacy_language_en('technologies')
         )
 
@@ -443,7 +443,7 @@ class TestSpacyKeywordList:
                     spacy_language_en('lab')
                 ]
             )
-            .exclude(SpacyExclusionSet({'lab'}))
+            .exclude(SpacyExclusion({'lab'}))
             .text_list
         ) == ['technology']
 
@@ -588,7 +588,7 @@ class TestSpacyKeywordDocument:
             'using technology'
         )
         assert document.get_keyword_str_list(
-            exclude=SpacyExclusionSet({'technology'})
+            exclude=SpacyExclusion({'technology'})
         ) == []
 
     def test_should_exclude_numbers_from_individual_token_of_compound_keyword(
