@@ -327,7 +327,7 @@ class TestNormalizeText:
         assert normalize_text('the/keyword') == 'the, keyword'
 
 
-class TestSpacyExclusionSet:
+class TestSpacyExclusion:
     def test_should_not_match_different_word(
             self, spacy_language_en: Language):
         assert not SpacyExclusion({'interest'}).should_exclude(
