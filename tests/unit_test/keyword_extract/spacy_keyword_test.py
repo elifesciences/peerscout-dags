@@ -524,8 +524,7 @@ class TestSpacyKeywordDocument:
             spacy_keyword_document_parser_full.parse_text(
                 'we use advanced technique, advanced, and special technology'
             )
-            .compound_keywords
-            .text_list
+            .get_keyword_str_list(individual_tokens=False)
         ) == {
             'advanced technique', 'advanced technology', 'special technology'
         }
@@ -540,8 +539,7 @@ class TestSpacyKeywordDocument:
             spacy_keyword_document_parser_full.parse_text(
                 'we use advanced technique, advanced and special technology'
             )
-            .compound_keywords
-            .text_list
+            .get_keyword_str_list(individual_tokens=False)
         ) == {
             'advanced technique', 'advanced technology', 'special technology'
         }
@@ -556,8 +554,7 @@ class TestSpacyKeywordDocument:
             spacy_keyword_document_parser_full.parse_text(
                 'we use technique and technology'
             )
-            .compound_keywords
-            .text_list
+            .get_keyword_str_list()
         ) == {
             'technique', 'technology'
         }
