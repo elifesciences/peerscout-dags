@@ -280,11 +280,11 @@ class SpacyExclusionSet:
         self.exclude_stop_words = exclude_stop_words
 
     def should_exclude(self, span: Span) -> bool:
+        last_token = span[-1]
         LOGGER.debug(
             'should_exclude: %s (pos: %s, ent_type: %s)',
-            span, span[-1].pos_, span[-1].ent_type_
+            span, last_token.pos_, last_token.ent_type_
         )
-        last_token = span[-1]
         if last_token.ent_type in self.exclude_entity_types:
             return True
         if self.exclude_stop_words and last_token.is_stop:
