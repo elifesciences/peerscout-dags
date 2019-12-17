@@ -257,7 +257,7 @@ class SpacyExclusionSet:
     def __init__(self, exclusion_list: Set[str]):
         self.exclusion_list = exclusion_list
 
-    def contains_span(self, span: Span) -> bool:
+    def should_exclude(self, span: Span) -> bool:
         last_token = span[-1]
         return (
             last_token.text in self.exclusion_list
@@ -292,7 +292,7 @@ class SpacyKeywordList:
         return self.with_keyword_spans([
             keyword_span
             for keyword_span in self.keyword_spans
-            if not exclusion_set.contains_span(keyword_span)
+            if not exclusion_set.should_exclude(keyword_span)
         ])
 
     @property

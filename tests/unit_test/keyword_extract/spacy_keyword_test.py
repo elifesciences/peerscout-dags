@@ -330,25 +330,25 @@ class TestNormalizeText:
 class TestSpacyExclusionSet:
     def test_should_not_match_different_word(
             self, spacy_language_en: Language):
-        assert not SpacyExclusionSet({'interest'}).contains_span(
+        assert not SpacyExclusionSet({'interest'}).should_exclude(
             spacy_language_en('technology')
         )
 
     def test_should_match_exact_word(
             self, spacy_language_en: Language):
-        assert SpacyExclusionSet({'interest'}).contains_span(
+        assert SpacyExclusionSet({'interest'}).should_exclude(
             spacy_language_en('interest')
         )
 
     def test_should_match_last_word(
             self, spacy_language_en: Language):
-        assert SpacyExclusionSet({'interest'}).contains_span(
+        assert SpacyExclusionSet({'interest'}).should_exclude(
             spacy_language_en('research interest')
         )
 
     def test_should_match_normalized_word(
             self, spacy_language_en: Language):
-        assert SpacyExclusionSet({'technology'}).contains_span(
+        assert SpacyExclusionSet({'technology'}).should_exclude(
             spacy_language_en('technologies')
         )
 
