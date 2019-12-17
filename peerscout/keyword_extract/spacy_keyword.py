@@ -361,15 +361,12 @@ class SpacyKeywordDocument:
         self.language = language
         self.doc = doc
 
-    def get_compound_keyword_spans(self) -> List[Span]:
-        return get_conjuction_noun_chunks(
-            self.doc, language=self.language
-        )
-
     @property
     def compound_keywords(self) -> SpacyKeywordList:
         return SpacyKeywordList(
-            self.language, self.get_compound_keyword_spans()
+            self.language, get_conjuction_noun_chunks(
+                self.doc, language=self.language
+            )
         )
 
     def get_keyword_str_list(  # pylint: disable=redefined-outer-name
