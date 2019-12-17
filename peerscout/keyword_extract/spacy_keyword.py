@@ -279,20 +279,14 @@ class SpacyExclusionSet:
         self.exclude_pronoun = exclude_pronoun
         self.exclude_stop_words = exclude_stop_words
 
-    def should_use_span_as_keyword(self, span: Span) -> bool:
-        last_token = span[-1]
-        return (
-            last_token.ent_type not in self.exclude_entity_types
-        )
-
     def should_exclude(self, span: Span) -> bool:
         LOGGER.debug(
             'should_exclude: %s (pos: %s, ent_type: %s)',
             span, span[-1].pos_, span[-1].ent_type_
         )
-        if not self.should_use_span_as_keyword(span):
-            return True
         last_token = span[-1]
+        if last_token.ent_type in self.exclude_entity_types:
+            return True
         if self.exclude_stop_words and last_token.is_stop:
             return True
         if self.exclude_pronoun and is_pronoun_token(last_token):
