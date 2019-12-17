@@ -352,6 +352,18 @@ class TestSpacyExclusion:
             spacy_language_en('technologies')
         )
 
+    def test_should_exclude_if_word_length_below_minimum(
+            self, spacy_language_en: Language):
+        assert SpacyExclusion(min_word_length=3).should_exclude(
+            spacy_language_en('xy')
+        )
+
+    def test_should_not_exclude_if_word_length_at_minimum(
+            self, spacy_language_en: Language):
+        assert not SpacyExclusion(min_word_length=2).should_exclude(
+            spacy_language_en('xy')
+        )
+
 
 class TestSpacyKeywordList:
     def test_should_extract_individual_tokens_from_single_keyword_span(

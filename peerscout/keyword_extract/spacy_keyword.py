@@ -193,10 +193,14 @@ def get_conjuction_noun_chunks(
     ]
 
 
+def get_span_words(span: Span) -> List[str]:
+    return span.text.split(' ')
+
+
 def iter_individual_keyword_spans(
         keyword_span: Span,
         language: Language) -> Iterable[Span]:
-    individual_keywords = keyword_span.text.split(' ')
+    individual_keywords = get_span_words(keyword_span)
     if len(individual_keywords) > 1:
         for individual_keyword in individual_keywords:
             if len(individual_keyword) < 2:
@@ -207,7 +211,7 @@ def iter_individual_keyword_spans(
 def iter_shorter_keyword_spans(
         keyword_span: Span,
         language: Language) -> Iterable[Span]:
-    individual_keywords = keyword_span.text.split(' ')
+    individual_keywords = get_span_words(keyword_span)
     for start in range(1, len(individual_keywords) - 1):
         yield language(' '.join(individual_keywords[start:]))
 
@@ -271,13 +275,15 @@ class SpacyExclusion:
             exclusion_list: Set[str] = None,
             exclude_entity_types: Set[int] = None,
             exclude_pronoun: bool = True,
-            exclude_stop_words: bool = True):
+            exclude_stop_words: bool = True,
+            min_word_length: int = 2):
         self.exclusion_list = exclusion_list or set()
         self.exclude_entity_types = _coalesce(
             exclude_entity_types, DEFAULT_EXCLUDED_ENTITY_TYPES
         )
         self.exclude_pronoun = exclude_pronoun
         self.exclude_stop_words = exclude_stop_words
+        self.min_word_length = min_word_length
 
     def should_exclude(self, span: Span) -> bool:
         last_token = span[-1]
@@ -290,6 +296,9 @@ class SpacyExclusion:
         if self.exclude_stop_words and last_token.is_stop:
             return True
         if self.exclude_pronoun and is_pronoun_token(last_token):
+            return True
+        if len(span.text) < self.min_word_length:
+            LOGGER.debug('should_exclude: too few words: "%s"', span)
             return True
         return (
             last_token.text in self.exclusion_list
