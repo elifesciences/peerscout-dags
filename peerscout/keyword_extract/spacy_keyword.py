@@ -362,12 +362,9 @@ class SpacyKeywordDocument:
         self.doc = doc
 
     def get_compound_keyword_spans(self) -> List[Span]:
-        return [
-            span
-            for span in get_conjuction_noun_chunks(
-                self.doc, language=self.language
-            )
-        ]
+        return get_conjuction_noun_chunks(
+            self.doc, language=self.language
+        )
 
     @property
     def compound_keywords(self) -> SpacyKeywordList:
