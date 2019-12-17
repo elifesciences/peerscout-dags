@@ -73,6 +73,10 @@ def is_particle_token(token: Token) -> bool:
     return token.pos == PART
 
 
+def is_pronoun_token(token: Token) -> bool:
+    return token.pos == PRON
+
+
 def get_text_list(spans: List[Span]) -> List[str]:
     return [span.text for span in spans]
 
@@ -329,7 +333,7 @@ class SpacyKeywordDocument:
         last_token = span[-1]
         return (
             last_token.ent_type not in {PERSON, GPE, PERCENT}
-            and last_token.pos not in {PRON}
+            and not is_pronoun_token(last_token)
             and not last_token.is_stop
         )
 
