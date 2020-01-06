@@ -262,13 +262,6 @@ def normalize_text(text: str) -> str:
 DEFAULT_EXCLUDED_ENTITY_TYPES = {CARDINAL, DATE, PERSON, GPE, PERCENT}
 
 
-def _coalesce(*args):
-    for value in args:
-        if value is not None:
-            return value
-    return None
-
-
 class SpacyExclusion:
     def __init__(
             self,
@@ -278,8 +271,9 @@ class SpacyExclusion:
             exclude_stop_words: bool = True,
             min_word_length: int = 2):
         self.exclusion_list = exclusion_list or set()
-        self.exclude_entity_types = _coalesce(
-            exclude_entity_types, DEFAULT_EXCLUDED_ENTITY_TYPES
+        self.exclude_entity_types = (
+            exclude_entity_types if exclude_entity_types is not None
+            else DEFAULT_EXCLUDED_ENTITY_TYPES
         )
         self.exclude_pronoun = exclude_pronoun
         self.exclude_stop_words = exclude_stop_words
