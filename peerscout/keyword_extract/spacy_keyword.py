@@ -18,7 +18,9 @@ from spacy.symbols import (  # pylint: disable=no-name-in-module
     PUNCT,
     PRON,
 
-    # ent_typ
+    # ent_type
+    CARDINAL,
+    DATE,
     PERSON,
     GPE,
     PERCENT
@@ -191,10 +193,14 @@ def get_conjuction_noun_chunks(
     ]
 
 
+def get_span_words(span: Span) -> List[str]:
+    return span.text.split(' ')
+
+
 def iter_individual_keyword_spans(
         keyword_span: Span,
         language: Language) -> Iterable[Span]:
-    individual_keywords = keyword_span.text.split(' ')
+    individual_keywords = get_span_words(keyword_span)
     if len(individual_keywords) > 1:
         for individual_keyword in individual_keywords:
             if len(individual_keyword) < 2:
@@ -205,7 +211,7 @@ def iter_individual_keyword_spans(
 def iter_shorter_keyword_spans(
         keyword_span: Span,
         language: Language) -> Iterable[Span]:
-    individual_keywords = keyword_span.text.split(' ')
+    individual_keywords = get_span_words(keyword_span)
     for start in range(1, len(individual_keywords) - 1):
         yield language(' '.join(individual_keywords[start:]))
 
@@ -253,12 +259,41 @@ def normalize_text(text: str) -> str:
     ).strip()
 
 
-class SpacyExclusionSet:
-    def __init__(self, exclusion_list: Set[str]):
-        self.exclusion_list = exclusion_list
+DEFAULT_EXCLUDED_ENTITY_TYPES = {CARDINAL, DATE, PERSON, GPE, PERCENT}
+
+
+class SpacyExclusion:
+    def __init__(
+            self,
+            exclusion_list: Set[str] = None,
+            exclude_entity_types: Set[int] = None,
+            exclude_pronoun: bool = True,
+            exclude_stop_words: bool = True,
+            min_word_length: int = 2):
+        self.exclusion_list = exclusion_list or set()
+        self.exclude_entity_types = (
+            exclude_entity_types if exclude_entity_types is not None
+            else DEFAULT_EXCLUDED_ENTITY_TYPES
+        )
+        self.exclude_pronoun = exclude_pronoun
+        self.exclude_stop_words = exclude_stop_words
+        self.min_word_length = min_word_length
 
     def should_exclude(self, span: Span) -> bool:
         last_token = span[-1]
+        LOGGER.debug(
+            'should_exclude: %s (pos: %s, ent_type: %s)',
+            span, last_token.pos_, last_token.ent_type_
+        )
+        if last_token.ent_type in self.exclude_entity_types:
+            return True
+        if self.exclude_stop_words and last_token.is_stop:
+            return True
+        if self.exclude_pronoun and is_pronoun_token(last_token):
+            return True
+        if len(span.text) < self.min_word_length:
+            LOGGER.debug('should_exclude: too few words: "%s"', span)
+            return True
         return (
             last_token.text in self.exclusion_list
             or get_normalized_token_text(last_token) in self.exclusion_list
@@ -288,7 +323,7 @@ class SpacyKeywordList:
             self.keyword_spans + additional_keyword_spans
         )
 
-    def exclude(self, exclusion_set: SpacyExclusionSet) -> 'SpacyKeywordList':
+    def exclude(self, exclusion_set: SpacyExclusion) -> 'SpacyKeywordList':
         return self.with_keyword_spans([
             keyword_span
             for keyword_span in self.keyword_spans
@@ -329,27 +364,12 @@ class SpacyKeywordDocument:
         self.language = language
         self.doc = doc
 
-    def should_use_span_as_keyword(self, span: Span) -> bool:
-        last_token = span[-1]
-        return (
-            last_token.ent_type not in {PERSON, GPE, PERCENT}
-            and not is_pronoun_token(last_token)
-            and not last_token.is_stop
-        )
-
-    def get_compound_keyword_spans(self) -> List[Span]:
-        return [
-            span
-            for span in get_conjuction_noun_chunks(
-                self.doc, language=self.language
-            )
-            if self.should_use_span_as_keyword(span)
-        ]
-
     @property
     def compound_keywords(self) -> SpacyKeywordList:
         return SpacyKeywordList(
-            self.language, self.get_compound_keyword_spans()
+            self.language, get_conjuction_noun_chunks(
+                self.doc, language=self.language
+            )
         )
 
     def get_keyword_str_list(  # pylint: disable=redefined-outer-name
@@ -358,17 +378,22 @@ class SpacyKeywordDocument:
             individual_tokens: bool = True,
             shorter_keywords: bool = True,
             normalize_text: bool = True,
-            exclude: SpacyExclusionSet = None) -> List[str]:
+            exclude: SpacyExclusion = None) -> List[str]:
+
+        if exclude is None:
+            exclude = SpacyExclusion()
 
         keyword_list = self.compound_keywords
         if strip_stop_words_and_punct:
             keyword_list = keyword_list.with_stripped_stop_words_and_punct
-        if exclude:
-            keyword_list = keyword_list.exclude(exclude)
+        # exclude whole keyword spans
+        keyword_list = keyword_list.exclude(exclude)
         if individual_tokens:
             keyword_list = keyword_list.with_individual_tokens
         if shorter_keywords:
             keyword_list = keyword_list.with_shorter_keywords
+        # exclude potential individual keywords
+        keyword_list = keyword_list.exclude(exclude)
         if normalize_text:
             return keyword_list.normalized_text_list
         return keyword_list.text_list
