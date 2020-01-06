@@ -210,8 +210,10 @@ def add_extracted_keywords(
             keywords,
             additional_keywords=additional_keywords
         )
-        record[extracted_keyword_field_name] = new_keywords
-        yield record
+        yield {
+            **record,
+            extracted_keyword_field_name: new_keywords
+        }
 
 
 def simple_regex_keyword_extraction(
