@@ -72,7 +72,8 @@ DEFAULT_CONFIG = {
     "id_field": "id",
     "data_load_timestamp_field": "datahub_imported_timestamp",
     "table_write_append": "true",
-    "limit_row_count_value": None
+    "limit_row_count_value": None,
+    "spacy_language_model": "en_core_web_md"
 }
 
 PEERSCOUT_DAG = DAG(
