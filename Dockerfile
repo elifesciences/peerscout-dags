@@ -13,7 +13,7 @@ COPY requirements.spacy.txt ./
 RUN pip install -r requirements.spacy.txt
 
 # download spaCy language models
-RUN python -m spacy download en_core_web_md
+RUN python -m spacy download en_core_web_lg
 RUN if [ "${install_dev}" = "y" ]; then python -m spacy download en_core_web_sm; fi
 
 COPY requirements.txt ./
