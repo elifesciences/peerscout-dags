@@ -30,7 +30,7 @@ from spacy.symbols import (  # pylint: disable=no-name-in-module
 LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_SPACY_LANGUAGE_MODEL_NAME = "en_core_web_lg"
+DEFAULT_SPACY_LANGUAGE_MODEL_NAME = "en_core_web_md"
 
 
 def get_token_lemma(token: Token) -> str:
