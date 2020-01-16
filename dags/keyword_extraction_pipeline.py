@@ -106,6 +106,9 @@ def etl_extraction_keyword(**kwargs):
     table = externally_triggered_parameters.get(
         ExternalTriggerConfig.BQ_TABLE_PARAM_KEY
     )
+    spacy_language_model = externally_triggered_parameters.get(
+        ExternalTriggerConfig.SPACY_LANGUAGE_MODEL_NAME_KEY
+    )
 
     with TemporaryDirectory() as tempdir:
         full_temp_file_location = Path.joinpath(
@@ -114,7 +117,8 @@ def etl_extraction_keyword(**kwargs):
         keyword_extract_config = KeywordExtractConfig(
             DEFAULT_CONFIG, destination_dataset=dep_env,
             destination_table=table,
-            limit_count_value=limit_row_count_value
+            limit_count_value=limit_row_count_value,
+            spacy_language_model=spacy_language_model
         )
         etl_keywords(keyword_extract_config, full_temp_file_location)
 

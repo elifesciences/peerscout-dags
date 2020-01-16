@@ -61,3 +61,4 @@ class ExternalTriggerConfig:
     LIMIT_ROW_COUNT = 'limit_row_count_value'
     BQ_DATASET_PARAM_KEY = 'dataset'
     BQ_TABLE_PARAM_KEY = 'table'
+    SPACY_LANGUAGE_MODEL_NAME_KEY = 'spacy_language_model'
