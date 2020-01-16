@@ -1,6 +1,3 @@
-"""
-manages data config of the keyword extraction pipeline
-"""
 # pylint: disable=too-few-public-methods,simplifiable-if-expression,
 # pylint: disable=too-many-arguments,too-many-instance-attributes
 
