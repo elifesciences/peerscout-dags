@@ -1,10 +1,9 @@
-"""
-test
-@author: mowonibi
-"""
 import logging
 import time
 from peerscout.bq_utils.bq_query_service import BqQuery
+from peerscout.keyword_extract.spacy_keyword import (
+    DEFAULT_SPACY_LANGUAGE_MODEL_NAME
+)
 from tests.end2end_test.end_to_end_test_helper import AirflowAPI
 
 LOGGER = logging.getLogger(__name__)
@@ -13,7 +12,6 @@ AIRFLW_API = AirflowAPI()
 DATASET = "ci"
 TABLE = "ci_extracted_keyword"
 PROJECT = "elife-data-pipeline"  # change  all to env variable
-SPACY_LANGUAGE_MODEL_NAME = "en_core_web_lg"
 
 
 # pylint: disable=broad-except
@@ -30,7 +28,7 @@ def test_dag_runs_data_imported(
     table_name = table or TABLE
     spacy_language_model = (
         spacy_language_model_name or
-        SPACY_LANGUAGE_MODEL_NAME
+        DEFAULT_SPACY_LANGUAGE_MODEL_NAME
     )
     bq_query_service = BqQuery(project_name=project_name)
 

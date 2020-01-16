@@ -10,7 +10,7 @@ def test_task_count(dagbag):
     :return:
     """
     dag = dagbag.get_dag(DAG_ID)
-    assert len(dag.tasks) == 1
+    assert len(dag.tasks) == 2
 
 
 def test_contain_all_tasks(dagbag):
@@ -22,7 +22,7 @@ def test_contain_all_tasks(dagbag):
     tasks = dag.tasks
     task_ids = list(map(lambda task: task.task_id, tasks))
     task_ids.sort()
-    expected_ids = ['etl_keyword_extraction_task']
+    expected_ids = ['etl_keyword_extraction_task', 'get_data_config']
 
     expected_ids.sort()
 

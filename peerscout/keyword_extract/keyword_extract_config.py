@@ -6,9 +6,6 @@ manages data config of the keyword extraction pipeline
 
 
 class KeywordExtractConfig:
-    """
-    manages data config of the keyword extraction pipeline
-    """
     def __init__(
             self,
             config: dict,
@@ -19,13 +16,15 @@ class KeywordExtractConfig:
             query_template: str = None,
             limit_count_value: int = None,
             keyword_extractor: str = None,
-            spacy_language_model: str = None
+            spacy_language_model: str = None,
+            environment_placeholder="{ENV}",
+            deployment_env=""
     ):
         self.gcp_project = gcp_project or config.get("gcp_project")
         self.source_dataset = source_dataset or config.get("source_dataset")
         self.destination_dataset = destination_dataset or config.get(
             "destination_dataset"
-        )
+        ).replace(environment_placeholder, deployment_env)
         self.destination_table = destination_table or config.get(
             "destination_table"
         )
