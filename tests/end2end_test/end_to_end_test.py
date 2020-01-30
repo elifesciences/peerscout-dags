@@ -1,10 +1,9 @@
-"""
-test
-@author: mowonibi
-"""
 import logging
 import time
 from peerscout.bq_utils.bq_query_service import BqQuery
+from peerscout.keyword_extract.spacy_keyword import (
+    DEFAULT_SPACY_LANGUAGE_MODEL_NAME
+)
 from tests.end2end_test.end_to_end_test_helper import AirflowAPI
 
 LOGGER = logging.getLogger(__name__)
@@ -18,13 +17,19 @@ PROJECT = "elife-data-pipeline"  # change  all to env variable
 # pylint: disable=broad-except
 def test_dag_runs_data_imported(
         dataset: str = None, table: str = None,
-        project: str = None):
+        project: str = None,
+        spacy_language_model_name=None
+):
     """
     :return:
     """
     project_name = project or PROJECT
     dataset_name = dataset or DATASET
     table_name = table or TABLE
+    spacy_language_model = (
+        spacy_language_model_name or
+        DEFAULT_SPACY_LANGUAGE_MODEL_NAME
+    )
     bq_query_service = BqQuery(project_name=project_name)
 
     try:
@@ -40,7 +45,8 @@ def test_dag_runs_data_imported(
     config = {
         "dataset": dataset_name,
         "table": table_name,
-        "limit_row_count_value": 5
+        "limit_row_count_value": 5,
+        "spacy_language_model": spacy_language_model
     }
     execution_date = AIRFLW_API.trigger_dag(dag_id=dag_id, conf=config)
     is_running = True

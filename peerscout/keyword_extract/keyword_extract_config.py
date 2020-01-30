@@ -1,14 +1,8 @@
-"""
-manages data config of the keyword extraction pipeline
-"""
 # pylint: disable=too-few-public-methods,simplifiable-if-expression,
 # pylint: disable=too-many-arguments,too-many-instance-attributes
 
 
 class KeywordExtractConfig:
-    """
-    manages data config of the keyword extraction pipeline
-    """
     def __init__(
             self,
             config: dict,
@@ -19,13 +13,15 @@ class KeywordExtractConfig:
             query_template: str = None,
             limit_count_value: int = None,
             keyword_extractor: str = None,
-            spacy_language_model: str = None
+            spacy_language_model: str = None,
+            environment_placeholder="{ENV}",
+            deployment_env=""
     ):
         self.gcp_project = gcp_project or config.get("gcp_project")
         self.source_dataset = source_dataset or config.get("source_dataset")
         self.destination_dataset = destination_dataset or config.get(
             "destination_dataset"
-        )
+        ).replace(environment_placeholder, deployment_env)
         self.destination_table = destination_table or config.get(
             "destination_table"
         )
@@ -61,3 +57,4 @@ class ExternalTriggerConfig:
     LIMIT_ROW_COUNT = 'limit_row_count_value'
     BQ_DATASET_PARAM_KEY = 'dataset'
     BQ_TABLE_PARAM_KEY = 'table'
+    SPACY_LANGUAGE_MODEL_NAME_KEY = 'spacy_language_model'
