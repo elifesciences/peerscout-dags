@@ -1,7 +1,7 @@
 elifePipeline {
     node('containers-jenkins-plugin') {
         def commit
-        def image_building_ci_pipeline = 'data-hub-airflow-image'
+        def jenkins_image_building_ci_pipeline = 'process/process-data-hub-airflow-image-update-repo-list'
         def git_url
 
         stage 'Checkout', {
@@ -26,7 +26,7 @@ elifePipeline {
                 elifeGitMoveToBranch commit, 'master'
             }
             stage 'Build data pipeline image with latest commit', {
-                triggerImageBuild(image_building_ci_pipeline, git_url, commit )
+                triggerImageBuild(image_building_ci_pipeline, git_url, commit)
             }
         }
     }
@@ -41,10 +41,12 @@ def withDataPipelineGcpCredentials(doSomething) {
     }
 }
 
-def triggerImageBuild(image_building_ci_pipeline, gitUrl, gitRef){
-    build job: image_building_ci_pipeline,  wait: false, parameters: [string(name: 'gitUrl', value: gitUrl), string(name: 'gitRef', value: gitRef)]
+def triggerImageBuild(image_building_ci_pipeline, gitUrl, gitCommitRef){
+    build job: image_building_ci_pipeline,  wait: false, parameters: [string(name: 'gitUrl', value: gitUrl), string(name: 'gitCommitRef', value: gitCommitRef)]
 }
 
 def getGitUrl() {
     return sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
 }
+
+
