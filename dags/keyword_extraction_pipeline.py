@@ -67,7 +67,7 @@ DEFAULT_CONFIG = {
             SELECT
                 name AS id,
                 keywords AS keywords_csv,
-                research_interests AS text_field,
+                COALESCE(research_interests, "") AS text_field,
                 ROW_NUMBER() OVER (PARTITION BY name
                     ORDER BY imported_timestamp DESC) AS t
             FROM `{project}.{dataset}.public_editor_profile`
