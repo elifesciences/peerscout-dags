@@ -65,12 +65,10 @@ class SpacyKeywordExtractor(KeywordExtractor):
 
 def get_keyword_extractor(
         keyword_extract_config: KeywordExtractConfig) -> KeywordExtractor:
-    keyword_extractor_name = (
-        keyword_extract_config.keyword_extractor or 'spacy'
-    )
-    if keyword_extractor_name == 'simple':
+
+    if not keyword_extract_config.spacy_language_model:
         return SimpleKeywordExtractor()
-    if keyword_extractor_name == 'spacy':
+    else:
         spacy_language_model_name = (
             keyword_extract_config.spacy_language_model
             or DEFAULT_SPACY_LANGUAGE_MODEL_NAME
@@ -78,20 +76,16 @@ def get_keyword_extractor(
         return SpacyKeywordExtractor(spacy.load(
             spacy_language_model_name
         ))
-    raise ValueError(
-        'unsupported keyword_extractor: %s' % keyword_extractor_name
-    )
 
 
 def etl_keywords(
         keyword_extract_config: KeywordExtractConfig,
-        full_file_location: str):
-    """
-    :param keyword_extract_config:
-    :param full_file_location:
-    :return:
-    """
-
+        full_file_location: str,
+        data_pipelines_state: dict = None
+):
+    latest_state_value = data_pipelines_state.get(
+        keyword_extract_config.id_field
+    )
     keyword_extractor = get_keyword_extractor(keyword_extract_config)
     bq_query_processing = BqQuery(
         project_name=keyword_extract_config.gcp_project)
@@ -101,7 +95,18 @@ def etl_keywords(
                   keyword_extract_config.limit_return_count]),
         keyword_extract_config.gcp_project,
         keyword_extract_config.source_dataset,
+        latest_state_value
     )
+    downloaded_data, data_for_state_info_extraction = (
+        tee(downloaded_data, 2)
+    )
+    if keyword_extract_config.data_load_timestamp_field:
+        latest_state_value = get_latest_state(
+            data_for_state_info_extraction,
+            keyword_extract_config.data_load_timestamp_field,
+            keyword_extract_config.state_timestamp_format
+        )
+
     timestamp_as_string = current_timestamp_as_string()
     data_with_timestamp = add_timestamp(
         downloaded_data,
@@ -129,49 +134,79 @@ def etl_keywords(
         project_name=keyword_extract_config.gcp_project
     )
 
+    if latest_state_value:
+        data_pipelines_state[keyword_extract_config.pipeline_id] = (
+            latest_state_value
+        )
+
+        state_as_string = json.dumps(
+            data_pipelines_state, ensure_ascii=False, indent=4
+        )
+        upload_s3_object(
+            bucket=state_file_bucket,
+            object_key=state_file_name_key,
+            data_object=latest_record_date,
+        )
+
+
 
 def current_timestamp_as_string():
-    """
-    :return:
-    """
     dtobj = datetime.datetime.now(timezone.utc)
     return dtobj.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def get_timestamp_from_string(
+        timestamp_as_string: str,
+        timestamp_format: str
+):
+    timestamp_obj = datetime.datetime.strptime(
+        timestamp_as_string.strip(),
+        timestamp_format
+    )
+    return timestamp_obj
+
+
 def download_data(
-        bq_query_processing, query_template, gcp_project, source_dataset
+        bq_query_processing, query_template, gcp_project, source_dataset,
+        latest_state_value
 ) -> Iterable[dict]:
-    """
-    :param bq_query_processing:
-    :param query_template:
-    :param gcp_project:
-    :param source_dataset:
-    :return:
-    """
+
     rows = bq_query_processing.simple_query(
-        query_template, gcp_project, source_dataset
+        query_template=query_template,
+        gcp_project=gcp_project,
+        source_dataset=source_dataset,
+        latest_state_value=latest_state_value
     )
     return rows
 
 
 def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
-    """
-    :param record_list:
-    :param timestamp_field_name:
-    :param timestamp_as_string:
-    :return:
-    """
     for record in record_list:
         record[timestamp_field_name] = timestamp_as_string
         yield record
 
 
+def get_latest_state(
+        record_list,
+        status_timestamp_field_name,
+        timestamp_format
+):
+    latest_timestamp = datetime.datetime.min
+    for record in record_list:
+        record_status_timestamp =  get_timestamp_from_string(
+            record.get(status_timestamp_field_name),
+            timestamp_format
+        )
+        latest_timestamp = (
+            latest_timestamp
+            if latest_timestamp > record_status_timestamp
+            else record_status_timestamp
+        )
+    return latest_timestamp
+
+
 def write_to_file(json_list, full_temp_file_location):
-    """
-    :param json_list:
-    :param full_temp_file_location:
-    :return:
-    """
+
     with open(full_temp_file_location, "a") as write_file:
         for record in json_list:
             write_file.write(json.dumps(record, ensure_ascii=False))

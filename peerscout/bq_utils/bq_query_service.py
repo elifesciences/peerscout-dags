@@ -17,10 +17,12 @@ class BqQuery:
             query: str,
             project: str,
             dataset: str,
-            table: str = None
+            table: str = None,
+            latest_state_value: str = None
     ) -> List[dict]:
         _query = query.format(
-            project=project, dataset=dataset, table=table
+            project=project, dataset=dataset, table=table,
+            latest_state_value=latest_state_value
         ).strip()
         LOGGER.debug("running query:\n%s", _query)
         query_job = self.bigquery_client.query(_query)
