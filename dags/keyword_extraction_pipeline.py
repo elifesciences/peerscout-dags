@@ -3,6 +3,7 @@ dag for    extracting keywords from data in bigquery
 """
 import os
 import logging
+import json
 from tempfile import NamedTemporaryFile
 from datetime import timedelta
 from airflow import DAG
@@ -10,11 +11,12 @@ import airflow
 from airflow.models import Variable
 from airflow.operators.python_operator import PythonOperator
 from peerscout.keyword_extract.keyword_extract import (
-    etl_keywords
+    etl_keywords_get_latest_state
 )
 from peerscout.keyword_extract.utils import (
     get_stored_state,
-    get_yaml_file_as_dict
+    get_yaml_file_as_dict,
+    upload_s3_object
 )
 from peerscout.keyword_extract.keyword_extract_config import (
     MultiKeywordExtractConfig,
@@ -136,11 +138,23 @@ def etl_extraction_keyword(**kwargs):
                 state_dict[keyword_extract_config.pipeline_id] = (
                     keyword_extract_config.default_start_timestamp
                 )
-            etl_keywords(
+            latest_state_value = etl_keywords_get_latest_state(
                 keyword_extract_config,
                 named_temp_file.name,
                 state_dict
             )
+            if latest_state_value:
+                state_dict[keyword_extract_config.pipeline_id] = (
+                    latest_state_value
+                )
+                state_as_string = json.dumps(
+                    state_dict, ensure_ascii=False, indent=4
+                )
+                upload_s3_object(
+                    bucket=multi_keyword_extract_conf.state_file_bucket_name,
+                    object_key=multi_keyword_extract_conf.state_file_object_name,
+                    data_object=state_as_string,
+                )
             if to_reset_state:
                 reset_var[keyword_extract_config.pipeline_id] = False
                 Variable.set(

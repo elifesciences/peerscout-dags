@@ -78,7 +78,7 @@ def get_keyword_extractor(
         ))
 
 
-def etl_keywords(
+def etl_keywords_get_latest_state(
         keyword_extract_config: KeywordExtractConfig,
         full_file_location: str,
         data_pipelines_state: dict = None
@@ -134,20 +134,7 @@ def etl_keywords(
         project_name=keyword_extract_config.gcp_project
     )
 
-    if latest_state_value:
-        data_pipelines_state[keyword_extract_config.pipeline_id] = (
-            latest_state_value
-        )
-
-        state_as_string = json.dumps(
-            data_pipelines_state, ensure_ascii=False, indent=4
-        )
-        upload_s3_object(
-            bucket=state_file_bucket,
-            object_key=state_file_name_key,
-            data_object=latest_record_date,
-        )
-
+    return latest_state_value
 
 
 def current_timestamp_as_string():
