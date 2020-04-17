@@ -26,6 +26,9 @@ from peerscout.keyword_extract.spacy_keyword import (
     DEFAULT_SPACY_LANGUAGE_MODEL_NAME
 )
 
+SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE = (
+    "provenance_source_type"
+)
 
 def to_unique_keywords(
         keywords: List[str],
@@ -113,8 +116,13 @@ def etl_keywords_get_latest_state(
         keyword_extract_config.data_load_timestamp_field,
         timestamp_as_string,
     )
-    data_with_extracted_keywords = add_extracted_keywords(
+    data_with_provenance = add_provenance_source_type(
         data_with_timestamp,
+        keyword_extract_config.provenance_fieldname_in_source_data,
+        keyword_extract_config.provenance_value_from_config,
+    )
+    data_with_extracted_keywords = add_extracted_keywords(
+        data_with_provenance,
         keyword_extract_config.text_field,
         keyword_extract_config.existing_keywords_field,
         keyword_extractor=keyword_extractor
@@ -167,6 +175,19 @@ def download_data(
     return rows
 
 
+def add_provenance_source_type(
+        record_list,
+        provenance_fieldname_in_source_data: str = None,
+        provenance_value_from_config: str = None
+):
+    for record in record_list:
+        record[SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE] = (
+            provenance_value_from_config or
+            record.pop(provenance_fieldname_in_source_data, None)
+        )
+        yield record
+
+
 def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
     for record in record_list:
         record[timestamp_field_name] = timestamp_as_string
@@ -180,7 +201,7 @@ def get_latest_state(
 ):
     latest_timestamp = datetime.datetime.min
     for record in record_list:
-        record_status_timestamp =  get_timestamp_from_string(
+        record_status_timestamp = get_timestamp_from_string(
             record.get(status_timestamp_field_name),
             timestamp_format
         )
@@ -193,7 +214,6 @@ def get_latest_state(
 
 
 def write_to_file(json_list, full_temp_file_location):
-
     with open(full_temp_file_location, "a") as write_file:
         for record in json_list:
             write_file.write(json.dumps(record, ensure_ascii=False))

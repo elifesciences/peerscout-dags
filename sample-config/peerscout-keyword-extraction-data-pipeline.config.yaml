@@ -34,8 +34,12 @@ keywordExtractionPipelines:
     limitRowCountValue:  #config element primarily used during test
     spacyLanguageModel: 'en_core_web_lg'
     provenance:
-      fieldNameInSourceDataforDataSourceType: #
-      fixedInMetadataDataSourceType: #
+      type: fixedValue #either sourceDataFieldName or fixedValue (DEFAULT)
+      # provide EITHER the field in source data from which to
+      # retrieve the value OR the fixed value to enter into provenance
+      # field which indicate the kind of data source from which the keywords
+      # is extracted
+      value: public_editor_profile
 
   - pipelineID: keywords_from_abstracts
     defaultStartTimestamp: ''

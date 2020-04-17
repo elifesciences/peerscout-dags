@@ -46,10 +46,29 @@ class KeywordExtractConfig:
             import_timestamp_field_name: str = None
     ):
         self.pipeline_id = config.get("pipelineID")
-
         self.default_start_timestamp = config.get(
             "defaultStartTimestamp"
         )
+        provenance_val = (
+            config.get("provenance", {}).get(
+                "value"
+            )
+        )
+        provenance_type = (
+            config.get("provenance", {}).get(
+                "type"
+            )
+        )
+        if provenance_val:
+            if provenance_type == "sourceDataFieldName":
+                self.provenance_fieldname_in_source_data = (
+                    provenance_val
+                )
+            else:
+                self.provenance_value_from_config = (
+                    provenance_val
+                )
+
         self.state_timestamp_format = config.get("stateFieldTimestampFormat")
         self.gcp_project = gcp_project or config.get("gcpProjectName")
         self.source_dataset = config.get("sourceDataset")
