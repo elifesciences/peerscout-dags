@@ -17,6 +17,9 @@ class MultiKeywordExtractConfig:
             ) if deployment_env else multi_keyword_extract_config
         )
 
+        print("SKDSLDSDSDSDSD",deployment_env, deployment_env_placeholder)
+        print(updated_config)
+
         self.gcp_project = updated_config.get(
             "gcpProjectName"
         )
@@ -59,17 +62,20 @@ class KeywordExtractConfig:
                 "type"
             )
         )
-        if provenance_val:
-            if provenance_type == "sourceDataFieldName":
-                self.provenance_fieldname_in_source_data = (
-                    provenance_val
-                )
-            else:
-                self.provenance_value_from_config = (
-                    provenance_val
-                )
+        self.provenance_fieldname_in_source_data = (
+            provenance_val
+            if provenance_val
+            and provenance_type == "sourceDataFieldName"
+            else None
+        )
 
-        self.state_timestamp_format = config.get("stateFieldTimestampFormat")
+        self.provenance_value_from_config = (
+            provenance_val
+            if provenance_val
+            and provenance_type != "sourceDataFieldName"
+            else None
+        )
+
         self.gcp_project = gcp_project or config.get("gcpProjectName")
         self.source_dataset = config.get("sourceDataset")
         self.destination_dataset = config.get(
@@ -129,7 +135,7 @@ def update_deployment_env_placeholder(
             new_dict[key] = tmp
         elif isinstance(val, list):
             new_dict[key] = [
-                replace_env_placeholder(
+                update_deployment_env_placeholder(
                     x,
                     deployment_env,
                     environment_placeholder

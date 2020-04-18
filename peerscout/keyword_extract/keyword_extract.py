@@ -29,6 +29,9 @@ from peerscout.keyword_extract.spacy_keyword import (
 SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE = (
     "provenance_source_type"
 )
+DEFAULT_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S%z"
+DATA_LOAD_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 
 def to_unique_keywords(
         keywords: List[str],
@@ -103,11 +106,10 @@ def etl_keywords_get_latest_state(
     downloaded_data, data_for_state_info_extraction = (
         tee(downloaded_data, 2)
     )
-    if keyword_extract_config.data_load_timestamp_field:
+    if keyword_extract_config.state_timestamp_field:
         latest_state_value = get_latest_state(
             data_for_state_info_extraction,
-            keyword_extract_config.data_load_timestamp_field,
-            keyword_extract_config.state_timestamp_format
+            keyword_extract_config.state_timestamp_field,
         )
 
     timestamp_as_string = current_timestamp_as_string()
@@ -147,18 +149,7 @@ def etl_keywords_get_latest_state(
 
 def current_timestamp_as_string():
     dtobj = datetime.datetime.now(timezone.utc)
-    return dtobj.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def get_timestamp_from_string(
-        timestamp_as_string: str,
-        timestamp_format: str
-):
-    timestamp_obj = datetime.datetime.strptime(
-        timestamp_as_string.strip(),
-        timestamp_format
-    )
-    return timestamp_obj
+    return dtobj.strftime(DATA_LOAD_TIMESTAMP_FORMAT)
 
 
 def download_data(
@@ -169,7 +160,7 @@ def download_data(
     rows = bq_query_processing.simple_query(
         query_template=query_template,
         gcp_project=gcp_project,
-        source_dataset=source_dataset,
+        dataset=source_dataset,
         latest_state_value=latest_state_value
     )
     return rows
@@ -181,6 +172,7 @@ def add_provenance_source_type(
         provenance_value_from_config: str = None
 ):
     for record in record_list:
+        record.pop("imported_timestamp")
         record[SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE] = (
             provenance_value_from_config or
             record.pop(provenance_fieldname_in_source_data, None)
@@ -197,13 +189,14 @@ def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
 def get_latest_state(
         record_list,
         status_timestamp_field_name,
-        timestamp_format
 ):
-    latest_timestamp = datetime.datetime.min
+    latest_timestamp = datetime.datetime.strptime(
+        "1900-01-10 00:00:00+0000",
+        DEFAULT_TIMESTAMP_FORMAT
+    )
     for record in record_list:
-        record_status_timestamp = get_timestamp_from_string(
-            record.get(status_timestamp_field_name),
-            timestamp_format
+        record_status_timestamp = (
+            record.get(status_timestamp_field_name)
         )
         latest_timestamp = (
             latest_timestamp
@@ -216,6 +209,7 @@ def get_latest_state(
 def write_to_file(json_list, full_temp_file_location):
     with open(full_temp_file_location, "a") as write_file:
         for record in json_list:
+            print("reereree", record)
             write_file.write(json.dumps(record, ensure_ascii=False))
             write_file.write("\n")
 

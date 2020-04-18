@@ -2,21 +2,21 @@ gcpProjectName: 'elife-data-pipeline'
 importedTimestampFieldName: 'data_hub_imported_timestamp'
 stateFile:
   bucketName: '{ENV}-elife-data-pipeline'
-  objectName: 'airflow-config/s3-csv/{ENV}-state/key_extraction_pipeline_state.json'
+  objectName: 'airflow-config/s3-csv/{ENV}-state/key_extraction_pipeline_state_test.json'
 keywordExtractionPipelines:
   - pipelineID: keywords_from_research_interests
-    defaultStartTimestamp: #
-    stateTimestampField: #
-    stateFieldTimestampFormat: #
-    sourceDataset: '{ENV}'
+    defaultStartTimestamp: '2000-01-01 00:00:00+0000'
+    stateTimestampField: imported_timestamp
+    sourceDataset: 'prod'
     destinationDataset: '{ENV}'
-    destinationTable: "extracted_keywords"
+    destinationTable: "extracted_keywordsX21x"
     queryTemplate: |
            WITH temp_t AS(
                SELECT
                    name AS id,
                    keywords AS keywords_csv,
                    COALESCE(research_interests, "") AS text_field,
+                   imported_timestamp,
                    ROW_NUMBER() OVER (PARTITION BY name
                        ORDER BY imported_timestamp DESC) AS t
                FROM `{project}.{dataset}.public_editor_profile`
@@ -40,32 +40,3 @@ keywordExtractionPipelines:
       # field which indicate the kind of data source from which the keywords
       # is extracted
       value: public_editor_profile
-
-  - pipelineID: keywords_from_abstracts
-    defaultStartTimestamp: ''
-    sourceDataset: '{ENV}'
-    destinationDataset: '{ENV}'
-    destinationTable: "extracted_keywords"
-    queryTemplate: |
-           WITH temp_t AS(
-               SELECT
-                   name AS id,
-                   keywords AS keywords_csv,
-                   COALESCE(research_interests, "") AS text_field,
-                   ROW_NUMBER() OVER (PARTITION BY name
-                       ORDER BY imported_timestamp DESC) AS t
-               FROM `{project}.{dataset}.public_editor_profile`
-           )
-           SELECT * EXCEPT(t) FROM temp_t
-           WHERE t=1
-    #to reduce properties to configure,
-    #it is assumed that query template placeholders for  project, dataset, and latest state value are
-    #{project}, {dataset} and {latest_state_value}
-    textField: 'text_field'
-    stateTimestampField: #
-    existingKeywordsField: 'keywords_csv'
-    idField: 'id'
-    importedTimestampFieldName: 'datahub_imported_timestamp'
-    tableWriteAppend: 'true'
-    limitRowCountValue:  #config element primarily used during test
-    spacyLanguageModel: 'en_core_web_lg'

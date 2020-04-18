@@ -6,12 +6,14 @@ import logging
 import json
 from tempfile import NamedTemporaryFile
 from datetime import timedelta
+from datetime import datetime
 from airflow import DAG
 import airflow
 from airflow.models import Variable
 from airflow.operators.python_operator import PythonOperator
 from peerscout.keyword_extract.keyword_extract import (
-    etl_keywords_get_latest_state
+    etl_keywords_get_latest_state,
+    DEFAULT_TIMESTAMP_FORMAT
 )
 from peerscout.keyword_extract.utils import (
     get_stored_state,
@@ -35,7 +37,6 @@ EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME = (
 )
 
 DEPLOYMENT_ENV = "DEPLOYMENT_ENV"
-DEFAULT_DEPLOYMENT_ENV_VALUE = None
 EXTERNAL_TRIGGER_LIMIT_VALUE_KEY = (
     "limit_row_count_value"
 )
@@ -52,6 +53,7 @@ def get_default_args():
         "retry_exponential_backoff": True,
         "provide_context": True,
     }
+
 
 STATE_RESET_VARIABLE_NAME = (
     "peerscout_keyword_extraction_data_pipeline_state_reset"
@@ -94,8 +96,7 @@ def etl_extraction_keyword(**kwargs):
         externally_triggered_parameters.get(
             ExternalTriggerConfig.DEPLOYMENT_ENV,
             os.getenv(
-                DEPLOYMENT_ENV,
-                DEFAULT_DEPLOYMENT_ENV_VALUE
+                DEPLOYMENT_ENV
             )
         )
     )
@@ -118,6 +119,7 @@ def etl_extraction_keyword(**kwargs):
         with NamedTemporaryFile() as named_temp_file:
             keyword_extract_config = KeywordExtractConfig(
                 extract_conf_dict,
+                gcp_project=multi_keyword_extract_conf.gcp_project,
                 destination_table=table,
                 limit_count_value=limit_row_count_value,
                 spacy_language_model=spacy_language_model,
@@ -138,14 +140,18 @@ def etl_extraction_keyword(**kwargs):
                 state_dict[keyword_extract_config.pipeline_id] = (
                     keyword_extract_config.default_start_timestamp
                 )
+            parsed_date_dict = {
+                key: datetime.strptime(value, DEFAULT_TIMESTAMP_FORMAT)
+                for key, value in state_dict.items()
+            }
             latest_state_value = etl_keywords_get_latest_state(
                 keyword_extract_config,
                 named_temp_file.name,
-                state_dict
+                parsed_date_dict
             )
             if latest_state_value:
                 state_dict[keyword_extract_config.pipeline_id] = (
-                    latest_state_value
+                    latest_state_value.strftime(DEFAULT_TIMESTAMP_FORMAT)
                 )
                 state_as_string = json.dumps(
                     state_dict, ensure_ascii=False, indent=4
