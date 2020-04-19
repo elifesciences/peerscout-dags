@@ -2,12 +2,12 @@ gcpProjectName: 'elife-data-pipeline' #mandatory
 importedTimestampFieldName: 'data_hub_imported_timestamp' #mandatory
 stateFile:
   bucketName: '{ENV}-elife-data-pipeline'
-  objectName: 'airflow-config/s3-csv/{ENV}-state/key_extraction_pipeline_state_test.json'
+  objectName: 'airflow-config/keyword-extraction/{ENV}-state/key_extraction_pipeline_state_test.json'
 keywordExtractionPipelines:
   - pipelineID: keywords_from_research_interests  #mandatory
     defaultStartTimestamp: '2000-01-01 00:00:00+0000' #format must be "%Y-%m-%d %H:%M:%S%z"
     stateTimestampField: imported_timestamp
-    sourceDataset: '{ENV}'  #mandatory
+    sourceDataset: 'prod'  #mandatory
     destinationDataset: '{ENV}'  #mandatory
     destinationTable: "test_extracted_keywords"  #mandatory
     queryTemplate: |

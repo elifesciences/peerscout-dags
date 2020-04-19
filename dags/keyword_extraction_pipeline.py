@@ -148,6 +148,7 @@ def etl_and_update_state(
             {}
         )
     )
+
     to_reset_state = reset_var.get(
         keyword_extract_config.pipeline_id, False
     )
@@ -159,13 +160,18 @@ def etl_and_update_state(
         key: datetime.strptime(value, ETL_STATE_TIMESTAMP_FORMAT)
         for key, value in state_dict.items()
     }
+
     latest_state_value = etl_keywords_get_latest_state(
         keyword_extract_config,
         temp_file_name,
         timestamp_as_string,
         parsed_date_dict
     )
-    if latest_state_value:
+
+    if (
+            keyword_extract_config.state_timestamp_field
+            and latest_state_value
+    ):
         state_dict[keyword_extract_config.pipeline_id] = (
             latest_state_value.strftime(ETL_STATE_TIMESTAMP_FORMAT)
         )
