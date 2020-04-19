@@ -4,11 +4,6 @@ import boto3
 from botocore.exceptions import ClientError
 
 
-def get_yaml_file_as_dict(file_location: str) -> dict:
-    with open(file_location, 'r') as yaml_file:
-        return yaml.safe_load(yaml_file)
-
-
 @contextmanager
 def s3_open_binary_read(bucket: str, object_key: str):
     s3_client = boto3.client("s3")

@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+import yaml
 from tempfile import NamedTemporaryFile
 from datetime import timedelta
 from datetime import datetime
@@ -14,7 +15,6 @@ from peerscout.keyword_extract.keyword_extract import (
 )
 from peerscout.utils.s3_data_service import (
     get_stored_state,
-    get_yaml_file_as_dict,
     upload_s3_object
 )
 from peerscout.keyword_extract.keyword_extract_config import (
@@ -59,6 +59,9 @@ PEERSCOUT_KEYWORD_EXTRACTION_DAG = DAG(
     dagrun_timeout=timedelta(minutes=60),
 )
 
+def get_yaml_file_as_dict(file_location: str) -> dict:
+    with open(file_location, 'r') as yaml_file:
+        return yaml.safe_load(yaml_file)
 
 def get_data_config(**kwargs):
     conf_file_path = os.getenv(
