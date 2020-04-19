@@ -16,7 +16,10 @@ import spacy
 from spacy.language import Language
 
 from peerscout.utils.bq_query_service import BqQuery
-from peerscout.utils.bq_data_service import load_file_into_bq
+from peerscout.utils.bq_data_service import (
+    load_file_into_bq,
+    create_or_extend_table_schema
+)
 from peerscout.keyword_extract.keyword_extract_config import (
     KeywordExtractConfig
 )
@@ -91,7 +94,8 @@ def get_keyword_extractor(
 def etl_keywords_get_latest_state(
         keyword_extract_config: KeywordExtractConfig,
         full_file_location: str,
-        data_pipelines_state: dict = None
+        timestamp_as_string: str,
+        data_pipelines_state: dict = None,
 ):
     latest_state_value = data_pipelines_state.get(
         keyword_extract_config.id_field
@@ -110,13 +114,12 @@ def etl_keywords_get_latest_state(
     downloaded_data, data_for_state_info_extraction = (
         tee(downloaded_data, 2)
     )
+
     if keyword_extract_config.state_timestamp_field:
         latest_state_value = get_latest_state(
             data_for_state_info_extraction,
             keyword_extract_config.state_timestamp_field,
         )
-
-    timestamp_as_string = current_timestamp_as_string()
     data_with_timestamp = add_timestamp(
         downloaded_data,
         keyword_extract_config.data_load_timestamp_field,
@@ -134,6 +137,12 @@ def etl_keywords_get_latest_state(
         keyword_extractor=keyword_extractor
     )
     write_to_file(data_with_extracted_keywords, full_file_location)
+    create_or_extend_table_schema(
+        keyword_extract_config.gcp_project,
+        keyword_extract_config.destination_dataset,
+        keyword_extract_config.destination_table,
+        full_file_location
+    )
     write_disposition = (
         WriteDisposition.WRITE_APPEND
         if keyword_extract_config.table_write_append
@@ -213,7 +222,6 @@ def get_latest_state(
 def write_to_file(json_list, full_temp_file_location):
     with open(full_temp_file_location, "a") as write_file:
         for record in json_list:
-            print("reereree", record)
             write_file.write(json.dumps(record, ensure_ascii=False))
             write_file.write("\n")
 
@@ -260,9 +268,4 @@ def simple_regex_keyword_extraction(
         text: str,
         regex_pattern=r"([a-z](?:\w|-)+)"
 ):
-    """
-    :param text:
-    :param regex_pattern:
-    :return:
-    """
     return re.findall(regex_pattern, text.lower())

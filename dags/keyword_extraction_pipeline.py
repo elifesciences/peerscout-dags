@@ -11,6 +11,7 @@ from airflow.models import Variable
 from airflow.operators.python_operator import PythonOperator
 from peerscout.keyword_extract.keyword_extract import (
     etl_keywords_get_latest_state,
+    current_timestamp_as_string,
     ETL_STATE_TIMESTAMP_FORMAT
 )
 from peerscout.utils.s3_data_service import (
@@ -59,9 +60,11 @@ PEERSCOUT_KEYWORD_EXTRACTION_DAG = DAG(
     dagrun_timeout=timedelta(minutes=60),
 )
 
+
 def get_yaml_file_as_dict(file_location: str) -> dict:
     with open(file_location, 'r') as yaml_file:
         return yaml.safe_load(yaml_file)
+
 
 def get_data_config(**kwargs):
     conf_file_path = os.getenv(
@@ -108,7 +111,7 @@ def etl_extraction_keyword(**kwargs):
         multi_keyword_extract_conf.state_file_bucket_name,
         multi_keyword_extract_conf.state_file_object_name
     )
-
+    timestamp_as_string = current_timestamp_as_string()
     for extract_conf_dict in multi_keyword_extract_conf.keyword_extract_config:
         with NamedTemporaryFile() as named_temp_file:
             keyword_extract_config = KeywordExtractConfig(
@@ -125,6 +128,7 @@ def etl_extraction_keyword(**kwargs):
                 keyword_extract_config,
                 state_dict,
                 named_temp_file.name,
+                timestamp_as_string,
                 multi_keyword_extract_conf.state_file_bucket_name,
                 multi_keyword_extract_conf.state_file_object_name
             )
@@ -134,6 +138,7 @@ def etl_and_update_state(
         keyword_extract_config: KeywordExtractConfig,
         state_dict: dict,
         temp_file_name: str,
+        timestamp_as_string: str,
         state_file_bucket_name: str,
         state_file_object_name: str
 ):
@@ -157,6 +162,7 @@ def etl_and_update_state(
     latest_state_value = etl_keywords_get_latest_state(
         keyword_extract_config,
         temp_file_name,
+        timestamp_as_string,
         parsed_date_dict
     )
     if latest_state_value:
