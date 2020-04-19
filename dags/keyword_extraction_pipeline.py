@@ -12,7 +12,7 @@ from peerscout.keyword_extract.keyword_extract import (
     etl_keywords_get_latest_state,
     DEFAULT_TIMESTAMP_FORMAT
 )
-from peerscout.keyword_extract.utils import (
+from peerscout.utils.s3_data_service import (
     get_stored_state,
     get_yaml_file_as_dict,
     upload_s3_object

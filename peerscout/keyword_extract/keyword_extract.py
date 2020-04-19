@@ -15,8 +15,8 @@ from google.cloud.bigquery import WriteDisposition
 import spacy
 from spacy.language import Language
 
-from peerscout.bq_utils.bq_query_service import BqQuery
-from peerscout.bq_utils.bq_data_service import load_file_into_bq
+from peerscout.utils.bq_query_service import BqQuery
+from peerscout.utils.bq_data_service import load_file_into_bq
 from peerscout.keyword_extract.keyword_extract_config import (
     KeywordExtractConfig
 )

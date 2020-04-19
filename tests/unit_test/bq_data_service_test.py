@@ -1,10 +1,10 @@
 from unittest.mock import patch
 import pytest
 
-from peerscout.bq_utils.bq_data_service import (
+from peerscout.utils.bq_data_service import (
     load_file_into_bq,
 )
-import peerscout.bq_utils.bq_data_service \
+import peerscout.utils.bq_data_service \
     as bq_data_service_module
 
 

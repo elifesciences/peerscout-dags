@@ -1,6 +1,6 @@
 import logging
 import time
-from peerscout.bq_utils.bq_query_service import BqQuery
+from peerscout.utils.bq_query_service import BqQuery
 from peerscout.keyword_extract.spacy_keyword import (
     DEFAULT_SPACY_LANGUAGE_MODEL_NAME
 )
