@@ -34,8 +34,8 @@ def test_dag_runs_data_imported(
 
     try:
         bq_query_service.simple_query(
-            query=TestQueryTemplate.CLEAN_TABLE_QUERY,
-            project=project_name,
+            query_template=TestQueryTemplate.CLEAN_TABLE_QUERY,
+            gcp_project=project_name,
             dataset=dataset_name,
             table=table_name,
         )
@@ -58,8 +58,8 @@ def test_dag_runs_data_imported(
     assert AIRFLW_API.get_dag_status(dag_id, execution_date) == "success"
 
     query_response = bq_query_service.simple_query(
-        query=TestQueryTemplate.READ_COUNT_TABLE_QUERY,
-        project=project_name,
+        query_template=TestQueryTemplate.READ_COUNT_TABLE_QUERY,
+        gcp_project=project_name,
         dataset=dataset_name,
         table=table_name,
     )
@@ -67,8 +67,8 @@ def test_dag_runs_data_imported(
 
     # clean up
     bq_query_service.simple_query(
-        query=TestQueryTemplate.CLEAN_TABLE_QUERY,
-        project=project_name,
+        query_template=TestQueryTemplate.CLEAN_TABLE_QUERY,
+        gcp_project=project_name,
         dataset=dataset_name,
         table=table_name,
     )
