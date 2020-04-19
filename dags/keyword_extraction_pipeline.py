@@ -11,7 +11,7 @@ from airflow.models import Variable
 from airflow.operators.python_operator import PythonOperator
 from peerscout.keyword_extract.keyword_extract import (
     etl_keywords_get_latest_state,
-    DEFAULT_TIMESTAMP_FORMAT
+    ETL_STATE_TIMESTAMP_FORMAT
 )
 from peerscout.utils.s3_data_service import (
     get_stored_state,
@@ -151,7 +151,7 @@ def etl_and_update_state(
             keyword_extract_config.default_start_timestamp
         )
     parsed_date_dict = {
-        key: datetime.strptime(value, DEFAULT_TIMESTAMP_FORMAT)
+        key: datetime.strptime(value, ETL_STATE_TIMESTAMP_FORMAT)
         for key, value in state_dict.items()
     }
     latest_state_value = etl_keywords_get_latest_state(
@@ -161,7 +161,7 @@ def etl_and_update_state(
     )
     if latest_state_value:
         state_dict[keyword_extract_config.pipeline_id] = (
-            latest_state_value.strftime(DEFAULT_TIMESTAMP_FORMAT)
+            latest_state_value.strftime(ETL_STATE_TIMESTAMP_FORMAT)
         )
         state_as_string = json.dumps(
             state_dict, ensure_ascii=False, indent=4

@@ -16,10 +16,6 @@ class MultiKeywordExtractConfig:
                 deployment_env_placeholder
             ) if deployment_env else multi_keyword_extract_config
         )
-
-        print("SKDSLDSDSDSDSD",deployment_env, deployment_env_placeholder)
-        print(updated_config)
-
         self.gcp_project = updated_config.get(
             "gcpProjectName"
         )
@@ -110,9 +106,6 @@ class KeywordExtractConfig:
 
 
 class ExternalTriggerConfig:
-    """
-    configuration for external trigger parameter keys
-    """
     LIMIT_ROW_COUNT = 'limit_row_count_value'
     BQ_TABLE_PARAM_KEY = 'table'
     DEPLOYMENT_ENV = 'dep_env'

@@ -29,7 +29,11 @@ from peerscout.keyword_extract.spacy_keyword import (
 SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE = (
     "provenance_source_type"
 )
-DEFAULT_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S%z"
+
+# etl_state_timestamp given in this format primarily
+# because datatime data returned from bigquery always
+# has associated timezone
+ETL_STATE_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S%z"
 DATA_LOAD_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -192,7 +196,7 @@ def get_latest_state(
 ):
     latest_timestamp = datetime.datetime.strptime(
         "1900-01-10 00:00:00+0000",
-        DEFAULT_TIMESTAMP_FORMAT
+        ETL_STATE_TIMESTAMP_FORMAT
     )
     for record in record_list:
         record_status_timestamp = (
