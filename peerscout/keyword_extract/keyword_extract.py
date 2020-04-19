@@ -136,7 +136,15 @@ def etl_keywords_get_latest_state(
         keyword_extract_config.existing_keywords_field,
         keyword_extractor=keyword_extractor
     )
-    write_to_file(data_with_extracted_keywords, full_file_location)
+    processed_data = remove_keys(
+        data_with_extracted_keywords,
+        [
+            keyword_extract_config.state_timestamp_field,
+            keyword_extract_config.existing_keywords_field,
+            keyword_extract_config.text_field
+        ]
+    )
+    write_to_file(processed_data, full_file_location)
     create_or_extend_table_schema(
         keyword_extract_config.gcp_project,
         keyword_extract_config.destination_dataset,
@@ -185,11 +193,20 @@ def add_provenance_source_type(
         provenance_value_from_config: str = None
 ):
     for record in record_list:
-        record.pop("imported_timestamp")
         record[SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE] = (
             provenance_value_from_config or
             record.pop(provenance_fieldname_in_source_data, None)
         )
+        yield record
+
+
+def remove_keys(
+        record_list,
+        keys_to_remove: list,
+):
+    for record in record_list:
+        for key in keys_to_remove:
+            record.pop(key)
         yield record
 
 

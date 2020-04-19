@@ -228,5 +228,3 @@ def create_or_extend_table_schema(
             table_name,
             schema
         )
-
-
