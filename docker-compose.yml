@@ -103,7 +103,7 @@ services:
             - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
             - AIRFLOW__CORE__EXECUTOR=DaskExecutor
             - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
-            - PEERSCOUT_CONFIG_FILE_PATH=/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+            - EXTRACT_KEYWORDS_FILE_PATH=/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
         depends_on:
           - dask-scheduler
         volumes:

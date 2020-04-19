@@ -1,6 +1,3 @@
-"""
-dag for    extracting keywords from data in bigquery
-"""
 import os
 import logging
 import json
@@ -29,8 +26,8 @@ from peerscout.keyword_extract.keyword_extract_config import (
 LOGGER = logging.getLogger(__name__)
 DAG_ID = "Extract_Keywords_From_Corpus"
 
-PEERSCOUT_CONFIG_FILE_PATH_ENV_NAME = (
-    "PEERSCOUT_CONFIG_FILE_PATH"
+EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME = (
+    "EXTRACT_KEYWORDS_FILE_PATH"
 )
 EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME = (
     "EXTRACT_KEYWORDS_SCHEDULE_INTERVAL"
@@ -40,9 +37,6 @@ DEPLOYMENT_ENV = "DEPLOYMENT_ENV"
 
 
 def get_default_args():
-    """
-    :return:
-    """
     return {
         "start_date": airflow.utils.dates.days_ago(1),
         "retries": 10,
@@ -56,7 +50,7 @@ STATE_RESET_VARIABLE_NAME = (
     "peerscout_keyword_extraction_data_pipeline_state_reset"
 )
 
-PEERSCOUT_DAG = DAG(
+PEERSCOUT_KEYWORD_EXTRACTION_DAG = DAG(
     dag_id=DAG_ID,
     default_args=get_default_args(),
     schedule_interval=os.getenv(
@@ -68,7 +62,7 @@ PEERSCOUT_DAG = DAG(
 
 def get_data_config(**kwargs):
     conf_file_path = os.getenv(
-        PEERSCOUT_CONFIG_FILE_PATH_ENV_NAME
+        EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME
     )
     data_config_dict = get_yaml_file_as_dict(
         conf_file_path
@@ -197,10 +191,12 @@ def create_python_task(
 
 
 GET_DATA_CONFIG_TASK = create_python_task(
-    PEERSCOUT_DAG, "get_data_config", get_data_config, retries=5
+    PEERSCOUT_KEYWORD_EXTRACTION_DAG,
+    "get_data_config", get_data_config, retries=5
 )
 ETL_KEYWORD_EXTRACTION_TASK = create_python_task(
-    PEERSCOUT_DAG, "etl_keyword_extraction_task",
+    PEERSCOUT_KEYWORD_EXTRACTION_DAG,
+    "etl_keyword_extraction_task",
     etl_extraction_keyword, retries=5
 )
 
