@@ -37,9 +37,6 @@ EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME = (
 )
 
 DEPLOYMENT_ENV = "DEPLOYMENT_ENV"
-EXTERNAL_TRIGGER_LIMIT_VALUE_KEY = (
-    "limit_row_count_value"
-)
 
 
 def get_default_args():
@@ -127,46 +124,62 @@ def etl_extraction_keyword(**kwargs):
                     multi_keyword_extract_conf.import_timestamp_field_name
                 )
             )
-            reset_var = (
-                Variable.get(
-                    STATE_RESET_VARIABLE_NAME,
-                    {}
-                )
-            )
-            to_reset_state = reset_var.get(
-                keyword_extract_config.pipeline_id, False
-            )
-            if keyword_extract_config.state_timestamp_field and to_reset_state:
-                state_dict[keyword_extract_config.pipeline_id] = (
-                    keyword_extract_config.default_start_timestamp
-                )
-            parsed_date_dict = {
-                key: datetime.strptime(value, DEFAULT_TIMESTAMP_FORMAT)
-                for key, value in state_dict.items()
-            }
-            latest_state_value = etl_keywords_get_latest_state(
+            etl_and_update_state(
                 keyword_extract_config,
+                state_dict,
                 named_temp_file.name,
-                parsed_date_dict
+                multi_keyword_extract_conf.state_file_bucket_name,
+                multi_keyword_extract_conf.state_file_object_name
             )
-            if latest_state_value:
-                state_dict[keyword_extract_config.pipeline_id] = (
-                    latest_state_value.strftime(DEFAULT_TIMESTAMP_FORMAT)
-                )
-                state_as_string = json.dumps(
-                    state_dict, ensure_ascii=False, indent=4
-                )
-                upload_s3_object(
-                    bucket=multi_keyword_extract_conf.state_file_bucket_name,
-                    object_key=multi_keyword_extract_conf.state_file_object_name,
-                    data_object=state_as_string,
-                )
-            if to_reset_state:
-                reset_var[keyword_extract_config.pipeline_id] = False
-                Variable.set(
-                    STATE_RESET_VARIABLE_NAME,
-                    reset_var
-                )
+
+
+def etl_and_update_state(
+        keyword_extract_config: KeywordExtractConfig,
+        state_dict: dict,
+        temp_file_name: str,
+        state_file_bucket_name: str,
+        state_file_object_name: str
+):
+    reset_var = (
+        Variable.get(
+            STATE_RESET_VARIABLE_NAME,
+            {}
+        )
+    )
+    to_reset_state = reset_var.get(
+        keyword_extract_config.pipeline_id, False
+    )
+    if keyword_extract_config.state_timestamp_field and to_reset_state:
+        state_dict[keyword_extract_config.pipeline_id] = (
+            keyword_extract_config.default_start_timestamp
+        )
+    parsed_date_dict = {
+        key: datetime.strptime(value, DEFAULT_TIMESTAMP_FORMAT)
+        for key, value in state_dict.items()
+    }
+    latest_state_value = etl_keywords_get_latest_state(
+        keyword_extract_config,
+        temp_file_name,
+        parsed_date_dict
+    )
+    if latest_state_value:
+        state_dict[keyword_extract_config.pipeline_id] = (
+            latest_state_value.strftime(DEFAULT_TIMESTAMP_FORMAT)
+        )
+        state_as_string = json.dumps(
+            state_dict, ensure_ascii=False, indent=4
+        )
+        upload_s3_object(
+            bucket=state_file_bucket_name,
+            object_key=state_file_object_name,
+            data_object=state_as_string,
+        )
+    if to_reset_state:
+        reset_var[keyword_extract_config.pipeline_id] = False
+        Variable.set(
+            STATE_RESET_VARIABLE_NAME,
+            reset_var
+        )
 
 
 def create_python_task(
