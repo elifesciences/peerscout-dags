@@ -110,7 +110,6 @@ def etl_extraction_keyword(**kwargs):
         multi_keyword_extract_conf.state_file_bucket_name,
         multi_keyword_extract_conf.state_file_object_name
     )
-    print("state_dict", state_dict)
     timestamp_as_string = current_timestamp_as_string()
     for extract_conf_dict in multi_keyword_extract_conf.keyword_extract_config:
         keyword_extract_config = KeywordExtractConfig(
