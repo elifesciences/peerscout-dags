@@ -26,11 +26,9 @@ class MultiKeywordExtractConfig:
             "stateFile", {}).get("bucketName")
         self.state_file_object_name = updated_config.get(
             "stateFile", {}).get("objectName")
-        self.keyword_extract_config = [
-            keyword_extract_conf
-            for keyword_extract_conf in
+        self.keyword_extract_config = (
             updated_config.get("keywordExtractionPipelines")
-        ]
+        )
 
 
 class KeywordExtractConfig:

@@ -79,16 +79,16 @@ class SpacyKeywordExtractor(KeywordExtractor):
 def get_keyword_extractor(
         keyword_extract_config: KeywordExtractConfig) -> KeywordExtractor:
 
-    if not keyword_extract_config.spacy_language_model:
-        return SimpleKeywordExtractor()
-    else:
+    extractor = SimpleKeywordExtractor()
+    if keyword_extract_config.spacy_language_model:
         spacy_language_model_name = (
             keyword_extract_config.spacy_language_model
             or DEFAULT_SPACY_LANGUAGE_MODEL_NAME
         )
-        return SpacyKeywordExtractor(spacy.load(
+        extractor = SpacyKeywordExtractor(spacy.load(
             spacy_language_model_name
         ))
+    return extractor
 
 
 def etl_keywords_get_latest_state(

@@ -134,7 +134,6 @@ def extend_table_schema_with_nested_schema(
         SchemaField.from_api_repr(schema_field_dict)
         for schema_field_dict in new_schema_dict
     ]
-
     table.schema = new_schema
     client.update_table(table, ["schema"])  # Make an API request.
 
