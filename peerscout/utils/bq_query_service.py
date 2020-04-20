@@ -20,12 +20,12 @@ class BqQuery:
             table: str = None,
             latest_state_value: str = None
     ) -> List[dict]:
+        print("SESSESSSE S SDSDSD SDS DSD SD", latest_state_value)
         _query = query_template.format(
             project=gcp_project, dataset=dataset, table=table,
             latest_state_value=latest_state_value
         ).strip()
         LOGGER.debug("running query:\n%s", _query)
         query_job = self.bigquery_client.query(_query)
-        rows = [dict(row) for row in query_job]
-        LOGGER.debug("rows: %s", rows)
-        return rows
+        for row in query_job:
+            yield dict(row)

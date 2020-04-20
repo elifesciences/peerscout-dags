@@ -63,7 +63,8 @@ def test_dag_runs_data_imported(
         dataset=dataset_name,
         table=table_name,
     )
-    assert query_response[0].get("count") > 0
+    response = list(query_response)
+    assert response[0].get("count") > 0
 
     # clean up
     bq_query_service.simple_query(

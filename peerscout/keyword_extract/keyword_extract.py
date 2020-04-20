@@ -4,6 +4,7 @@ utils for doing the heavy lifting job of extracting keywords
 
 import json
 import re
+from tempfile import NamedTemporaryFile
 from typing import Iterable, List
 import datetime
 from itertools import tee
@@ -93,12 +94,13 @@ def get_keyword_extractor(
 
 def etl_keywords_get_latest_state(
         keyword_extract_config: KeywordExtractConfig,
-        full_file_location: str,
         timestamp_as_string: str,
         data_pipelines_state: dict = None,
 ):
+
     latest_state_value = data_pipelines_state.get(
-        keyword_extract_config.id_field
+        keyword_extract_config.pipeline_id,
+        keyword_extract_config.default_start_timestamp
     )
     keyword_extractor = get_keyword_extractor(keyword_extract_config)
     bq_query_processing = BqQuery(
@@ -144,26 +146,28 @@ def etl_keywords_get_latest_state(
             keyword_extract_config.text_field
         ]
     )
-    write_to_file(processed_data, full_file_location)
-    create_or_extend_table_schema(
-        keyword_extract_config.gcp_project,
-        keyword_extract_config.destination_dataset,
-        keyword_extract_config.destination_table,
-        full_file_location
-    )
-    write_disposition = (
-        WriteDisposition.WRITE_APPEND
-        if keyword_extract_config.table_write_append
-        else WriteDisposition.WRITE_TRUNCATE
-    )
-    load_file_into_bq(
-        filename=full_file_location,
-        table_name=keyword_extract_config.destination_table,
-        auto_detect_schema=True,
-        dataset_name=keyword_extract_config.destination_dataset,
-        write_mode=write_disposition,
-        project_name=keyword_extract_config.gcp_project
-    )
+
+    with NamedTemporaryFile() as named_temp_file:
+        write_to_file(processed_data, named_temp_file.name)
+        create_or_extend_table_schema(
+            keyword_extract_config.gcp_project,
+            keyword_extract_config.destination_dataset,
+            keyword_extract_config.destination_table,
+            named_temp_file.name
+        )
+        write_disposition = (
+            WriteDisposition.WRITE_APPEND
+            if keyword_extract_config.table_write_append
+            else WriteDisposition.WRITE_TRUNCATE
+        )
+        load_file_into_bq(
+            filename=named_temp_file.name,
+            table_name=keyword_extract_config.destination_table,
+            auto_detect_schema=True,
+            dataset_name=keyword_extract_config.destination_dataset,
+            write_mode=write_disposition,
+            project_name=keyword_extract_config.gcp_project
+        )
 
     return latest_state_value
 

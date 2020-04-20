@@ -2,7 +2,6 @@ import os
 import logging
 import json
 import yaml
-from tempfile import NamedTemporaryFile
 from datetime import timedelta
 from datetime import datetime
 from airflow import DAG
@@ -111,33 +110,31 @@ def etl_extraction_keyword(**kwargs):
         multi_keyword_extract_conf.state_file_bucket_name,
         multi_keyword_extract_conf.state_file_object_name
     )
+    print("state_dict", state_dict)
     timestamp_as_string = current_timestamp_as_string()
     for extract_conf_dict in multi_keyword_extract_conf.keyword_extract_config:
-        with NamedTemporaryFile() as named_temp_file:
-            keyword_extract_config = KeywordExtractConfig(
-                extract_conf_dict,
-                gcp_project=multi_keyword_extract_conf.gcp_project,
-                destination_table=table,
-                limit_count_value=limit_row_count_value,
-                spacy_language_model=spacy_language_model,
-                import_timestamp_field_name=(
-                    multi_keyword_extract_conf.import_timestamp_field_name
-                )
+        keyword_extract_config = KeywordExtractConfig(
+            extract_conf_dict,
+            gcp_project=multi_keyword_extract_conf.gcp_project,
+            destination_table=table,
+            limit_count_value=limit_row_count_value,
+            spacy_language_model=spacy_language_model,
+            import_timestamp_field_name=(
+                multi_keyword_extract_conf.import_timestamp_field_name
             )
-            etl_and_update_state(
-                keyword_extract_config,
-                state_dict,
-                named_temp_file.name,
-                timestamp_as_string,
-                multi_keyword_extract_conf.state_file_bucket_name,
-                multi_keyword_extract_conf.state_file_object_name
-            )
+        )
+        etl_and_update_state(
+            keyword_extract_config,
+            state_dict,
+            timestamp_as_string,
+            multi_keyword_extract_conf.state_file_bucket_name,
+            multi_keyword_extract_conf.state_file_object_name
+        )
 
 
 def etl_and_update_state(
         keyword_extract_config: KeywordExtractConfig,
         state_dict: dict,
-        temp_file_name: str,
         timestamp_as_string: str,
         state_file_bucket_name: str,
         state_file_object_name: str
@@ -163,7 +160,6 @@ def etl_and_update_state(
 
     latest_state_value = etl_keywords_get_latest_state(
         keyword_extract_config,
-        temp_file_name,
         timestamp_as_string,
         parsed_date_dict
     )
