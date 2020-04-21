@@ -279,12 +279,9 @@ def write_to_jsonl_file(
 
 
 def iter_get_batches(iterable, size):
-    iterable = iter(iterable)
-
     while True:
         chunk = []
-        # pylint: disable=unused-variable
-        for ind in range(size):
+        for _ in range(size):
             try:
                 chunk.append(next(iterable))
             except StopIteration:
