@@ -1,7 +1,7 @@
 """
 utils for doing the heavy lifting job of extracting keywords
 """
-
+import os
 import json
 import re
 import logging
@@ -22,6 +22,9 @@ from peerscout.utils.bq_query_service import BqQuery
 from peerscout.utils.bq_data_service import (
     load_file_into_bq,
     create_or_extend_table_schema
+)
+from peerscout.utils.s3_data_service import (
+    upload_s3_object
 )
 from peerscout.keyword_extract.keyword_extract_config import (
     KeywordExtractConfig
@@ -96,9 +99,12 @@ def get_keyword_extractor(
     return extractor
 
 
-def etl_keywords_get_latest_state(
+# pylint: disable=too-many-locals
+def etl_keywords(
         keyword_extract_config: KeywordExtractConfig,
         timestamp_as_string: str,
+        state_s3_bucket: str = None,
+        state_s3_object: str = None,
         data_pipelines_state: dict = None,
 ):
 
@@ -135,22 +141,72 @@ def etl_keywords_get_latest_state(
         keyword_extractor=keyword_extractor
     )
 
-    with TemporaryDirectory() as tempdir:
-        full_temp_file_location = Path.joinpath(
-            Path(tempdir, "downloaded_rows_data"))
-        latest_timestamp_iterator = (
-            remove_cols_load_to_db_get_latest_timestamp(
-                data_with_extracted_keywords, full_temp_file_location,
+    write_disposition = (
+        WriteDisposition.WRITE_APPEND
+        if keyword_extract_config.table_write_append
+        else WriteDisposition.WRITE_TRUNCATE
+    )
+    batch_size = 1000
+    data_with_extracted_keywords_batches = iter_get_batches(
+        data_with_extracted_keywords, batch_size
+    )
+    progress_monitor = 1
+    for data_batch in data_with_extracted_keywords_batches:
+        print(data_batch)
+        LOGGER.info(
+            "processing batch %s of size %s",
+            progress_monitor, batch_size
+        )
+        progress_monitor += 1
+        latest_timestamp = get_latest_state(
+            data_batch,
+            keyword_extract_config.state_timestamp_field
+        )
+        with TemporaryDirectory() as tempdir:
+            temp_processed_jsonl_path = os.fspath(
+                Path(tempdir, "downloaded_rows_data")
+            )
+            write_to_jsonl_file(
+                data_batch,
+                temp_processed_jsonl_path,
                 keyword_extract_config
             )
+            load_data_to_bq(
+                keyword_extract_config,
+                temp_processed_jsonl_path,
+                write_disposition
+            )
+        update_state(
+            latest_timestamp,
+            keyword_extract_config,
+            data_pipelines_state,
+            state_s3_bucket,
+            state_s3_object
         )
 
-        if keyword_extract_config.state_timestamp_field:
-            latest_state_value = get_latest_state(
-                latest_timestamp_iterator
-            )
 
-    return latest_state_value
+def update_state(
+        latest_timestamp,
+        keyword_extract_config,
+        state_dict,
+        state_s3_bucket,
+        state_s3_object
+):
+    if (
+            keyword_extract_config.state_timestamp_field
+            and latest_timestamp
+    ):
+        state_dict[keyword_extract_config.pipeline_id] = (
+            latest_timestamp.strftime(ETL_STATE_TIMESTAMP_FORMAT)
+        )
+        state_as_string = json.dumps(
+            state_dict, ensure_ascii=False, indent=4
+        )
+        upload_s3_object(
+            bucket=state_s3_bucket,
+            object_key=state_s3_object,
+            data_object=state_as_string,
+        )
 
 
 def current_timestamp_as_string():
@@ -192,74 +248,66 @@ def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
 
 
 def get_latest_state(
-        record_status_timestamp_list,
+        record_list,
+        timestamp_field_name: str = None
 ):
-    latest_timestamp = datetime.datetime.strptime(
-        "1900-01-10 00:00:00+0000",
-        ETL_STATE_TIMESTAMP_FORMAT
-    )
-    for record_status_timestamp in record_status_timestamp_list:
+    latest_timestamp = None
+    if timestamp_field_name:
+        timestamp_list = [
+            record.get(timestamp_field_name)
+            for record in record_list
+            if record.get(timestamp_field_name)
+        ]
         latest_timestamp = (
-            latest_timestamp
-            if latest_timestamp > record_status_timestamp
-            else record_status_timestamp
+            max(timestamp_list) if latest_timestamp else None
         )
+
     return latest_timestamp
 
 
-def remove_cols_load_to_db_get_latest_timestamp(
-        json_list, full_temp_file_location,
+def write_to_jsonl_file(
+        data_with_extracted_keywords,
+        full_temp_file_location,
         keyword_extract_config
 ):
-    records_count = 0
-    write_disposition = (
-        WriteDisposition.WRITE_APPEND
-        if keyword_extract_config.table_write_append
-        else WriteDisposition.WRITE_TRUNCATE
-    )
-    with open(full_temp_file_location, "a") as write_file:
-        for record in json_list:
-            records_count += 1
-            if records_count % 1000 == 0:
-                load_data_to_bq(
-                    keyword_extract_config,
-                    full_temp_file_location,
-                    write_disposition
-                )
-                write_file.truncate(0)
-                LOGGER.info("%s records processed", str(records_count))
-            latest_timestamp = record.pop(
-                keyword_extract_config.state_timestamp_field
-            )
-            record.pop(keyword_extract_config.existing_keywords_field)
-            record.pop(keyword_extract_config.text_field)
+    with open(full_temp_file_location, "w") as write_file:
+        for record in data_with_extracted_keywords:
+            record.pop(keyword_extract_config.existing_keywords_field, None)
+            record.pop(keyword_extract_config.text_field, None)
+            record.pop(keyword_extract_config.state_timestamp_field, None)
             record = {key: value for key, value in record.items() if value}
             write_file.write(json.dumps(record, ensure_ascii=False))
             write_file.write("\n")
 
-            yield latest_timestamp
 
-        load_data_to_bq(
-            keyword_extract_config,
-            full_temp_file_location,
-            write_disposition
-        )
-        LOGGER.info("%s records processed", str(records_count))
+def iter_get_batches(iterable, size):
+    iterable = iter(iterable)
+
+    while True:
+        chunk = []
+        # pylint: disable=unused-variable
+        for ind in range(size):
+            try:
+                chunk.append(next(iterable))
+            except StopIteration:
+                yield chunk
+                return
+        yield chunk
 
 
 def load_data_to_bq(
         keyword_extract_config,
-        full_temp_file_location,
+        temp_processed_jsonl_path,
         write_disposition
 ):
     create_or_extend_table_schema(
         keyword_extract_config.gcp_project,
         keyword_extract_config.destination_dataset,
         keyword_extract_config.destination_table,
-        full_temp_file_location
+        temp_processed_jsonl_path
     )
     load_file_into_bq(
-        filename=full_temp_file_location,
+        filename=temp_processed_jsonl_path,
         table_name=keyword_extract_config.destination_table,
         auto_detect_schema=True,
         dataset_name=keyword_extract_config.destination_dataset,

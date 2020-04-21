@@ -1,6 +1,5 @@
 import os
 import logging
-import json
 import yaml
 from datetime import timedelta
 from datetime import datetime
@@ -9,13 +8,12 @@ import airflow
 from airflow.models import Variable
 from airflow.operators.python_operator import PythonOperator
 from peerscout.keyword_extract.keyword_extract import (
-    etl_keywords_get_latest_state,
+    etl_keywords,
     current_timestamp_as_string,
     ETL_STATE_TIMESTAMP_FORMAT
 )
 from peerscout.utils.s3_data_service import (
     get_stored_state,
-    upload_s3_object
 )
 from peerscout.keyword_extract.keyword_extract_config import (
     MultiKeywordExtractConfig,
@@ -156,28 +154,13 @@ def etl_and_update_state(
         key: datetime.strptime(value, ETL_STATE_TIMESTAMP_FORMAT)
         for key, value in state_dict.items()
     }
-
-    latest_state_value = etl_keywords_get_latest_state(
+    etl_keywords(
         keyword_extract_config,
         timestamp_as_string,
+        state_file_bucket_name,
+        state_file_object_name,
         parsed_date_dict
     )
-
-    if (
-            keyword_extract_config.state_timestamp_field
-            and latest_state_value
-    ):
-        state_dict[keyword_extract_config.pipeline_id] = (
-            latest_state_value.strftime(ETL_STATE_TIMESTAMP_FORMAT)
-        )
-        state_as_string = json.dumps(
-            state_dict, ensure_ascii=False, indent=4
-        )
-        upload_s3_object(
-            bucket=state_file_bucket_name,
-            object_key=state_file_object_name,
-            data_object=state_as_string,
-        )
     if to_reset_state:
         reset_var[keyword_extract_config.pipeline_id] = False
         Variable.set(

@@ -20,7 +20,7 @@ keywordExtractionPipelines:
                FROM `{project}.{dataset}.public_editor_profile`
            )
            SELECT * EXCEPT(t) FROM temp_t
-           WHERE t=1'
+           WHERE t=1
     # mandatory
     #to reduce properties to configure,
     #it is assumed that query template placeholders for  project, dataset, and latest state value are
@@ -61,7 +61,7 @@ keywordExtractionPipelines:
     idField: 'version_id'
     tableWriteAppend: 'true'
     limitRowCountValue:  #config element primarily used during test
-    #spacyLanguageModel: 'en_core_web_lg'
+    spacyLanguageModel: 'en_core_web_lg'
     provenance:
       type: fixedValue #either sourceDataFieldName or fixedValue (DEFAULT)
       # provide EITHER the field in source data from which to
