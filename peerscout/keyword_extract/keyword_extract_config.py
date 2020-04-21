@@ -2,59 +2,155 @@
 # pylint: disable=too-many-arguments,too-many-instance-attributes
 
 
+class MultiKeywordExtractConfig:
+    def __init__(
+            self,
+            multi_keyword_extract_config: dict,
+            deployment_env,
+            deployment_env_placeholder: str = '{ENV}'
+    ):
+        updated_config = (
+            update_deployment_env_placeholder(
+                multi_keyword_extract_config,
+                deployment_env,
+                deployment_env_placeholder
+            ) if deployment_env else multi_keyword_extract_config
+        )
+        self.gcp_project = updated_config.get(
+            "gcpProjectName"
+        )
+        self.import_timestamp_field_name = updated_config.get(
+            "importedTimestampFieldName"
+        )
+        self.state_file_bucket_name = updated_config.get(
+            "stateFile", {}).get("bucketName")
+        self.state_file_object_name = updated_config.get(
+            "stateFile", {}).get("objectName")
+        self.keyword_extract_config = (
+            updated_config.get("keywordExtractionPipelines")
+        )
+
+
 class KeywordExtractConfig:
     def __init__(
             self,
             config: dict,
             gcp_project: str = None,
-            source_dataset: str = None,
-            destination_dataset: str = None,
             destination_table: str = None,
             query_template: str = None,
             limit_count_value: int = None,
-            keyword_extractor: str = None,
             spacy_language_model: str = None,
-            environment_placeholder="{ENV}",
-            deployment_env=""
+            import_timestamp_field_name: str = None
     ):
-        self.gcp_project = gcp_project or config.get("gcp_project")
-        self.source_dataset = source_dataset or config.get("source_dataset")
-        self.destination_dataset = destination_dataset or config.get(
-            "destination_dataset"
-        ).replace(environment_placeholder, deployment_env)
-        self.destination_table = destination_table or config.get(
-            "destination_table"
+        self.pipeline_id = config.get("pipelineID")
+        self.default_start_timestamp = config.get(
+            "defaultStartTimestamp"
         )
-        self.query_template = query_template or config.get("query_template")
-        self.text_field = config.get("text_field")
-        self.existing_keywords_field = config.get("existing_keywords_field")
-        self.id_field = config.get("id_field")
-        self.data_load_timestamp_field = config.get(
-            "data_load_timestamp_field"
+        provenance_val = (
+            config.get("provenance", {}).get(
+                "value"
+            )
+        )
+        provenance_type = (
+            config.get("provenance", {}).get(
+                "type"
+            )
+        )
+        self.provenance_fieldname_in_source_data = (
+            provenance_val
+            if provenance_val
+            and provenance_type == "sourceDataFieldName"
+            else None
+        )
+
+        self.provenance_value_from_config = (
+            provenance_val
+            if provenance_val
+            and provenance_type != "sourceDataFieldName"
+            else None
+        )
+
+        self.gcp_project = gcp_project or config.get("gcpProjectName")
+        self.source_dataset = config.get("sourceDataset")
+        self.destination_dataset = config.get(
+            "destinationDataset"
+        )
+        self.destination_table = destination_table or config.get(
+            "destinationTable"
+        )
+        self.query_template = query_template or config.get("queryTemplate")
+        self.text_field = config.get("textField")
+        self.state_timestamp_field = config.get("stateTimestampField")
+        self.existing_keywords_field = config.get("existingKeywordsField")
+        self.id_field = config.get("idField")
+        self.data_load_timestamp_field = (
+            import_timestamp_field_name or
+            config.get(
+                "importedTimestampFieldName"
+            )
         )
         self.table_write_append = (
-            True if config.get("table_write_append").lower() == "true"
+            True if config.get("tableWriteAppend").lower() == "true"
             else False
         )
         limit_count = limit_count_value or config.get(
-            "limit_row_count_value"
+            "limitRowCountValue"
         )
         self.limit_return_count = " ".join(["Limit ", str(limit_count)]) \
             if limit_count else ""
-
-        self.keyword_extractor = (
-            keyword_extractor or config.get("keyword_extractor")
-        )
         self.spacy_language_model = (
-            spacy_language_model or config.get("spacy_language_model")
+            spacy_language_model or config.get("spacyLanguageModel")
         )
 
 
 class ExternalTriggerConfig:
-    """
-    configuration for external trigger parameter keys
-    """
     LIMIT_ROW_COUNT = 'limit_row_count_value'
-    BQ_DATASET_PARAM_KEY = 'dataset'
     BQ_TABLE_PARAM_KEY = 'table'
+    DEPLOYMENT_ENV = 'dep_env'
     SPACY_LANGUAGE_MODEL_NAME_KEY = 'spacy_language_model'
+
+
+def update_deployment_env_placeholder(
+        original_dict: dict,
+        deployment_env: str,
+        environment_placeholder: str,
+):
+    new_dict = dict()
+    for key, val in original_dict.items():
+        if isinstance(val, dict):
+            tmp = update_deployment_env_placeholder(
+                val,
+                deployment_env,
+                environment_placeholder
+            )
+            new_dict[key] = tmp
+        elif isinstance(val, list):
+            new_dict[key] = [
+                update_deployment_env_placeholder(
+                    x,
+                    deployment_env,
+                    environment_placeholder
+                )
+                for x in val
+            ]
+        else:
+            new_dict[key] = replace_env_placeholder(
+                original_dict[key],
+                deployment_env,
+                environment_placeholder
+            )
+    return new_dict
+
+
+def replace_env_placeholder(
+        param_value,
+        deployment_env: str,
+        environment_placeholder: str
+):
+    new_value = param_value
+    if isinstance(param_value, str):
+        new_value = param_value.replace(
+            environment_placeholder,
+            deployment_env
+        )
+    return new_value

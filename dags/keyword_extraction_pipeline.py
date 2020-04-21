@@ -1,53 +1,40 @@
-"""
-dag for    extracting keywords from data in bbigquery
-"""
 import os
 import logging
-import copy
-from pathlib import Path
-from tempfile import TemporaryDirectory
+import yaml
 from datetime import timedelta
+from datetime import datetime
 from airflow import DAG
 import airflow
+from airflow.models import Variable
 from airflow.operators.python_operator import PythonOperator
 from peerscout.keyword_extract.keyword_extract import (
-    etl_keywords
+    etl_keywords,
+    current_timestamp_as_string,
+    ETL_STATE_TIMESTAMP_FORMAT
 )
-from peerscout.keyword_extract.utils import (
-    get_yaml_file_as_dict
+from peerscout.utils.s3_data_service import (
+    get_stored_state,
 )
 from peerscout.keyword_extract.keyword_extract_config import (
-    KeywordExtractConfig, ExternalTriggerConfig
+    MultiKeywordExtractConfig,
+    KeywordExtractConfig,
+    ExternalTriggerConfig
 )
 
 LOGGER = logging.getLogger(__name__)
 DAG_ID = "Extract_Keywords_From_Corpus"
 
-PEERSCOUT_CONFIG_FILE_PATH_ENV_NAME =\
-    "PEERSCOUT_CONFIG_FILE_PATH"
-EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME = \
+EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME = (
+    "EXTRACT_KEYWORDS_FILE_PATH"
+)
+EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME = (
     "EXTRACT_KEYWORDS_SCHEDULE_INTERVAL"
-DEFAULT_EXTRACT_KEYWORDS_SCHEDULE_INTERVAL = None
+)
 
 DEPLOYMENT_ENV = "DEPLOYMENT_ENV"
-DEFAULT_DEPLOYMENT_ENV_VALUE = None
-EXTERNAL_TRIGGER_LIMIT_VALUE_KEY =\
-    "limit_row_count_value"
-
-
-def get_env_var_or_use_default(env_var_name, default_value):
-    """
-    :param env_var_name:
-    :param default_value:
-    :return:
-    """
-    return os.getenv(env_var_name, default_value)
 
 
 def get_default_args():
-    """
-    :return:
-    """
     return {
         "start_date": airflow.utils.dates.days_ago(1),
         "retries": 10,
@@ -57,75 +44,55 @@ def get_default_args():
     }
 
 
-DEFAULT_CONFIG = {
-    "gcp_project": "elife-data-pipeline",
-    "source_dataset": "prod",
-    "destination_dataset": "{ENV}",
-    "destination_table": "extracted_keywords",
-    "query_template": """
-        WITH temp_t AS(
-            SELECT
-                name AS id,
-                keywords AS keywords_csv,
-                COALESCE(research_interests, "") AS text_field,
-                ROW_NUMBER() OVER (PARTITION BY name
-                    ORDER BY imported_timestamp DESC) AS t
-            FROM `{project}.{dataset}.public_editor_profile`
-        )
-        SELECT * EXCEPT(t) FROM temp_t
-        WHERE t=1
-                        """,
-    "text_field": "text_field",
-    "existing_keywords_field": "keywords_csv",
-    "id_field": "id",
-    "data_load_timestamp_field": "datahub_imported_timestamp",
-    "table_write_append": "true",
-    "limit_row_count_value": None,
-    "spacy_language_model": "en_core_web_lg"
-}
+STATE_RESET_VARIABLE_NAME = (
+    "peerscout_keyword_extraction_data_pipeline_state_reset"
+)
 
-PEERSCOUT_DAG = DAG(
+PEERSCOUT_KEYWORD_EXTRACTION_DAG = DAG(
     dag_id=DAG_ID,
     default_args=get_default_args(),
-    schedule_interval=get_env_var_or_use_default(
-        EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME,
-        DEFAULT_EXTRACT_KEYWORDS_SCHEDULE_INTERVAL,
+    schedule_interval=os.getenv(
+        EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME
     ),
     dagrun_timeout=timedelta(minutes=60),
 )
 
 
+def get_yaml_file_as_dict(file_location: str) -> dict:
+    with open(file_location, 'r') as yaml_file:
+        return yaml.safe_load(yaml_file)
+
+
 def get_data_config(**kwargs):
-    conf_file_path = get_env_var_or_use_default(
-        PEERSCOUT_CONFIG_FILE_PATH_ENV_NAME, None
+    conf_file_path = os.getenv(
+        EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME
     )
-    data_config_dict = copy.deepcopy(DEFAULT_CONFIG)
-    if conf_file_path:
-        data_config_dict.update(
-            get_yaml_file_as_dict(conf_file_path)
-        )
-    kwargs["ti"].xcom_push(key="data_config_dict",
-                           value=data_config_dict)
+    data_config_dict = get_yaml_file_as_dict(
+        conf_file_path
+    )
+    kwargs["ti"].xcom_push(
+        key="multi_keyword_extract_conf_dict",
+        value=data_config_dict
+    )
 
 
 def etl_extraction_keyword(**kwargs):
     dag_context = kwargs["ti"]
-    data_config_dict = dag_context.xcom_pull(
-        key="data_config_dict", task_ids="get_data_config"
+    multi_keyword_extract_conf_dict = dag_context.xcom_pull(
+        key="multi_keyword_extract_conf_dict", task_ids="get_data_config"
     )
     # handles the external triggers
     externally_triggered_parameters = kwargs['dag_run'].conf or {}
     limit_row_count_value = externally_triggered_parameters.get(
         ExternalTriggerConfig.LIMIT_ROW_COUNT
     )
-
     dep_env = (
         externally_triggered_parameters.get(
-            ExternalTriggerConfig.BQ_DATASET_PARAM_KEY,
-            get_env_var_or_use_default(DEPLOYMENT_ENV,
-                                       DEFAULT_DEPLOYMENT_ENV_VALUE)
+            ExternalTriggerConfig.DEPLOYMENT_ENV,
+            os.getenv(
+                DEPLOYMENT_ENV
+            )
         )
-
     )
     table = externally_triggered_parameters.get(
         ExternalTriggerConfig.BQ_TABLE_PARAM_KEY
@@ -133,18 +100,73 @@ def etl_extraction_keyword(**kwargs):
     spacy_language_model = externally_triggered_parameters.get(
         ExternalTriggerConfig.SPACY_LANGUAGE_MODEL_NAME_KEY
     )
-
-    with TemporaryDirectory() as tempdir:
-        full_temp_file_location = Path.joinpath(
-            Path(tempdir, "downloaded_rows_data")
-        )
+    multi_keyword_extract_conf = MultiKeywordExtractConfig(
+        multi_keyword_extract_conf_dict,
+        dep_env
+    )
+    state_dict = get_stored_state(
+        multi_keyword_extract_conf.state_file_bucket_name,
+        multi_keyword_extract_conf.state_file_object_name
+    )
+    timestamp_as_string = current_timestamp_as_string()
+    for extract_conf_dict in multi_keyword_extract_conf.keyword_extract_config:
         keyword_extract_config = KeywordExtractConfig(
-            data_config_dict, destination_dataset=dep_env,
+            extract_conf_dict,
+            gcp_project=multi_keyword_extract_conf.gcp_project,
             destination_table=table,
             limit_count_value=limit_row_count_value,
-            spacy_language_model=spacy_language_model
+            spacy_language_model=spacy_language_model,
+            import_timestamp_field_name=(
+                multi_keyword_extract_conf.import_timestamp_field_name
+            )
         )
-        etl_keywords(keyword_extract_config, full_temp_file_location)
+        etl_and_update_state(
+            keyword_extract_config,
+            state_dict,
+            timestamp_as_string,
+            multi_keyword_extract_conf.state_file_bucket_name,
+            multi_keyword_extract_conf.state_file_object_name
+        )
+
+
+def etl_and_update_state(
+        keyword_extract_config: KeywordExtractConfig,
+        state_dict: dict,
+        timestamp_as_string: str,
+        state_file_bucket_name: str,
+        state_file_object_name: str
+):
+    reset_var = (
+        Variable.get(
+            STATE_RESET_VARIABLE_NAME,
+            {}
+        )
+    )
+
+    to_reset_state = reset_var.get(
+        keyword_extract_config.pipeline_id, False
+    )
+    if keyword_extract_config.state_timestamp_field and to_reset_state:
+        state_dict[keyword_extract_config.pipeline_id] = (
+            keyword_extract_config.default_start_timestamp
+        )
+    parsed_date_dict = {
+        key: datetime.strptime(value, ETL_STATE_TIMESTAMP_FORMAT)
+        for key, value in state_dict.items()
+    }
+    etl_keywords(
+        keyword_extract_config,
+        timestamp_as_string,
+        state_file_bucket_name,
+        state_file_object_name,
+        parsed_date_dict
+    )
+    if to_reset_state:
+        reset_var[keyword_extract_config.pipeline_id] = False
+        Variable.set(
+            STATE_RESET_VARIABLE_NAME,
+            reset_var
+        )
 
 
 def create_python_task(
@@ -162,10 +184,12 @@ def create_python_task(
 
 
 GET_DATA_CONFIG_TASK = create_python_task(
-    PEERSCOUT_DAG, "get_data_config", get_data_config, retries=5
+    PEERSCOUT_KEYWORD_EXTRACTION_DAG,
+    "get_data_config", get_data_config, retries=5
 )
 ETL_KEYWORD_EXTRACTION_TASK = create_python_task(
-    PEERSCOUT_DAG, "etl_keyword_extraction_task",
+    PEERSCOUT_KEYWORD_EXTRACTION_DAG,
+    "etl_keyword_extraction_task",
     etl_extraction_keyword, retries=5
 )
 
