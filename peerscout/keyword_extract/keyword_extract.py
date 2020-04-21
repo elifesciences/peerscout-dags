@@ -4,7 +4,9 @@ utils for doing the heavy lifting job of extracting keywords
 
 import json
 import re
-from tempfile import NamedTemporaryFile
+import logging
+from tempfile import TemporaryDirectory
+from pathlib import Path
 from typing import Iterable, List
 import datetime
 from itertools import tee
@@ -29,6 +31,8 @@ from peerscout.keyword_extract.spacy_keyword import (
     SpacyKeywordDocumentParser,
     DEFAULT_SPACY_LANGUAGE_MODEL_NAME
 )
+
+LOGGER = logging.getLogger(__name__)
 
 SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE = (
     "provenance_source_type"
@@ -113,15 +117,7 @@ def etl_keywords_get_latest_state(
         keyword_extract_config.source_dataset,
         latest_state_value
     )
-    downloaded_data, data_for_state_info_extraction = (
-        tee(downloaded_data, 2)
-    )
 
-    if keyword_extract_config.state_timestamp_field:
-        latest_state_value = get_latest_state(
-            data_for_state_info_extraction,
-            keyword_extract_config.state_timestamp_field,
-        )
     data_with_timestamp = add_timestamp(
         downloaded_data,
         keyword_extract_config.data_load_timestamp_field,
@@ -138,36 +134,21 @@ def etl_keywords_get_latest_state(
         keyword_extract_config.existing_keywords_field,
         keyword_extractor=keyword_extractor
     )
-    processed_data = remove_keys(
-        data_with_extracted_keywords,
-        [
-            keyword_extract_config.state_timestamp_field,
-            keyword_extract_config.existing_keywords_field,
-            keyword_extract_config.text_field
-        ]
-    )
 
-    with NamedTemporaryFile() as named_temp_file:
-        write_to_file(processed_data, named_temp_file.name)
-        create_or_extend_table_schema(
-            keyword_extract_config.gcp_project,
-            keyword_extract_config.destination_dataset,
-            keyword_extract_config.destination_table,
-            named_temp_file.name
+    with TemporaryDirectory() as tempdir:
+        full_temp_file_location = Path.joinpath(
+            Path(tempdir, "downloaded_rows_data"))
+        latest_timestamp_iterator = (
+            remove_cols_load_to_db_get_latest_timestamp(
+                data_with_extracted_keywords, full_temp_file_location,
+                keyword_extract_config
+            )
         )
-        write_disposition = (
-            WriteDisposition.WRITE_APPEND
-            if keyword_extract_config.table_write_append
-            else WriteDisposition.WRITE_TRUNCATE
-        )
-        load_file_into_bq(
-            filename=named_temp_file.name,
-            table_name=keyword_extract_config.destination_table,
-            auto_detect_schema=True,
-            dataset_name=keyword_extract_config.destination_dataset,
-            write_mode=write_disposition,
-            project_name=keyword_extract_config.gcp_project
-        )
+
+        if keyword_extract_config.state_timestamp_field:
+            latest_state_value = get_latest_state(
+                latest_timestamp_iterator
+            )
 
     return latest_state_value
 
@@ -204,16 +185,6 @@ def add_provenance_source_type(
         yield record
 
 
-def remove_keys(
-        record_list,
-        keys_to_remove: list,
-):
-    for record in record_list:
-        for key in keys_to_remove:
-            record.pop(key)
-        yield record
-
-
 def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
     for record in record_list:
         record[timestamp_field_name] = timestamp_as_string
@@ -221,17 +192,13 @@ def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
 
 
 def get_latest_state(
-        record_list,
-        status_timestamp_field_name,
+        record_status_timestamp_list,
 ):
     latest_timestamp = datetime.datetime.strptime(
         "1900-01-10 00:00:00+0000",
         ETL_STATE_TIMESTAMP_FORMAT
     )
-    for record in record_list:
-        record_status_timestamp = (
-            record.get(status_timestamp_field_name)
-        )
+    for record_status_timestamp in record_status_timestamp_list:
         latest_timestamp = (
             latest_timestamp
             if latest_timestamp > record_status_timestamp
@@ -240,11 +207,65 @@ def get_latest_state(
     return latest_timestamp
 
 
-def write_to_file(json_list, full_temp_file_location):
+def remove_cols_load_to_db_get_latest_timestamp(
+        json_list, full_temp_file_location,
+        keyword_extract_config
+):
+    records_count = 0
+    write_disposition = (
+        WriteDisposition.WRITE_APPEND
+        if keyword_extract_config.table_write_append
+        else WriteDisposition.WRITE_TRUNCATE
+    )
     with open(full_temp_file_location, "a") as write_file:
         for record in json_list:
+            records_count += 1
+            if records_count % 1000 == 0:
+                load_data_to_bq(
+                    keyword_extract_config,
+                    full_temp_file_location,
+                    write_disposition
+                )
+                write_file.truncate(0)
+                LOGGER.info("%s records processed", str(records_count))
+            latest_timestamp = record.pop(
+                keyword_extract_config.state_timestamp_field
+            )
+            record.pop(keyword_extract_config.existing_keywords_field)
+            record.pop(keyword_extract_config.text_field)
+            record = {key: value for key, value in record.items() if value}
             write_file.write(json.dumps(record, ensure_ascii=False))
             write_file.write("\n")
+
+            yield latest_timestamp
+
+        load_data_to_bq(
+            keyword_extract_config,
+            full_temp_file_location,
+            write_disposition
+        )
+        LOGGER.info("%s records processed", str(records_count))
+
+
+def load_data_to_bq(
+        keyword_extract_config,
+        full_temp_file_location,
+        write_disposition
+):
+    create_or_extend_table_schema(
+        keyword_extract_config.gcp_project,
+        keyword_extract_config.destination_dataset,
+        keyword_extract_config.destination_table,
+        full_temp_file_location
+    )
+    load_file_into_bq(
+        filename=full_temp_file_location,
+        table_name=keyword_extract_config.destination_table,
+        auto_detect_schema=True,
+        dataset_name=keyword_extract_config.destination_dataset,
+        write_mode=write_disposition,
+        project_name=keyword_extract_config.gcp_project
+    )
 
 
 def parse_keyword_list(keywords_str: str, separator: str = ","):

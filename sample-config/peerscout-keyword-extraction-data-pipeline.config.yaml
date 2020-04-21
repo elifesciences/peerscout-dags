@@ -41,3 +41,32 @@ keywordExtractionPipelines:
       # field which indicate the kind of data source from which the keywords
       # is extracted
       value: public_editor_profile
+  - pipelineID: keywords_from_manuscript_abstract  #mandatory
+    defaultStartTimestamp: '2000-01-01 00:00:00+0000' #format must be "%Y-%m-%d %H:%M:%S%z"
+    stateTimestampField: modified_timestamp
+    sourceDataset: 'prod'  #mandatory
+    destinationDataset: '{ENV}'  #mandatory
+    destinationTable: "test_extracted_keywords"  #mandatory
+    queryTemplate: |
+          SELECT
+            manuscript_id, version_id, IFNULL(abstract, "") AS abstract, modified_timestamp,
+            ARRAY_TO_STRING(ARRAY(SELECT keyword from UNNEST(keywords)), ', ') AS existing_keyword_csv
+          FROM `{project}.{dataset}.manuscript_version`
+          WHERE modified_timestamp > TIMESTAMP '{latest_state_value}'
+    # mandatory
+    #to reduce properties to configure,
+    #it is assumed that query template placeholders for  project, dataset, and latest state value are
+    #{project}, {dataset} and {latest_state_value}
+    textField: 'abstract'  #mandatory
+    existingKeywordsField: 'existing_keyword_csv'
+    idField: 'version_id'
+    tableWriteAppend: 'true'
+    limitRowCountValue:  #config element primarily used during test
+    spacyLanguageModel: 'en_core_web_lg'
+    provenance:
+      type: fixedValue #either sourceDataFieldName or fixedValue (DEFAULT)
+      # provide EITHER the field in source data from which to
+      # retrieve the value OR the fixed value to enter into provenance
+      # field which indicate the kind of data source from which the keywords
+      # is extracted
+      value: manuscript_version_abstract
