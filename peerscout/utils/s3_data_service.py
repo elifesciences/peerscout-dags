@@ -46,3 +46,11 @@ def get_stored_state(
 def upload_s3_object(bucket: str, object_key: str, data_object):
     s3_client = boto3.client("s3")
     s3_client.put_object(Body=data_object, Bucket=bucket, Key=object_key)
+
+
+def delete_s3_object(bucket, object_key):
+    s3_client = boto3.client('s3')
+    s3_client.delete_object(
+        Bucket=bucket,
+        Key=object_key
+    )

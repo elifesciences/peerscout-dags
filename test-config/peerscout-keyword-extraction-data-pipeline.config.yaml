@@ -6,7 +6,6 @@ stateFile:
 keywordExtractionPipelines:
   - pipelineID: keywords_from_research_interests  #mandatory
     defaultStartTimestamp: '2000-01-01 00:00:00+0000' #format must be "%Y-%m-%d %H:%M:%S%z"
-    stateTimestampField: imported_timestamp
     sourceDataset: 'prod'  #mandatory
     destinationDataset: '{ENV}'  #mandatory
     destinationTable: "test_extracted_keywords"  #mandatory
@@ -16,13 +15,12 @@ keywordExtractionPipelines:
                    name AS id,
                    keywords AS keywords_csv,
                    COALESCE(research_interests, "") AS text_field,
-                   imported_timestamp,
                    ROW_NUMBER() OVER (PARTITION BY name
                        ORDER BY imported_timestamp DESC) AS t
                FROM `{project}.{dataset}.public_editor_profile`
            )
            SELECT * EXCEPT(t) FROM temp_t
-           WHERE t=1 AND imported_timestamp > TIMESTAMP '{latest_state_value}'
+           WHERE t=1'
     # mandatory
     #to reduce properties to configure,
     #it is assumed that query template placeholders for  project, dataset, and latest state value are
@@ -30,7 +28,7 @@ keywordExtractionPipelines:
     textField: 'text_field'  #mandatory
     existingKeywordsField: 'keywords_csv'
     idField: 'id'
-    importedTimestampFieldName: #
+    #importedTimestampFieldName: #
     tableWriteAppend: 'true'
     limitRowCountValue:  #config element primarily used during test
     spacyLanguageModel: 'en_core_web_lg'
@@ -53,6 +51,7 @@ keywordExtractionPipelines:
             ARRAY_TO_STRING(ARRAY(SELECT keyword from UNNEST(keywords)), ', ') AS existing_keyword_csv
           FROM `{project}.{dataset}.manuscript_version`
           WHERE modified_timestamp > TIMESTAMP '{latest_state_value}'
+          ORDER BY modified_timestamp ASC
     # mandatory
     #to reduce properties to configure,
     #it is assumed that query template placeholders for  project, dataset, and latest state value are
@@ -62,7 +61,7 @@ keywordExtractionPipelines:
     idField: 'version_id'
     tableWriteAppend: 'true'
     limitRowCountValue:  #config element primarily used during test
-    spacyLanguageModel: 'en_core_web_lg'
+    #spacyLanguageModel: 'en_core_web_lg'
     provenance:
       type: fixedValue #either sourceDataFieldName or fixedValue (DEFAULT)
       # provide EITHER the field in source data from which to
