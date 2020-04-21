@@ -152,7 +152,6 @@ def etl_keywords(
     )
     progress_monitor = 1
     for data_batch in data_with_extracted_keywords_batches:
-        print(data_batch)
         LOGGER.info(
             "processing batch %s of size %s",
             progress_monitor, batch_size
@@ -259,9 +258,8 @@ def get_latest_state(
             if record.get(timestamp_field_name)
         ]
         latest_timestamp = (
-            max(timestamp_list) if latest_timestamp else None
+            max(timestamp_list) if timestamp_list else None
         )
-
     return latest_timestamp
 
 
