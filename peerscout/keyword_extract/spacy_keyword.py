@@ -132,6 +132,9 @@ def iter_split_noun_chunk_conjunctions(
         if not is_conjunction_token(token):
             previous_end = index + 1
             continue
+        if index and noun_chunk[index - 1].text == '-':
+            previous_end = index + 1
+            continue
         LOGGER.debug(
             'conjunction token "%s", previous token: %d..%d',
             token, previous_start, previous_end
