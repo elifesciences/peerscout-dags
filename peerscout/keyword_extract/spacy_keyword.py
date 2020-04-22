@@ -223,7 +223,9 @@ def lstrip_stop_words_and_punct(span: Span) -> Span:
             continue
         if list(token.children):
             continue
-        if token.text == '-' or (index + 1 < len(span) and span[index + 1].text == '-'):
+        if token.text == '-':
+            continue
+        if index + 1 < len(span) and span[index + 1].text == '-':
             continue
         if (
                 token.is_stop
