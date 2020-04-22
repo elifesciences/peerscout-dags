@@ -1,12 +1,14 @@
 import os
 import logging
-import yaml
 from datetime import timedelta
 from datetime import datetime
+
+import yaml
 from airflow import DAG
 import airflow
 from airflow.models import Variable
 from airflow.operators.python_operator import PythonOperator
+
 from peerscout.keyword_extract.keyword_extract import (
     etl_keywords,
     current_timestamp_as_string,
