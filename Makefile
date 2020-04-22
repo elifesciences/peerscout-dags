@@ -84,7 +84,7 @@ build-dev:
 ci-test-exclude-e2e: build-dev
 	$(DOCKER_COMPOSE) run --rm peerscout-dags-dev ./run_test.sh
 
-ci-end2end-test: build-dev
+ci-test-including-end2end: build-dev
 	$(DOCKER_COMPOSE) run --rm  test-client
 	$(DOCKER_COMPOSE) down -v
 
