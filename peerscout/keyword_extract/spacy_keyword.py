@@ -27,6 +27,9 @@ from spacy.symbols import (  # pylint: disable=no-name-in-module
 )
 
 
+from peerscout.utils.html import strip_tags
+
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -255,7 +258,7 @@ def strip_stop_words_and_punct(span: Span) -> Span:
 def normalize_text(text: str) -> str:
     return re.sub(
         r'\s+', ' ',
-        text.replace('/', ', ')
+        strip_tags(text).replace('/', ', ')
     ).strip()
 
 
