@@ -12,11 +12,11 @@ export PYTHONOPTIMIZE=
 
 
 echo "running flake8"
-flake8 flake8  tests/ peerscout/
+flake8 flake8 dags/ tests/ peerscout/
 
 echo "running pylint"
 PYLINTHOME=/tmp/datahub-dags-pylint \
- pylint tests/ peerscout/ --init-hook="import sys; sys.setrecursionlimit(1500)"
+ pylint dags/ tests/ peerscout/ --init-hook="import sys; sys.setrecursionlimit(1500)"
 
 echo "running unit tests"
 pytest tests/unit_test/ -p no:cacheprovider -s --disable-warnings
