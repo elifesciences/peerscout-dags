@@ -16,6 +16,7 @@ class MLStripper(HTMLParser):
         return ''.join(self.fed)
 
     def error(self, message):
+        # override ParserBase.error, which otherwise raises NotImplementedError
         raise message
 
 
