@@ -11,19 +11,18 @@ airflow initdb
 export PYTHONOPTIMIZE=
 
 
+echo "running flake8"
+flake8 flake8 dags/ tests/ peerscout/
+
+echo "running pylint"
+PYLINTHOME=/tmp/datahub-dags-pylint \
+ pylint dags/ tests/ peerscout/ --init-hook="import sys; sys.setrecursionlimit(1500)"
+
 echo "running unit tests"
 pytest tests/unit_test/ -p no:cacheprovider -s --disable-warnings
 
 echo "running dag validation tests"
 pytest tests/dag_validation_test/ -p no:cacheprovider -s --disable-warnings
-
-echo "running pylint"
-PYLINTHOME=/tmp/datahub-dags-pylint \
- pylint tests/ peerscout/ --init-hook="import sys; sys.setrecursionlimit(1500)"
-
-echo "running flake8"
-flake8 flake8  tests/ peerscout/
-
 
 if [[ $1  &&  $1 == "with-end-to-end" ]]; then
     echo "running end to end tests"
