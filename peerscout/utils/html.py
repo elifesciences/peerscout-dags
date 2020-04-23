@@ -7,13 +7,13 @@ class MLStripper(HTMLParser):
         self.reset()
         self.strict = False
         self.convert_charrefs = True
-        self.fed = []
+        self._collected_data = []
 
     def handle_data(self, data):
-        self.fed.append(data)
+        self._collected_data.append(data)
 
     def get_data(self):
-        return ''.join(self.fed)
+        return ''.join(self._collected_data)
 
     def error(self, message):
         # override ParserBase.error, which otherwise raises NotImplementedError
