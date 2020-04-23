@@ -1,7 +1,7 @@
 from html.parser import HTMLParser
 
 
-class MLStripper(HTMLParser):
+class MarkupStrippingHtmlParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.strict = False
@@ -20,6 +20,6 @@ class MLStripper(HTMLParser):
 
 
 def strip_tags(text: str) -> str:
-    stripper = MLStripper()
+    stripper = MarkupStrippingHtmlParser()
     stripper.feed(text)
     return stripper.get_data()
