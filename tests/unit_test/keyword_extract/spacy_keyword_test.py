@@ -740,3 +740,11 @@ class TestSpacyKeywordDocumentParser:
             language=spacy_language_mock
         ).iter_parse_text_list(text_list))
         spacy_language_mock.pipe.assert_called()
+
+    def test_should_strip_tags(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser
+            .parse_text('<i>italic</i>')
+            .doc.text == 'italic'
+        )

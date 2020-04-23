@@ -14,7 +14,7 @@ elifePipeline {
             withDataPipelineGcpCredentials {
                 try {
                     sh "make build-dev"
-                    sh "make ci-end2end-test"
+                    sh "make ci-test-including-end2end"
                 } finally {
                     sh "make ci-clean"
                 }
