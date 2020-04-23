@@ -4,7 +4,6 @@ from html.parser import HTMLParser
 class MarkupStrippingHtmlParser(HTMLParser):
     def __init__(self, convert_charrefs: bool = True):
         super().__init__(convert_charrefs=convert_charrefs)
-        self.strict = False
         self._collected_data = []
 
     def handle_data(self, data):
