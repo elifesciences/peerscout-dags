@@ -155,6 +155,13 @@ class TestIterSplitNounChunkConjunctions:
             language=spacy_language_en
         )] == ['advanced technology', 'special technology']
 
+    def test_should_not_split_hyphenated_noun_chunk_on_conjunction(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_split_noun_chunk_conjunctions(
+            spacy_language_en('advanced-and-special technology'),
+            language=spacy_language_en
+        )] == ['advanced-and-special technology']
+
 
 class TestGetConjuctionNounChunks:
     def test_should_not_split_noun_chunk_without_conjunctions(
@@ -214,6 +221,13 @@ class TestIterIndividualKeywordSpans:
             spacy_language_en('M strain'),
             language=spacy_language_en
         )] == ['strain']
+
+    def test_should_not_split_hyphenated_keyword(
+            self, spacy_language_en: Language):
+        assert [span.text for span in iter_individual_keyword_spans(
+            spacy_language_en('simple-and-advanced technology'),
+            language=spacy_language_en
+        )] == ['simple-and-advanced', 'technology']
 
 
 class TestIterShorterKeywordSpans:
@@ -283,6 +297,14 @@ class TestLstripStopWordsAndPunct:
         assert lstrip_stop_words_and_punct(spacy_language_en(
             "MHC-I molecule"
         )).text == "MHC-I molecule"
+
+    def test_should_not_strip_stop_word_within_hyphenated_keyword(
+            self, spacy_language_en: Language):
+        # "and" is considered a stop word but we don't want to
+        # break apart the hyphenated keyword
+        assert lstrip_stop_words_and_punct(spacy_language_en(
+            "simple-and-advanced technology"
+        )).text == "simple-and-advanced technology"
 
     def test_should_strip_eg(
             self, spacy_language_en: Language):
@@ -478,6 +500,16 @@ class TestSpacyKeywordDocument:
             .compound_keywords
             .text_list
         ) == ['advanced technology']
+
+    def test_should_extract_single_noun_with_hyphenated_adjective(
+            self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):
+        assert (
+            spacy_keyword_document_parser.parse_text(
+                'using simple-and-advanced technology'
+            )
+            .compound_keywords
+            .text_list
+        ) == ['simple-and-advanced technology']
 
     def test_should_normalize_text(
             self, spacy_keyword_document_parser: SpacyKeywordDocumentParser):

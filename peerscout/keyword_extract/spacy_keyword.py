@@ -135,6 +135,9 @@ def iter_split_noun_chunk_conjunctions(
         if not is_conjunction_token(token):
             previous_end = index + 1
             continue
+        if index and noun_chunk[index - 1].text == '-':
+            previous_end = index + 1
+            continue
         LOGGER.debug(
             'conjunction token "%s", previous token: %d..%d',
             token, previous_start, previous_end
@@ -227,6 +230,8 @@ def lstrip_stop_words_and_punct(span: Span) -> Span:
         if list(token.children):
             continue
         if token.text == '-':
+            continue
+        if index + 1 < len(span) and span[index + 1].text == '-':
             continue
         if (
                 token.is_stop
