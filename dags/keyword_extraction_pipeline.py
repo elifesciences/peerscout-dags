@@ -1,7 +1,6 @@
 import os
 import logging
 from datetime import timedelta
-from datetime import datetime
 
 import yaml
 from airflow import DAG
@@ -11,8 +10,7 @@ from airflow.operators.python_operator import PythonOperator
 
 from peerscout.keyword_extract.keyword_extract import (
     etl_keywords,
-    current_timestamp_as_string,
-    ETL_STATE_TIMESTAMP_FORMAT
+    current_timestamp_as_string
 )
 from peerscout.utils.s3_data_service import (
     get_stored_state,
@@ -152,16 +150,13 @@ def etl_and_update_state(
         state_dict[keyword_extract_config.pipeline_id] = (
             keyword_extract_config.default_start_timestamp
         )
-    parsed_date_dict = {
-        key: datetime.strptime(value, ETL_STATE_TIMESTAMP_FORMAT)
-        for key, value in state_dict.items()
-    }
+
     etl_keywords(
         keyword_extract_config,
         timestamp_as_string,
         state_file_bucket_name,
         state_file_object_name,
-        parsed_date_dict
+        state_dict
     )
     if to_reset_state:
         reset_var[keyword_extract_config.pipeline_id] = False
