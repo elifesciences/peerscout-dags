@@ -12,7 +12,7 @@ export PYTHONOPTIMIZE=
 
 
 echo "running flake8"
-flake8 flake8 dags/ tests/ peerscout/
+flake8 dags/ tests/ peerscout/
 
 echo "running pylint"
 PYLINTHOME=/tmp/datahub-dags-pylint \
