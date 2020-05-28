@@ -146,7 +146,7 @@ def etl_keywords(
         if keyword_extract_config.table_write_append
         else WriteDisposition.WRITE_TRUNCATE
     )
-    batch_size = 1000
+    batch_size = 2000
     data_with_extracted_keywords_batches = iter_get_batches(
         data_with_extracted_keywords, batch_size
     )
@@ -304,7 +304,7 @@ def load_data_to_bq(
     load_file_into_bq(
         filename=temp_processed_jsonl_path,
         table_name=keyword_extract_config.destination_table,
-        auto_detect_schema=True,
+        auto_detect_schema=False,
         dataset_name=keyword_extract_config.destination_dataset,
         write_mode=write_disposition,
         project_name=keyword_extract_config.gcp_project
