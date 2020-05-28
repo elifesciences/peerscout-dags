@@ -20,7 +20,7 @@ def load_file_into_bq(
         table_name: str,
         source_format=SourceFormat.NEWLINE_DELIMITED_JSON,
         write_mode=WriteDisposition.WRITE_APPEND,
-        auto_detect_schema=True,
+        auto_detect_schema=False,
         rows_to_skip=0,
         project_name: str = None,
 ):
