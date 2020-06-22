@@ -26,7 +26,7 @@ pytest tests/dag_validation_test/ -p no:cacheprovider -s --disable-warnings
 
 if [[ $1  &&  $1 == "with-end-to-end" ]]; then
     echo "running end to end tests"
-    pytest tests/end2end_test/ -p no:cacheprovider -s
+    pytest tests/end2end_test/ -p no:cacheprovider --log-cli-level=INFO
 fi
 
 echo "done"
