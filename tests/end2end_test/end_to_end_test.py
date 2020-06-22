@@ -69,6 +69,7 @@ def test_dag_runs_data_imported(
         if not conf.get("stateTimestampField")
     ][0]
     try:
+        LOGGER.info('cleaning table: %s.%s', DATASET, TABLE)
         bq_query_service.simple_query(
             query_template=TestQueryTemplate.CLEAN_TABLE_QUERY,
             gcp_project=project_name,
@@ -96,6 +97,7 @@ def test_dag_runs_data_imported(
     assert not is_running
     assert AIRFLW_API.get_dag_status(dag_id, execution_date) == "success"
 
+    LOGGER.info('reading resuls from: %s.%s', DATASET, TABLE)
     query_response = bq_query_service.simple_query(
         query_template=TestQueryTemplate.READ_COUNT_TABLE_QUERY,
         gcp_project=project_name,
