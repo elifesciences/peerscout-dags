@@ -2,6 +2,6 @@ apache-airflow[crypto,postgres,jdbc]==1.10.10
 boto3==1.14.7
 google-cloud-bigquery==1.25.0
 dateparser==0.7.6
-dask[complete]==2.17.0
+dask[complete]==2.19.0
 distributed==2.17.0
 bigquery-schema-generator==1.0
