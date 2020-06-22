@@ -133,7 +133,10 @@ def etl_keywords(
     bq_query_processing = BqQuery(
         project_name=keyword_extract_config.gcp_project)
     LOGGER.info(
-        'retrieving data, source dataset: %s, latest state value: %s (s3://%s/%s)',
+        ' '.join([
+            'retrieving data, source dataset: %s,'
+            ' latest state value: %s (s3://%s/%s)'
+        ]),
         keyword_extract_config.source_dataset,
         latest_state_value,
         state_s3_bucket,

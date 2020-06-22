@@ -28,7 +28,8 @@ class BqQuery:
             gcp_project: str,
             dataset: str,
             table: str = None,
-            latest_state_value: str = None) -> Union[BqQueryResult, Iterable[dict]]:
+            latest_state_value: str = None
+    ) -> Union[BqQueryResult, Iterable[dict]]:
         _query = query_template.format(
             project=gcp_project, dataset=dataset, table=table,
             latest_state_value=latest_state_value
