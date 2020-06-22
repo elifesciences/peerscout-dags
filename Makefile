@@ -2,7 +2,7 @@
 
 DOCKER_COMPOSE_CI = docker-compose
 DOCKER_COMPOSE_DEV = docker-compose -f docker-compose.yml -f docker-compose.dev.override.yml
-DOCKER_COMPOSE = $(DOCKER_COMPOSE_CI)
+DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
 VENV = venv
 PIP = $(VENV)/bin/pip
@@ -12,6 +12,11 @@ NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 
 PYTEST_WATCH_SPACY_MODEL_MINIMAL = en_core_web_sm
 PYTEST_WATCH_SPACY_MODEL_FULL = en_core_web_md
+
+PEERSCOUT_DAGS_AIRFLOW_PORT = $(shell bash -c 'source .env && echo $$PEERSCOUT_DAGS_AIRFLOW_PORT')
+
+AIRFLOW_DOCKER_COMPOSE = PEERSCOUT_DAGS_AIRFLOW_PORT="$(PEERSCOUT_DAGS_AIRFLOW_PORT)" \
+	$(DOCKER_COMPOSE)
 
 
 venv-clean:
@@ -75,25 +80,66 @@ dev-integration-test: dev-install
 dev-test: dev-lint dev-unittest dev-dagtest
 
 
-build:
-	$(DOCKER_COMPOSE) build peerscout-dags-image
 
-build-dev:
-	$(DOCKER_COMPOSE) build peerscout-dags-dev
+airflow-build:
+	$(AIRFLOW_DOCKER_COMPOSE) build peerscout-dags
+
+airflow-dev-build:
+	$(AIRFLOW_DOCKER_COMPOSE) build peerscout-dags-dev
+
+
+airflow-dev-shell:
+	$(AIRFLOW_DOCKER_COMPOSE) run --rm peerscout-dags-dev bash
+
+
+airflow-print-url:
+	@echo "airflow url: http://localhost:$(PEERSCOUT_DAGS_AIRFLOW_PORT)"
+
+
+airflow-scheduler-exec:
+	$(AIRFLOW_DOCKER_COMPOSE) exec scheduler bash
+
+
+airflow-dask-worker-shell:
+	$(AIRFLOW_DOCKER_COMPOSE) run --rm dask-worker bash
+
+
+airflow-dask-worker-exec:
+	$(AIRFLOW_DOCKER_COMPOSE) exec dask-worker bash
+
+
+airflow-logs:
+	$(AIRFLOW_DOCKER_COMPOSE) logs -f scheduler webserver dask-worker
+
+
+airflow-start:
+	$(AIRFLOW_DOCKER_COMPOSE) up -d --scale dask-worker=1 scheduler
+	$(MAKE) airflow-print-url
+
+
+airflow-stop:
+	$(AIRFLOW_DOCKER_COMPOSE) down
+
+
+build: airflow-build
+
+build-dev: airflow-dev-build
+
+ci-build-dev:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build-dev
 
 ci-test-exclude-e2e: build-dev
-	$(DOCKER_COMPOSE) run --rm peerscout-dags-dev ./run_test.sh
+	$(DOCKER_COMPOSE_CI) run --rm peerscout-dags-dev ./run_test.sh
 
 ci-test-including-end2end: build-dev
-	$(DOCKER_COMPOSE) run --rm  test-client
-	$(DOCKER_COMPOSE) down -v
+	$(DOCKER_COMPOSE_CI) run --rm  test-client
+	$(DOCKER_COMPOSE_CI) down -v
 
 ci-end2end-test-logs:
-	$(DOCKER_COMPOSE) exec dask-worker bash -c \
+	$(DOCKER_COMPOSE_CI) exec dask-worker bash -c \
 		'cat logs/Extract_Keywords_From_Corpus/etl_keyword_extraction_task/*/*.log'
 
-dev-env: build-dev
-	$(DOCKER_COMPOSE_DEV) up  scheduler
+dev-env: airflow-start airflow-logs
 
 ci-clean:
-	$(DOCKER_COMPOSE) down -v
+	$(DOCKER_COMPOSE_CI) down -v
