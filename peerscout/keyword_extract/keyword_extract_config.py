@@ -98,6 +98,7 @@ class KeywordExtractConfig:
         )
         self.limit_return_count = " ".join(["Limit ", str(limit_count)]) \
             if limit_count else ""
+        self.batch_size = config.get("batchSize")
         self.spacy_language_model = (
             spacy_language_model or config.get("spacyLanguageModel")
         )

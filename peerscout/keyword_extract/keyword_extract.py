@@ -47,6 +47,8 @@ SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE = (
 ETL_STATE_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S%z"
 DATA_LOAD_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+DEFAULT_BATCH_SIZE = 2000
+
 
 def to_unique_keywords(
         keywords: List[str],
@@ -108,6 +110,12 @@ def etl_keywords(
         data_pipelines_state: dict = None,
 ):
 
+    LOGGER.info(
+        'processing keyword extraction pipeline: %s (to %s.%s)',
+        keyword_extract_config.pipeline_id,
+        keyword_extract_config.destination_dataset,
+        keyword_extract_config.destination_table
+    )
     latest_state_value = data_pipelines_state.get(
         keyword_extract_config.pipeline_id,
         keyword_extract_config.default_start_timestamp
@@ -146,7 +154,7 @@ def etl_keywords(
         if keyword_extract_config.table_write_append
         else WriteDisposition.WRITE_TRUNCATE
     )
-    batch_size = 2000
+    batch_size = keyword_extract_config.batch_size or DEFAULT_BATCH_SIZE
     data_with_extracted_keywords_batches = iter_get_batches(
         data_with_extracted_keywords, batch_size
     )
