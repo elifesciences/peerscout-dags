@@ -1,9 +1,19 @@
 import logging
-from typing import List
+from typing import Iterable, Union
 
 from google.cloud import bigquery
 
 LOGGER = logging.getLogger(__name__)
+
+
+class BqQueryResult:
+    def __init__(self, row_iterator: bigquery.table.RowIterator):
+        self.row_iterator = row_iterator
+        self.total_rows = row_iterator.total_rows
+
+    def __iter__(self):
+        for row in self.row_iterator:
+            yield dict(row)
 
 
 # pylint: disable=too-few-public-methods
@@ -18,13 +28,11 @@ class BqQuery:
             gcp_project: str,
             dataset: str,
             table: str = None,
-            latest_state_value: str = None
-    ) -> List[dict]:
+            latest_state_value: str = None) -> Union[BqQueryResult, Iterable[dict]]:
         _query = query_template.format(
             project=gcp_project, dataset=dataset, table=table,
             latest_state_value=latest_state_value
         ).strip()
         LOGGER.debug("running query:\n%s", _query)
         query_job = self.bigquery_client.query(_query)
-        for row in query_job:
-            yield dict(row)
+        return BqQueryResult(query_job.result())
