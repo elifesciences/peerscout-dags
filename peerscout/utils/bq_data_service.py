@@ -13,6 +13,10 @@ from bigquery_schema_generator.generate_schema import SchemaGenerator
 LOGGER = logging.getLogger(__name__)
 
 
+def get_client(project_id: str) -> Client:
+    return Client(project=project_id)
+
+
 # pylint: disable=too-many-arguments
 def load_file_into_bq(
         filename: str,
@@ -27,7 +31,7 @@ def load_file_into_bq(
     if os.path.isfile(filename) and os.path.getsize(filename) == 0:
         LOGGER.info("File %s is empty.", filename)
         return
-    client = Client(project=project_name)
+    client = get_client(project_id=project_name)
     dataset_ref = client.dataset(dataset_name)
     table_ref = dataset_ref.table(table_name)
     job_config = LoadJobConfig()
@@ -58,7 +62,7 @@ def create_table(
         table_name: str,
         json_schema: list
 ):
-    client = bigquery.Client()
+    client = get_client(project_id=project_name)
     table_id = compose_full_table_name(
         project_name, dataset_name, table_name
     )
@@ -77,7 +81,7 @@ def does_bigquery_table_exist(
         project_name: str, dataset_name: str, table_name: str
 ) -> bool:
     table_id = compose_full_table_name(project_name, dataset_name, table_name)
-    client = bigquery.Client()
+    client = get_client(project_id=project_name)
     try:
         client.get_table(table_id)
         return True
@@ -103,7 +107,7 @@ def get_table_schema_field_names(
         dataset_name: str,
         table_name: str
 ):
-    client = bigquery.Client()
+    client = get_client(project_id=project_name)
 
     dataset_ref = client.dataset(dataset_name, project=project_name)
     table_ref = dataset_ref.table(table_name)
@@ -118,7 +122,7 @@ def extend_table_schema_with_nested_schema(
         project_name: str, dataset_name: str,
         table_name: str, new_fields: list
 ):
-    client = bigquery.Client()
+    client = get_client(project_id=project_name)
     dataset_ref = client.dataset(dataset_name, project=project_name)
     table_ref = dataset_ref.table(table_name)
     table = client.get_table(table_ref)  # Make an API request.
