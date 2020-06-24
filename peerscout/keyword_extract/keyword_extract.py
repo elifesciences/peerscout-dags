@@ -320,7 +320,8 @@ def iter_get_batches(iterable, size):
             try:
                 chunk.append(next(iterable))
             except StopIteration:
-                yield chunk
+                if chunk:
+                    yield chunk
                 return
         yield chunk
 
