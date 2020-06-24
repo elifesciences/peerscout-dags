@@ -8,7 +8,7 @@ import re
 import logging
 from tempfile import TemporaryDirectory
 from pathlib import Path
-from typing import Iterable, List, Tuple
+from typing import Iterable, Iterator, List, Tuple, T
 import datetime
 from itertools import tee
 from datetime import timezone
@@ -313,12 +313,12 @@ def write_to_jsonl_file(
             write_file.write("\n")
 
 
-def iter_get_batches(iterable, size):
+def iter_get_batches(iterator: Iterator[T], size: int) -> Iterable[T]:
     while True:
         chunk = []
         for _ in range(size):
             try:
-                chunk.append(next(iterable))
+                chunk.append(next(iterator))
             except StopIteration:
                 if chunk:
                     yield chunk
