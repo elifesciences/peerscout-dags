@@ -3,3 +3,5 @@ venv
 
 credentials.json
 peerscount_dags.egg-info
+
+*.pyc

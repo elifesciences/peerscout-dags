@@ -1,4 +1,23 @@
-version: '3'
+version: '3.4'
+
+x-airflow-env:
+    &airflow-env
+    - LOAD_EX=n
+    - AIRFLOW_HOST=webserver
+    - AIRFLOW_PORT=8080
+    - AIRFLOW__CORE__EXECUTOR=DaskExecutor
+    - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+    - AIRFLOW__CORE__FERNET_KEY='81HqDtbqAywKSOumSha3BhWNOdQ26slT6K0YaZeZyPs='
+    - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+    - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
+    - GOOGLE_APPLICATION_CREDENTIALS=/usr/local/airflow/.config/gcloud/credentials.json
+    - EXTRACT_KEYWORDS_FILE_PATH=/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+
+x-airflow-volumes:
+    &airflow-volumes
+        - ${GOOGLE_APPLICATION_CREDENTIALS:-~/.config/gcloud/application_default_credentials.json}:/tmp/credentials.json
+        - ~/.aws/credentials:/tmp/.aws-credentials
+        - ./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml:/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
 
 services:
     peerscout-dags:
@@ -30,12 +49,7 @@ services:
             - postgres
             - dask-worker
             - dask-scheduler
-        environment:
-            - DEPLOYMENT_ENV=ci
-            - LOAD_EX=n
-            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
-            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
-            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+        environment: *airflow-env
         image:  elifesciences/peerscout-dags-dev
         entrypoint: /entrypoint.sh
         command: webserver
@@ -44,14 +58,7 @@ services:
         image:  elifesciences/peerscout-dags-dev
         depends_on:
             - webserver
-        environment:
-            - DEPLOYMENT_ENV=ci
-            - AIRFLOW_HOST=webserver
-            - AIRFLOW_PORT=8080
-            - LOAD_EX=n
-            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
-            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
-            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+        environment: *airflow-env
         entrypoint: /entrypoint.sh
         command: scheduler
 
@@ -59,22 +66,11 @@ services:
         image:  elifesciences/peerscout-dags-dev
         depends_on:
             - scheduler
-        environment:
-            - GOOGLE_APPLICATION_CREDENTIALS=/usr/local/airflow/.config/gcloud/credentials.json
-            - LOAD_EX=n
-            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
-            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
-            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-            - AIRFLOW_HOST=webserver
-            - AIRFLOW_PORT=8080
-            - DEPLOYMENT_ENV=ci
-            - EXTRACT_KEYWORDS_FILE_PATH=/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
-        volumes:
-            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
-            - ./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml:/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
-            - ./credentials.json:/tmp/credentials.json
+        environment: *airflow-env
+        volumes: *airflow-volumes
         command: >
             bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /usr/local/airflow/.config/gcloud
+            && sudo install -D /tmp/.aws-credentials -m 644 --no-target-directory /usr/local/airflow/.aws/credentials
             && ./run_test.sh with-end-to-end"
 
     postgres:
@@ -90,35 +86,21 @@ services:
             retries: 5
 
     dask-scheduler:
-        environment:
-            - DEPLOYMENT_ENV=ci
-            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
-            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
+        environment: *airflow-env
         image: elifesciences/peerscout-dags-dev
         hostname: dask-scheduler
         entrypoint: [ ]
         command: ["dask-scheduler"]
 
     dask-worker:
-        environment:
-            - DEPLOYMENT_ENV=ci
-            - GOOGLE_APPLICATION_CREDENTIALS=/usr/local/airflow/.config/gcloud/credentials.json
-            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-            - AIRFLOW__CORE__EXECUTOR=DaskExecutor
-            - AIRFLOW__DASK__CLUSTER_ADDRESS=dask-scheduler:8786
-            - EXTRACT_KEYWORDS_FILE_PATH=/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+        environment: *airflow-env
+        volumes: *airflow-volumes
         depends_on:
           - dask-scheduler
-        volumes:
-            - ./credentials.json:/tmp/credentials.json
-            - ./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml:/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
-            - ~/.aws/credentials:/usr/local/airflow/.aws/credentials
         image: elifesciences/peerscout-dags-dev
         hostname: dask-worker
-        ports:
-          - "8793:8793"
         entrypoint: []
         command: >
             bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /usr/local/airflow/.config/gcloud
+            && sudo install -D /tmp/.aws-credentials -m 644 --no-target-directory /usr/local/airflow/.aws/credentials
             && ./worker.sh tcp://dask-scheduler:8786"

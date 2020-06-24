@@ -3,11 +3,12 @@ utils for doing the heavy lifting job of extracting keywords
 """
 import os
 import json
+import math
 import re
 import logging
 from tempfile import TemporaryDirectory
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Tuple
 import datetime
 from itertools import tee
 from datetime import timezone
@@ -46,6 +47,8 @@ SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE = (
 # has associated timezone
 ETL_STATE_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S%z"
 DATA_LOAD_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+DEFAULT_BATCH_SIZE = 2000
 
 
 def to_unique_keywords(
@@ -87,6 +90,10 @@ class SpacyKeywordExtractor(KeywordExtractor):
 def get_keyword_extractor(
         keyword_extract_config: KeywordExtractConfig) -> KeywordExtractor:
 
+    LOGGER.info(
+        'loading keyword extractor, spacy language model: %s',
+        keyword_extract_config.spacy_language_model
+    )
     extractor = SimpleKeywordExtractor()
     if keyword_extract_config.spacy_language_model:
         spacy_language_model_name = (
@@ -99,6 +106,10 @@ def get_keyword_extractor(
     return extractor
 
 
+def get_batch_count(total_count: int, batch_size: int) -> int:
+    return math.floor((total_count + batch_size - 1) / batch_size)
+
+
 # pylint: disable=too-many-locals
 def etl_keywords(
         keyword_extract_config: KeywordExtractConfig,
@@ -108,6 +119,12 @@ def etl_keywords(
         data_pipelines_state: dict = None,
 ):
 
+    LOGGER.info(
+        'processing keyword extraction pipeline: %s (to %s.%s)',
+        keyword_extract_config.pipeline_id,
+        keyword_extract_config.destination_dataset,
+        keyword_extract_config.destination_table
+    )
     latest_state_value = data_pipelines_state.get(
         keyword_extract_config.pipeline_id,
         keyword_extract_config.default_start_timestamp
@@ -115,13 +132,29 @@ def etl_keywords(
     keyword_extractor = get_keyword_extractor(keyword_extract_config)
     bq_query_processing = BqQuery(
         project_name=keyword_extract_config.gcp_project)
-    downloaded_data = download_data(
+    LOGGER.info(
+        ' '.join([
+            'retrieving data, source dataset: %s,'
+            ' latest state value: %s (s3://%s/%s)'
+        ]),
+        keyword_extract_config.source_dataset,
+        latest_state_value,
+        state_s3_bucket,
+        state_s3_object
+    )
+    downloaded_data, total_rows = download_data_and_get_total_rows(
         bq_query_processing,
         " ".join([keyword_extract_config.query_template,
                   keyword_extract_config.limit_return_count]),
         keyword_extract_config.gcp_project,
         keyword_extract_config.source_dataset,
         latest_state_value
+    )
+    batch_size = keyword_extract_config.batch_size or DEFAULT_BATCH_SIZE
+    total_batch_count = get_batch_count(total_rows, batch_size)
+    LOGGER.info(
+        'total_rows: %d (batch size: %d, total batch count: %d)',
+        total_rows, batch_size, total_batch_count
     )
 
     data_with_timestamp = add_timestamp(
@@ -146,15 +179,17 @@ def etl_keywords(
         if keyword_extract_config.table_write_append
         else WriteDisposition.WRITE_TRUNCATE
     )
-    batch_size = 2000
     data_with_extracted_keywords_batches = iter_get_batches(
         data_with_extracted_keywords, batch_size
     )
     progress_monitor = 1
     for data_batch in data_with_extracted_keywords_batches:
         LOGGER.info(
-            "processing batch %s of size %s",
-            progress_monitor, batch_size
+            "uploading batch %d of %d (%.1f%%, batch size: %s)",
+            progress_monitor,
+            total_batch_count,
+            (100.0 * progress_monitor / total_batch_count),
+            batch_size
         )
         progress_monitor += 1
         latest_timestamp = get_latest_state(
@@ -213,18 +248,18 @@ def current_timestamp_as_string():
     return dtobj.strftime(DATA_LOAD_TIMESTAMP_FORMAT)
 
 
-def download_data(
+def download_data_and_get_total_rows(
         bq_query_processing, query_template, gcp_project, source_dataset,
         latest_state_value
-) -> Iterable[dict]:
+) -> Tuple[Iterable[dict], int]:
 
-    rows = bq_query_processing.simple_query(
+    result = bq_query_processing.simple_query(
         query_template=query_template,
         gcp_project=gcp_project,
         dataset=source_dataset,
         latest_state_value=latest_state_value
     )
-    return rows
+    return result, result.total_rows
 
 
 def add_provenance_source_type(
