@@ -7,6 +7,7 @@ from spacy.language import Language
 
 import peerscout.keyword_extract.keyword_extract as keyword_extract_module
 from peerscout.keyword_extract.keyword_extract import (
+    iter_get_batches,
     to_unique_keywords,
     SimpleKeywordExtractor,
     SpacyKeywordExtractor,
@@ -26,6 +27,26 @@ def _spacy_keyword_document_parser_class_mock():
 def _spacy_keyword_document_parser_mock(
         spacy_keyword_document_parser_class_mock: MagicMock):
     return spacy_keyword_document_parser_class_mock.return_value
+
+
+class TestIterGetBatches:
+    def test_should_not_return_any_batches_if_iterator_produces_no_items(self):
+        assert list(iter_get_batches(
+            iter([]),
+            2
+        )) == []
+
+    def test_should_return_full_batches(self):
+        assert list(iter_get_batches(
+            iter([1, 2, 3, 4]),
+            2
+        )) == [[1, 2], [3, 4]]
+
+    def test_should_return_last_partial_batch(self):
+        assert list(iter_get_batches(
+            iter([1, 2, 3, 4, 5]),
+            2
+        )) == [[1, 2], [3, 4], [5]]
 
 
 class TestToUniqueKeywords:
