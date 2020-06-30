@@ -13,7 +13,7 @@ keywordExtractionPipelines:
     queryTemplate: |
       SELECT
         name,
-        ARRAY_TO_STRING(keywords, ', ') AS keywords_csv,
+        CONCAT('the ', ARRAY_TO_STRING(keywords, ', ')) AS keywords_csv,
         imported_timestamp
       FROM `elife-data-pipeline.de_dev.mv_public_editor_profile`
     #to reduce properties to configure,
