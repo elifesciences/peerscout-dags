@@ -6,7 +6,7 @@ x-airflow-volumes:
       - ~/.aws/credentials:/tmp/.aws-credentials
       - ./dags:/usr/local/airflow/dags
       - ./peerscout:/usr/local/airflow/peerscout
-      - ./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml:/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+      - ${PEERSCOUT_DAGS_CONFIG:-./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml}:/usr/local/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
 
 services:
     webserver:
