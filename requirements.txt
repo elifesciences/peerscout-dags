@@ -3,6 +3,6 @@ boto3==1.14.12
 google-cloud-bigquery==1.25.0
 cloudpickle==1.4.1
 dateparser==0.7.6
-dask[complete]==2.19.0
+dask[complete]==2.20.0
 distributed==2.19.0
 bigquery-schema-generator==1.0
