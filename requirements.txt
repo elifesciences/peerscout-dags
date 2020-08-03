@@ -4,5 +4,5 @@ google-cloud-bigquery==1.26.0
 cloudpickle==1.4.1
 dateparser==0.7.6
 dask[complete]==2.21.0
-distributed==2.21.0
+distributed==2.22.0
 bigquery-schema-generator==1.1
