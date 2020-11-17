@@ -8,6 +8,9 @@ RUN echo "airflow ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN sed -i 's/LocalExecutor/SequentialExecutor/' /entrypoint.sh
 
+COPY requirements.build.txt ./
+RUN pip install --disable-pip-version-check -r requirements.build.txt
+
 # install spaCy separately to allow better caching of large language model download
 COPY requirements.spacy.txt ./
 RUN pip install --disable-pip-version-check -r requirements.spacy.txt
@@ -15,9 +18,6 @@ RUN pip install --disable-pip-version-check -r requirements.spacy.txt
 # download spaCy language models
 RUN python -m spacy download en_core_web_lg
 RUN if [ "${install_dev}" = "y" ]; then python -m spacy download en_core_web_sm; fi
-
-COPY requirements.build.txt ./
-RUN pip install --disable-pip-version-check -r requirements.build.txt
 
 COPY requirements.txt ./
 RUN pip install --disable-pip-version-check -r requirements.txt
