@@ -10,20 +10,22 @@ RUN sed -i 's/LocalExecutor/SequentialExecutor/' /entrypoint.sh
 
 # install spaCy separately to allow better caching of large language model download
 COPY requirements.spacy.txt ./
-RUN pip install -r requirements.spacy.txt
+RUN pip install --disable-pip-version-check -r requirements.spacy.txt
 
 # download spaCy language models
 RUN python -m spacy download en_core_web_lg
 RUN if [ "${install_dev}" = "y" ]; then python -m spacy download en_core_web_sm; fi
 
+COPY requirements.build.txt ./
+RUN pip install --disable-pip-version-check -r requirements.build.txt
+
 COPY requirements.txt ./
-RUN pip install --upgrade -r requirements.txt
-RUN if [ "${install_dev}" = "y" ]; then  pip install bokeh; fi
+RUN pip install --disable-pip-version-check -r requirements.txt
 
 USER airflow
 ENV PATH /usr/local/airflow/.local/bin:$PATH
 COPY --chown=airflow:airflow requirements.dev.txt ./
-RUN if [ "${install_dev}" = "y" ]; then pip install --user -r requirements.dev.txt; fi
+RUN if [ "${install_dev}" = "y" ]; then pip install --disable-pip-version-check --user -r requirements.dev.txt; fi
 
 COPY --chown=airflow:airflow peerscout ./peerscout
 COPY --chown=airflow:airflow dags ./dags
