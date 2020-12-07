@@ -6,4 +6,4 @@ cloudpickle==1.4.1
 dateparser==1.0.0
 dask[complete]==2.30.0
 distributed==2.30.1
-bigquery-schema-generator==1.2
+bigquery-schema-generator==1.3
