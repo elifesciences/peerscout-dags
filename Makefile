@@ -35,7 +35,7 @@ dev-install:
 	$(PIP) install --disable-pip-version-check -r requirements.build.txt
 	$(PIP) install --disable-pip-version-check -r requirements.spacy.txt
 	SLUGIFY_USES_TEXT_UNIDECODE=yes \
-		$(PIP) install --disable-pip-version-check -r requirements.txt
+	$(PIP) install --disable-pip-version-check -r requirements.txt
 	$(PIP) install --disable-pip-version-check -r requirements.dev.txt
 	$(PIP) install --disable-pip-version-check -e . --no-deps
 
@@ -58,6 +58,13 @@ dev-lint: dev-flake8 dev-pylint
 dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
 
+dev-dagtest:
+	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test
+
+dev-integration-test: dev-install
+	(VENV)/bin/airflow upgradedb
+	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/integration_test
+
 dev-watch:
 	SPACY_LANGUAGE_EN_MINIMAL=$(PYTEST_WATCH_SPACY_MODEL_MINIMAL) \
 	SPACY_LANGUAGE_EN_FULL=$(PYTEST_WATCH_SPACY_MODEL_FULL) \
@@ -72,15 +79,8 @@ dev-watch-slow:
 	$(PYTHON) -m pytest_watch -- -p no:cacheprovider \
 		$(ARGS) tests/unit_test
 
-dev-dagtest:
-	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test
-
-dev-integration-test: dev-install
-	(VENV)/bin/airflow upgradedb
-	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/integration_test
 
 dev-test: dev-lint dev-unittest dev-dagtest
-
 
 
 airflow-build:
@@ -127,18 +127,35 @@ build: airflow-build
 
 build-dev: airflow-dev-build
 
+clean:
+	$(DOCKER_COMPOSE) down -v
+
+airflow-initdb:
+	$(DOCKER_COMPOSE) run --rm  webserver initdb
+
+
+end2end-test:
+	$(MAKE) clean
+	$(MAKE) airflow-initdb
+	$(DOCKER_COMPOSE) run --rm  test-client
+	$(MAKE) clean
+
 ci-build-dev:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build-dev
 
 ci-test-exclude-e2e: build-dev
-	$(DOCKER_COMPOSE_CI) run --rm peerscout-dags-dev ./run_test.sh
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
+	 run --rm peerscout-dags-dev ./run_test.sh
 
 ci-test-including-end2end: build-dev
-	$(DOCKER_COMPOSE_CI) run --rm  test-client
-	$(DOCKER_COMPOSE_CI) down -v
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
+	 run --rm  test-client
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
+	 down -v
 
 ci-end2end-test-logs:
-	$(DOCKER_COMPOSE_CI) exec dask-worker bash -c \
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
+		exec dask-worker bash -c \
 		'cat logs/Extract_Keywords_From_Corpus/etl_keyword_extraction_task/*/*.log'
 
 dev-env: airflow-start airflow-logs
