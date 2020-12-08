@@ -4,7 +4,7 @@ ARG install_dev
 USER root
 
 RUN apt-get update \
-  && apt-get install sudo gcc -yqq \
+  && apt-get install sudo gcc g++ -yqq \
   && rm -rf /var/lib/apt/lists/*
 
 RUN usermod -aG sudo airflow
