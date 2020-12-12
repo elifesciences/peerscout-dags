@@ -149,9 +149,7 @@ ci-test-exclude-e2e: build-dev
 
 ci-test-including-end2end: build-dev
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
-	 run --rm  test-client
-	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
-	 down -v
+	 run --rm  end2end-test
 
 ci-end2end-test-logs:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
