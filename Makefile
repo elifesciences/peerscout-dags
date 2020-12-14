@@ -144,16 +144,13 @@ ci-build-dev:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build-dev
 
 ci-test-exclude-e2e: build-dev
-	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
-	 run --rm peerscout-dags-dev ./run_test.sh
+	$(DOCKER_COMPOSE_CI) run --rm peerscout-dags-dev ./run_test.sh
 
 ci-test-including-end2end: build-dev
-	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
-	 run --rm  end2end-test
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" end2end-test
 
 ci-end2end-test-logs:
-	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
-		exec dask-worker bash -c \
+	$(DOCKER_COMPOSE_CI) exec dask-worker bash -c \
 		'cat logs/Extract_Keywords_From_Corpus/etl_keyword_extraction_task/*/*.log'
 
 dev-env: airflow-start airflow-logs
