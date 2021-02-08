@@ -1,4 +1,4 @@
-apache-airflow[crypto,postgres,jdbc]==1.10.12
+apache-airflow[crypto,postgres,jdbc]==2.0.0
 boto3==1.17.3
 pyarrow==2.0.0
 google-cloud-bigquery==2.6.1
