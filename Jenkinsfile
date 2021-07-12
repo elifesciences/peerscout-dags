@@ -13,9 +13,11 @@ elifePipeline {
         stage 'Build and run tests', {
             withDataPipelineGcpCredentials {
                 try {
-                    sh "make ci-build-dev"
-                    sh "GOOGLE_APPLICATION_CREDENTIALS=./credentials.json \
-                        make ci-test-including-end2end"
+                    timeout(time: 30, unit: 'MINUTES') {
+                        sh "make ci-build-dev"
+                        sh "GOOGLE_APPLICATION_CREDENTIALS=./credentials.json \
+                            make ci-test-including-end2end"
+                    }
                 } finally {
                     sh "make ci-clean"
                 }
