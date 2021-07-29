@@ -1,7 +1,7 @@
 apache-airflow[crypto,postgres,jdbc]==1.10.15
 boto3==1.17.106
 pyarrow==4.0.1
-google-cloud-bigquery==2.20.0
+google-cloud-bigquery==2.23.2
 cattrs==1.7.1
 cloudpickle==1.4.1
 dateparser==1.0.0
