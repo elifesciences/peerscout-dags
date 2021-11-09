@@ -7,4 +7,4 @@ cloudpickle==1.4.1
 dateparser==1.0.0
 dask[complete]<2021.12.0
 distributed<=2021.2.0
-bigquery-schema-generator==1.4
+bigquery-schema-generator==1.4.1
