@@ -45,16 +45,6 @@ updates:
     versions:
     - 2.0.0
     - 2.0.1
-  - dependency-name: distributed
-    versions:
-    - 2021.3.0
-    - 2021.3.1
-    - 2021.4.0
-  - dependency-name: dask[complete]
-    versions:
-    - 2021.3.0
-    - 2021.3.1
-    - 2021.4.0
   - dependency-name: spacy
     versions:
     - 3.0.0
