@@ -19,5 +19,5 @@ services:
         volumes: *airflow-volumes
 
 
-    dask-worker:
+    worker:
         volumes: *airflow-volumes

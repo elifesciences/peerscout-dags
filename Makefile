@@ -102,20 +102,12 @@ airflow-scheduler-exec:
 	$(AIRFLOW_DOCKER_COMPOSE) exec scheduler bash
 
 
-airflow-dask-worker-shell:
-	$(AIRFLOW_DOCKER_COMPOSE) run --rm dask-worker bash
-
-
-airflow-dask-worker-exec:
-	$(AIRFLOW_DOCKER_COMPOSE) exec dask-worker bash
-
-
 airflow-logs:
-	$(AIRFLOW_DOCKER_COMPOSE) logs -f scheduler webserver dask-worker
+	$(AIRFLOW_DOCKER_COMPOSE) logs -f scheduler webserver worker
 
 
 airflow-start:
-	$(AIRFLOW_DOCKER_COMPOSE) up -d --scale dask-worker=1 scheduler
+	$(AIRFLOW_DOCKER_COMPOSE) up worker webserver flower
 	$(MAKE) airflow-print-url
 
 
@@ -150,7 +142,7 @@ ci-test-including-end2end: build-dev
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" end2end-test
 
 ci-end2end-test-logs:
-	$(DOCKER_COMPOSE_CI) exec dask-worker bash -c \
+	$(DOCKER_COMPOSE_CI) exec worker bash -c \
 		'cat logs/Extract_Keywords_From_Corpus/etl_keyword_extraction_task/*/*.log'
 
 dev-env: airflow-start airflow-logs
