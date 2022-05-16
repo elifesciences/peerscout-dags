@@ -6,5 +6,5 @@ pyarrow==8.0.0
 google-cloud-bigquery==3.1.0
 cattrs==1.10.0
 cloudpickle==2.0.0
-dateparser==1.1.0
+dateparser==1.1.1
 bigquery-schema-generator==1.5
