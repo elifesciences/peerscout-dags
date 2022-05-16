@@ -31,10 +31,7 @@ def _spacy_keyword_document_parser_mock(
 
 class TestIterGetBatches:
     def test_should_not_return_any_batches_if_iterator_produces_no_items(self):
-        assert list(iter_get_batches(
-            iter([]),
-            2
-        )) == []
+        assert not list(iter_get_batches(iter([]), 2))
 
     def test_should_return_full_batches(self):
         assert list(iter_get_batches(
