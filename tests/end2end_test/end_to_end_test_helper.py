@@ -76,7 +76,7 @@ class AirflowAPI:
         :return:
         """
         self.unpause_dag(dag_id)
-        endpoint = "/api/experimental/dags/{}/dag_runs".format(dag_id)
+        endpoint = f"/api/experimental/dags/{dag_id}/dag_runs"
         url = urljoin(self.airflow_url, endpoint)
         data = self.send_request(url, method="POST",
                                  json_param={"conf": conf, })
