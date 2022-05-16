@@ -116,7 +116,7 @@ def update_deployment_env_placeholder(
         deployment_env: str,
         environment_placeholder: str,
 ):
-    new_dict = dict()
+    new_dict = {}
     for key, val in original_dict.items():
         if isinstance(val, dict):
             tmp = update_deployment_env_placeholder(
