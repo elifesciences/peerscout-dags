@@ -192,7 +192,7 @@ def get_new_merged_schema(
 
 
 def generate_schema_from_file(full_temp_file_location):
-    with open(full_temp_file_location) as file_reader:
+    with open(full_temp_file_location, encoding="UTF-8") as file_reader:
         generator = SchemaGenerator(
             input_format="json",
             quoted_values_are_strings=True

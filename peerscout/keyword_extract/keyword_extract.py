@@ -303,7 +303,7 @@ def write_to_jsonl_file(
         full_temp_file_location,
         keyword_extract_config
 ):
-    with open(full_temp_file_location, "w") as write_file:
+    with open(full_temp_file_location, "w", encoding="UTF-8") as write_file:
         for record in data_with_extracted_keywords:
             record.pop(keyword_extract_config.existing_keywords_field, None)
             record.pop(keyword_extract_config.text_field, None)
