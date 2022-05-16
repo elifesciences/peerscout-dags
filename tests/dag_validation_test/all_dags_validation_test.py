@@ -36,5 +36,4 @@ def test_is_all_dag_imported(dagbag):
     :return:
     """
     assert len(dagbag.import_errors) == 0, \
-        "DAG import failures. Errors: {}".format(
-            dagbag.import_errors)
+        f"DAG import failures. Errors: {dagbag.import_errors}"

@@ -35,7 +35,7 @@ def get_pipeline_config():
             "DEPLOYMENT_ENV"
         )
     )
-    with open(conf_file_path, 'r') as yaml_file:
+    with open(conf_file_path, 'r', encoding="UTF-8") as yaml_file:
         return MultiKeywordExtractConfig(
             yaml.safe_load(yaml_file),
             dep_env
