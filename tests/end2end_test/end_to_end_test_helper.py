@@ -91,7 +91,8 @@ class AirflowAPI:
         :return:
         """
         return requests.get(
-            f"{self.airflow_url}/api/experimental/dags/{dag_id}/dag_runs/{execution_date}"
+            f"{self.airflow_url}/api/experimental/dags/{dag_id}\
+            /dag_runs/{execution_date}"
         )
 
     def is_dag_running(self, dag_id, execution_date):
