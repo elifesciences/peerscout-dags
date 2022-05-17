@@ -103,10 +103,9 @@ class AirflowAPI:
         """
         response = self.dag_state(dag_id, execution_date)
         json_response = json.loads(response.text)
-        if json_response.get("state"):
-            if json_response.get("state").lower() == "running":
-                return True
-
+        LOGGER.debug("json_response: %s", json_response)
+        if json_response.get("state").lower() == "running":
+            return True
         return False
 
     def get_dag_status(self, dag_id, execution_date):
@@ -117,4 +116,5 @@ class AirflowAPI:
         """
         response = self.dag_state(dag_id, execution_date)
         json_response = json.loads(response.text)
+        LOGGER.debug("json_response: %s", json_response)
         return json_response.get("state").lower()
