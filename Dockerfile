@@ -37,9 +37,8 @@ COPY --chown=airflow:airflow dags ./dags
 COPY --chown=airflow:airflow setup.py ./setup.py
 RUN pip install -e . --user --no-dependencies
 
-COPY .pylintrc ./.pylintrc
 COPY --chown=airflow:airflow tests ./tests
-COPY --chown=airflow:airflow run_test.sh ./
+COPY --chown=airflow:airflow .flake8 .pylintrc run_test.sh ./
 RUN if [ "${install_dev}" = "y" ]; then chmod +x run_test.sh; fi
 
 RUN mkdir -p $AIRFLOW_HOME/serve
