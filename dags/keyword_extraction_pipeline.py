@@ -59,7 +59,7 @@ PEERSCOUT_KEYWORD_EXTRACTION_DAG = DAG(
 
 
 def get_yaml_file_as_dict(file_location: str) -> dict:
-    with open(file_location, 'r') as yaml_file:
+    with open(file_location, 'r', encoding="UTF-8") as yaml_file:
         return yaml.safe_load(yaml_file)
 
 

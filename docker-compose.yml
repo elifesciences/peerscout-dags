@@ -106,7 +106,7 @@ services:
             - ALLOW_EMPTY_PASSWORD=yes
 
     flower:
-        image: elifesciences/data-hub-core-dags-dev
+        image: elifesciences/peerscout-dags-dev
         depends_on:
             - redis
         environment: *airflow-env
