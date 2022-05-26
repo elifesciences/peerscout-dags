@@ -89,7 +89,7 @@ def test_dag_runs_data_imported(
         "state_file_object": state_file_object
     }
     execution_date = AIRFLW_API.trigger_dag(dag_id=dag_id, conf=config)
-    dag_status = None
+    dag_status: str
     while True:
         dag_status = AIRFLW_API.get_dag_status(dag_id, execution_date)
         if dag_status not in {"running", "queued"}:
