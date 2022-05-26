@@ -89,13 +89,14 @@ def test_dag_runs_data_imported(
         "state_file_object": state_file_object
     }
     execution_date = AIRFLW_API.trigger_dag(dag_id=dag_id, conf=config)
-    is_running = True
-    while is_running:
-        is_running = AIRFLW_API.is_dag_running(dag_id, execution_date)
+    dag_status = None
+    while True:
+        dag_status = AIRFLW_API.get_dag_status(dag_id, execution_date)
+        if dag_status not in {"running", "queued"}:
+            break
         time.sleep(5)
-        LOGGER.info("etl in progress")
-    assert not is_running
-    assert AIRFLW_API.get_dag_status(dag_id, execution_date) == "success"
+        LOGGER.info("etl in progress (status: %r)", dag_status)
+    assert dag_status == "success"
 
     LOGGER.info('reading resuls from: %s.%s', DATASET, TABLE)
     query_response = bq_query_service.simple_query(
