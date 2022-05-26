@@ -29,16 +29,16 @@ COPY requirements.txt ./
 RUN pip install --disable-pip-version-check -r requirements.txt
 
 ENV PATH /home/airflow/.local/bin:$PATH
-COPY --chown=airflow:airflow requirements.dev.txt ./
+COPY requirements.dev.txt ./
 RUN if [ "${install_dev}" = "y" ]; then pip install --disable-pip-version-check --user -r requirements.dev.txt; fi
 
-COPY --chown=airflow:airflow peerscout ./peerscout
-COPY --chown=airflow:airflow dags ./dags
-COPY --chown=airflow:airflow setup.py ./setup.py
+COPY peerscout ./peerscout
+COPY dags ./dags
+COPY setup.py ./setup.py
 RUN pip install -e . --user --no-dependencies
 
-COPY --chown=airflow:airflow tests ./tests
-COPY --chown=airflow:airflow .flake8 .pylintrc run_test.sh ./
+COPY tests ./tests
+COPY .flake8 .pylintrc run_test.sh ./
 RUN if [ "${install_dev}" = "y" ]; then chmod +x run_test.sh; fi
 
 RUN mkdir -p $AIRFLOW_HOME/serve
