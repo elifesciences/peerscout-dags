@@ -107,7 +107,7 @@ airflow-logs:
 
 
 airflow-start:
-	$(AIRFLOW_DOCKER_COMPOSE) up worker webserver flower
+	$(AIRFLOW_DOCKER_COMPOSE) up worker webserver
 	$(MAKE) airflow-print-url
 
 
