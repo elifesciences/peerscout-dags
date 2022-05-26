@@ -51,6 +51,8 @@ services:
         depends_on:
             - worker
         environment: *airflow-env
+        volumes:
+            - ./config/webserver_config.py:/opt/airflow/webserver_config.py
         image:  elifesciences/peerscout-dags-dev
         entrypoint: /entrypoint
         command: webserver
