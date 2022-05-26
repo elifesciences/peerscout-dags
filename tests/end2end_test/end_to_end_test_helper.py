@@ -100,12 +100,7 @@ class AirflowAPI:
         :param execution_date:
         :return:
         """
-        response = self.dag_state(dag_id, execution_date)
-        json_response = json.loads(response.text)
-        LOGGER.info("json_response: %s", json_response)
-        if json_response.get("state").lower() == "running":
-            return True
-        return False
+        return self.get_dag_status(dag_id, execution_date) == "running"
 
     def get_dag_status(self, dag_id, execution_date):
         """
