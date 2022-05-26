@@ -39,7 +39,6 @@ RUN pip install -e . --user --no-dependencies
 
 COPY tests ./tests
 COPY .flake8 .pylintrc run_test.sh ./
-RUN if [ "${install_dev}" = "y" ]; then chmod +x run_test.sh; fi
 
 RUN mkdir -p $AIRFLOW_HOME/serve
 RUN ln -s $AIRFLOW_HOME/logs $AIRFLOW_HOME/serve/log
