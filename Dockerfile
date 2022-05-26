@@ -1,4 +1,4 @@
-FROM apache/airflow:1.10.15-python3.7
+FROM apache/airflow:2.3.0-python3.7
 ARG install_dev=n
 
 USER root
