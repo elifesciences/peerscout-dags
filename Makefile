@@ -123,7 +123,7 @@ clean:
 	$(DOCKER_COMPOSE) down -v
 
 airflow-initdb:
-	$(DOCKER_COMPOSE) run --rm  webserver initdb
+	$(DOCKER_COMPOSE) run --rm  webserver db init
 
 
 end2end-test:
