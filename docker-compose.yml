@@ -10,6 +10,7 @@ x-airflow-env:
     - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
     - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
     - AIRFLOW__CORE__FERNET_KEY='81HqDtbqAywKSOumSha3BhWNOdQ26slT6K0YaZeZyPs='
+    - AIRFLOW__API__ENABLE_EXPERIMENTAL_API=True
     - AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.default
     - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
     - GOOGLE_APPLICATION_CREDENTIALS=/home/airflow/.config/gcloud/credentials.json
@@ -50,6 +51,8 @@ services:
         depends_on:
             - worker
         environment: *airflow-env
+        volumes:
+            - ./config/webserver_config.py:/opt/airflow/webserver_config.py
         image:  elifesciences/peerscout-dags-dev
         entrypoint: /entrypoint
         command: webserver
@@ -74,7 +77,7 @@ services:
         command: >
             bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /home/airflow/.config/gcloud
             && sudo install -D /tmp/.aws-credentials -m 644 --no-target-directory /home/airflow/.aws/credentials
-            && airflow worker"
+            && airflow celery worker"
 
     test-client:
         image:  elifesciences/peerscout-dags-dev
@@ -105,11 +108,11 @@ services:
         environment:
             - ALLOW_EMPTY_PASSWORD=yes
 
-    flower:
-        image: elifesciences/peerscout-dags-dev
-        depends_on:
-            - redis
-        environment: *airflow-env
-        ports:
-            - "5555:5555"
-        command: celery flower
+    # flower:
+    #     image: elifesciences/peerscout-dags-dev
+    #     depends_on:
+    #         - redis
+    #     environment: *airflow-env
+    #     ports:
+    #         - "5555:5555"
+    #     command: celery flower

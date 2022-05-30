@@ -107,7 +107,7 @@ airflow-logs:
 
 
 airflow-start:
-	$(AIRFLOW_DOCKER_COMPOSE) up worker webserver flower
+	$(AIRFLOW_DOCKER_COMPOSE) up worker webserver
 	$(MAKE) airflow-print-url
 
 
@@ -122,12 +122,16 @@ build-dev: airflow-dev-build
 clean:
 	$(DOCKER_COMPOSE) down -v
 
+airflow-db-upgrade:
+	$(DOCKER_COMPOSE) run --rm  webserver db upgrade
+
 airflow-initdb:
-	$(DOCKER_COMPOSE) run --rm  webserver initdb
+	$(DOCKER_COMPOSE) run --rm  webserver db init
 
 
 end2end-test:
 	$(MAKE) clean
+	$(MAKE) airflow-db-upgrade
 	$(MAKE) airflow-initdb
 	$(DOCKER_COMPOSE) run --rm  test-client
 	$(MAKE) clean

@@ -5,6 +5,8 @@ import importlib
 import os
 import pytest
 from airflow import models as af_models
+from airflow.utils.dag_cycle_tester import test_cycle as _test_cycle
+
 
 from tests.dag_validation_test.conftest import DAG_FILES, DAG_PATH
 
@@ -28,7 +30,7 @@ def test_all_dag_integrity(dag_file):
     assert len(dag_objects) > 0
 
     for dag in dag_objects:
-        dag.test_cycle()
+        _test_cycle(dag)
 
 
 def test_is_all_dag_imported(dagbag):

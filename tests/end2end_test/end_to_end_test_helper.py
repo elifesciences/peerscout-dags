@@ -79,7 +79,7 @@ class AirflowAPI:
         endpoint = f"/api/experimental/dags/{dag_id}/dag_runs"
         url = urljoin(self.airflow_url, endpoint)
         data = self.send_request(url, method="POST",
-                                 json_param={"conf": conf, })
+                                 json_param={"conf": conf or {}, })
 
         pattern = r"\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d"
         return re.findall(pattern, data["message"])[0]
@@ -100,12 +100,7 @@ class AirflowAPI:
         :param execution_date:
         :return:
         """
-        response = self.dag_state(dag_id, execution_date)
-        json_response = json.loads(response.text)
-        LOGGER.info("json_response: %s", json_response)
-        if json_response.get("state").lower() == "running":
-            return True
-        return False
+        return self.get_dag_status(dag_id, execution_date) == "running"
 
     def get_dag_status(self, dag_id, execution_date):
         """
