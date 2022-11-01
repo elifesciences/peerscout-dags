@@ -6,7 +6,7 @@ import yaml
 from airflow import DAG
 import airflow
 from airflow.models import Variable
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python import PythonOperator
 
 from peerscout.keyword_extract.keyword_extract import (
     etl_keywords,
