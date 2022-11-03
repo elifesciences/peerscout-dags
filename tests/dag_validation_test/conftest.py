@@ -3,7 +3,7 @@ conftest
 by m.owonibi
 """
 import os
-from airflow import models as af_models
+from airflow.models import dagbag
 import pytest
 
 
@@ -12,5 +12,5 @@ DAG_FILES = [f for f in os.listdir(DAG_PATH) if f.endswith("pipeline.py")]
 
 
 @pytest.fixture(name="dagbag", scope="session")
-def _airflow_dagbag() -> af_models.dagbag:
-    return af_models.DagBag(dag_folder=DAG_PATH, include_examples=False)
+def _airflow_dagbag() -> dagbag:
+    return dagbag.DagBag(dag_folder=DAG_PATH, include_examples=False)
