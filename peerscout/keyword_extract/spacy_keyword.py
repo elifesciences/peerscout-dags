@@ -1,6 +1,6 @@
 import re
 import logging
-from typing import Iterable, List, Set
+from typing import Iterable, List, Optional, Set
 
 from spacy.language import Language
 from spacy.tokens import Doc, Span, Token
@@ -273,8 +273,8 @@ DEFAULT_EXCLUDED_ENTITY_TYPES = {CARDINAL, DATE, PERSON, GPE, PERCENT}
 class SpacyExclusion:
     def __init__(
             self,
-            exclusion_list: Set[str] = None,
-            exclude_entity_types: Set[int] = None,
+            exclusion_list: Optional[Set[str]] = None,
+            exclude_entity_types: Optional[Set[int]] = None,
             exclude_pronoun: bool = True,
             exclude_stop_words: bool = True,
             min_word_length: int = 2):
