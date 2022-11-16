@@ -8,7 +8,7 @@ import re
 import logging
 from tempfile import TemporaryDirectory
 from pathlib import Path
-from typing import Iterable, Iterator, List, Optional, Tuple, T
+from typing import Iterable, Iterator, List, Optional, Tuple, TypeVar
 import datetime
 from itertools import tee
 from datetime import timezone
@@ -37,6 +37,7 @@ from peerscout.keyword_extract.spacy_keyword import (
 )
 
 LOGGER = logging.getLogger(__name__)
+T = TypeVar('T')
 
 SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE = (
     "provenance_source_type"
@@ -53,7 +54,7 @@ DEFAULT_BATCH_SIZE = 2000
 
 def to_unique_keywords(
         keywords: List[str],
-        additional_keywords: List[str] = None) -> List[str]:
+        additional_keywords: Optional[List[str]] = None) -> List[str]:
     return sorted(set(
         keywords + (additional_keywords or [])
     ))
