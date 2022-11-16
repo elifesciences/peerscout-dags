@@ -8,7 +8,7 @@ import re
 import logging
 from tempfile import TemporaryDirectory
 from pathlib import Path
-from typing import Iterable, Iterator, List, Tuple, T
+from typing import Iterable, Iterator, List, Optional, Tuple, T
 import datetime
 from itertools import tee
 from datetime import timezone
@@ -114,9 +114,9 @@ def get_batch_count(total_count: int, batch_size: int) -> int:
 def etl_keywords(
         keyword_extract_config: KeywordExtractConfig,
         timestamp_as_string: str,
-        state_s3_bucket: str = None,
-        state_s3_object: str = None,
-        data_pipelines_state: dict = None,
+        state_s3_bucket: Optional[str] = None,
+        state_s3_object: Optional[str] = None,
+        data_pipelines_state: Optional[dict] = None,
 ):
 
     LOGGER.info(
@@ -264,8 +264,8 @@ def download_data_and_get_total_rows(
 
 def add_provenance_source_type(
         record_list,
-        provenance_fieldname_in_source_data: str = None,
-        provenance_value_from_config: str = None
+        provenance_fieldname_in_source_data: Optional[str] = None,
+        provenance_value_from_config: Optional[str] = None
 ):
     for record in record_list:
         record[SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE] = (
@@ -283,7 +283,7 @@ def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
 
 def get_latest_state(
         record_list,
-        timestamp_field_name: str = None
+        timestamp_field_name: Optional[str] = None
 ):
     latest_timestamp = None
     if timestamp_field_name:

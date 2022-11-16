@@ -2,6 +2,9 @@
 # pylint: disable=too-many-arguments,too-many-instance-attributes
 
 
+from typing import Optional
+
+
 class MultiKeywordExtractConfig:
     def __init__(
             self,
@@ -35,12 +38,12 @@ class KeywordExtractConfig:
     def __init__(
             self,
             config: dict,
-            gcp_project: str = None,
-            destination_table: str = None,
-            query_template: str = None,
-            limit_count_value: int = None,
-            spacy_language_model: str = None,
-            import_timestamp_field_name: str = None
+            gcp_project: Optional[str] = None,
+            destination_table: Optional[str] = None,
+            query_template: Optional[str] = None,
+            limit_count_value: Optional[int] = None,
+            spacy_language_model: Optional[str] = None,
+            import_timestamp_field_name: Optional[str] = None
     ):
         self.pipeline_id = config.get("pipelineID")
         self.default_start_timestamp = config.get(

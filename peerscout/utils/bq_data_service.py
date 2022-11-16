@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List
+from typing import List, Optional
 from google.cloud import bigquery
 from google.cloud.bigquery import (
     LoadJobConfig, Client,
@@ -26,7 +26,7 @@ def load_file_into_bq(
         write_mode=WriteDisposition.WRITE_APPEND,
         auto_detect_schema=False,
         rows_to_skip=0,
-        project_name: str = None,
+        project_name: Optional[str] = None,
 ):
     if os.path.isfile(filename) and os.path.getsize(filename) == 0:
         LOGGER.info("File %s is empty.", filename)
