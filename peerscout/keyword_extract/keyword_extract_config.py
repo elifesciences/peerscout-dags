@@ -93,7 +93,7 @@ class KeywordExtractConfig:
             )
         )
         self.table_write_append = (
-            True if config.get("tableWriteAppend").lower() == "true"
+            True if config["tableWriteAppend"].lower() == "true"
             else False
         )
         limit_count = limit_count_value or config.get(
