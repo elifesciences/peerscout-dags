@@ -386,7 +386,7 @@ class SpacyKeywordDocument:
             individual_tokens: bool = True,
             shorter_keywords: bool = True,
             normalize_text: bool = True,
-            exclude: SpacyExclusion = None) -> List[str]:
+            exclude: Optional[SpacyExclusion] = None) -> List[str]:
 
         if exclude is None:
             exclude = SpacyExclusion()
