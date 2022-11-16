@@ -47,10 +47,12 @@ def test_load_file_into_bq(
     file_name = "file_name"
     dataset_name = "dataset_name"
     table_name = "table_name"
+    project_name = "project_name"
     load_file_into_bq(
         filename=file_name,
         dataset_name=dataset_name,
-        table_name=table_name)
+        table_name=table_name,
+        project_name=project_name)
 
     mock_open.assert_called_with(file_name, "rb")
     source_file = mock_open.return_value.__enter__.return_value
