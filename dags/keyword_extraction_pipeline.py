@@ -120,11 +120,11 @@ def etl_extraction_keyword(**kwargs):
             )
         )
         etl_and_update_state(
-            keyword_extract_config,
-            state_dict,
-            timestamp_as_string,
-            multi_keyword_extract_conf.state_file_bucket_name,
-            multi_keyword_extract_conf.state_file_object_name
+            keyword_extract_config=keyword_extract_config,
+            state_dict=state_dict,
+            timestamp_as_string=timestamp_as_string,
+            state_file_bucket_name=multi_keyword_extract_conf.state_file_bucket_name,
+            state_file_object_name=multi_keyword_extract_conf.state_file_object_name
         )
 
 
@@ -151,11 +151,11 @@ def etl_and_update_state(
         )
 
     etl_keywords(
-        keyword_extract_config,
-        timestamp_as_string,
-        state_file_bucket_name,
-        state_file_object_name,
-        state_dict
+        keyword_extract_config=keyword_extract_config,
+        timestamp_as_string=timestamp_as_string,
+        state_s3_bucket=state_file_bucket_name,
+        state_s3_object=state_file_object_name,
+        data_pipelines_state=state_dict
     )
     if to_reset_state:
         reset_var[keyword_extract_config.pipeline_id] = False
