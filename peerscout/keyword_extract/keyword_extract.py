@@ -144,12 +144,16 @@ def etl_keywords(
         state_s3_object
     )
     downloaded_data, total_rows = download_data_and_get_total_rows(
-        bq_query_processing,
-        " ".join([keyword_extract_config.query_template,
-                  keyword_extract_config.limit_return_count]),
-        keyword_extract_config.gcp_project,
-        keyword_extract_config.source_dataset,
-        latest_state_value
+        bq_query_processing=bq_query_processing,
+        query_template=" ".join(
+            [
+                str(keyword_extract_config.query_template),
+                keyword_extract_config.limit_return_count
+            ]
+        ),
+        gcp_project=keyword_extract_config.gcp_project,
+        source_dataset=keyword_extract_config.source_dataset,
+        latest_state_value=latest_state_value
     )
     batch_size = keyword_extract_config.batch_size or DEFAULT_BATCH_SIZE
     total_batch_count = get_batch_count(total_rows, batch_size)
@@ -250,7 +254,10 @@ def current_timestamp_as_string():
 
 
 def download_data_and_get_total_rows(
-        bq_query_processing, query_template, gcp_project, source_dataset,
+        bq_query_processing,
+        query_template,
+        gcp_project,
+        source_dataset,
         latest_state_value
 ) -> Tuple[Iterable[dict], int]:
 
