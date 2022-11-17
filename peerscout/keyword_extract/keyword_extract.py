@@ -314,7 +314,7 @@ def write_to_jsonl_file(
             write_file.write("\n")
 
 
-def iter_get_batches(iterator: Iterator[T], size: int) -> Iterable[T]:
+def iter_get_batches(iterator: Iterator[T], size: int) -> Iterable[Iterable[T]]:
     while True:
         chunk = []
         for _ in range(size):
