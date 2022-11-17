@@ -169,10 +169,10 @@ def etl_keywords(
         keyword_extract_config.provenance_value_from_config,
     )
     data_with_extracted_keywords = add_extracted_keywords(
-        data_with_provenance,
-        keyword_extract_config.text_field,
-        keyword_extract_config.existing_keywords_field,
-        keyword_extractor=keyword_extractor
+        record_list=data_with_provenance,
+        text_field=keyword_extract_config.text_field,
+        existing_keyword_field=keyword_extract_config.existing_keywords_field,
+        keyword_extractor=keyword_extractor=keyword_extractor
     )
 
     write_disposition = (
@@ -360,8 +360,8 @@ def parse_keyword_list(keywords_str: str, separator: str = ","):
 def add_extracted_keywords(
         record_list: Iterable[dict],
         text_field: str,
-        existing_keyword_field: str,
         keyword_extractor: KeywordExtractor,
+        existing_keyword_field: Optional[str] = None,
         existing_keyword_split_pattern: str = ",",
         extracted_keyword_field_name: str = "extracted_keywords",
 ):

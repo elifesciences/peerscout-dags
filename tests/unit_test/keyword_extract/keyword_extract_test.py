@@ -150,7 +150,7 @@ class TestAddExtractedKeywords:
     def test_should_extract_keywords_with_existing_keywords(self):
         records = [{'text': 'the keywords', 'existing_keywords': 'existing'}]
         records_with_keywords = list(add_extracted_keywords(
-            records,
+            record_list=records,
             text_field='text',
             existing_keyword_field='existing_keywords',
             extracted_keyword_field_name='extracted_keywords',
@@ -163,7 +163,7 @@ class TestAddExtractedKeywords:
     def test_should_extract_keywords_without_existing_keywords(self):
         records = [{'text': 'the keywords'}]
         records_with_keywords = list(add_extracted_keywords(
-            records,
+            record_list=records,
             text_field='text',
             existing_keyword_field='existing_keywords',
             extracted_keyword_field_name='extracted_keywords',
@@ -190,7 +190,7 @@ class TestAddExtractedKeywords:
         records = [{'text': 'the keywords'}]
         records_copy = deepcopy(records)
         list(add_extracted_keywords(
-            records,
+            record_list=records,
             text_field='text',
             existing_keyword_field='existing_keywords',
             extracted_keyword_field_name='extracted_keywords',
