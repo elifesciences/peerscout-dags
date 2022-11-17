@@ -95,7 +95,7 @@ def get_keyword_extractor(
         'loading keyword extractor, spacy language model: %s',
         keyword_extract_config.spacy_language_model
     )
-    extractor = SimpleKeywordExtractor()
+    extractor: KeywordExtractor = SimpleKeywordExtractor()
     if keyword_extract_config.spacy_language_model:
         spacy_language_model_name = (
             keyword_extract_config.spacy_language_model
