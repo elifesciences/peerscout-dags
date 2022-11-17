@@ -83,7 +83,7 @@ dev-watch-slow:
 		$(ARGS) tests/unit_test
 
 
-dev-test: dev-lint dev-unittest dev-dagtest
+dev-test: dev-lint dev-unittest dev-dagtest dev-mypy
 
 
 airflow-build:
