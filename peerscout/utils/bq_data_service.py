@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Optional
+from typing import List
 from google.cloud import bigquery
 from google.cloud.bigquery import (
     LoadJobConfig, Client,
