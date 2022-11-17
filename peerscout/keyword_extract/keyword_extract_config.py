@@ -82,7 +82,7 @@ class KeywordExtractConfig:
             "destinationTable"
         )
         self.query_template = query_template or config.get("queryTemplate")
-        self.text_field = config.get("textField")
+        self.text_field = config["textField"]
         self.state_timestamp_field = config.get("stateTimestampField")
         self.existing_keywords_field = config.get("existingKeywordsField")
         self.id_field = config.get("idField")
