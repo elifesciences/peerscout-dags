@@ -172,7 +172,7 @@ def etl_keywords(
         record_list=data_with_provenance,
         text_field=keyword_extract_config.text_field,
         existing_keyword_field=keyword_extract_config.existing_keywords_field,
-        keyword_extractor=keyword_extractor=keyword_extractor
+        keyword_extractor=keyword_extractor
     )
 
     write_disposition = (
