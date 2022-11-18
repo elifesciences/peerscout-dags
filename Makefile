@@ -56,7 +56,7 @@ dev-pylint:
 dev-mypy:
 	$(PYTHON) -m mypy --check-untyped-defs peerscout dags tests
 
-dev-lint: dev-flake8 dev-pylint
+dev-lint: dev-flake8 dev-pylint dev-mypy
 
 dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
@@ -83,7 +83,7 @@ dev-watch-slow:
 		$(ARGS) tests/unit_test
 
 
-dev-test: dev-lint dev-unittest dev-dagtest dev-mypy
+dev-test: dev-lint dev-unittest dev-dagtest
 
 
 airflow-build:
