@@ -54,7 +54,7 @@ dev-pylint:
 	$(PYTHON) -m pylint peerscout dags tests
 
 dev-mypy:
-	$(PYTHON) -m mypy peerscout dags tests
+	$(PYTHON) -m mypy --check-untyped-defs peerscout dags tests
 
 dev-lint: dev-flake8 dev-pylint
 
