@@ -53,7 +53,10 @@ dev-flake8:
 dev-pylint:
 	$(PYTHON) -m pylint peerscout dags tests
 
-dev-lint: dev-flake8 dev-pylint
+dev-mypy:
+	$(PYTHON) -m mypy --check-untyped-defs peerscout dags tests
+
+dev-lint: dev-flake8 dev-pylint dev-mypy
 
 dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test

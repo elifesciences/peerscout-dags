@@ -27,9 +27,7 @@ TABLE = "ci_extracted_keyword"
 
 
 def get_pipeline_config():
-    conf_file_path = os.getenv(
-        EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME
-    )
+    conf_file_path = os.environ[EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME]
     dep_env = (
         os.getenv(
             "DEPLOYMENT_ENV"

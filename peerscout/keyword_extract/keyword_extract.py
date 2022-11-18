@@ -8,7 +8,7 @@ import re
 import logging
 from tempfile import TemporaryDirectory
 from pathlib import Path
-from typing import Iterable, Iterator, List, Tuple, T
+from typing import Iterable, Iterator, List, Optional, Tuple, TypeVar
 import datetime
 from itertools import tee
 from datetime import timezone
@@ -37,6 +37,7 @@ from peerscout.keyword_extract.spacy_keyword import (
 )
 
 LOGGER = logging.getLogger(__name__)
+T = TypeVar('T')
 
 SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE = (
     "provenance_source_type"
@@ -53,7 +54,7 @@ DEFAULT_BATCH_SIZE = 2000
 
 def to_unique_keywords(
         keywords: List[str],
-        additional_keywords: List[str] = None) -> List[str]:
+        additional_keywords: Optional[List[str]] = None) -> List[str]:
     return sorted(set(
         keywords + (additional_keywords or [])
     ))
@@ -94,7 +95,7 @@ def get_keyword_extractor(
         'loading keyword extractor, spacy language model: %s',
         keyword_extract_config.spacy_language_model
     )
-    extractor = SimpleKeywordExtractor()
+    extractor: KeywordExtractor = SimpleKeywordExtractor()
     if keyword_extract_config.spacy_language_model:
         spacy_language_model_name = (
             keyword_extract_config.spacy_language_model
@@ -114,9 +115,9 @@ def get_batch_count(total_count: int, batch_size: int) -> int:
 def etl_keywords(
         keyword_extract_config: KeywordExtractConfig,
         timestamp_as_string: str,
-        state_s3_bucket: str = None,
-        state_s3_object: str = None,
-        data_pipelines_state: dict = None,
+        data_pipelines_state: dict,
+        state_s3_bucket: Optional[str] = None,
+        state_s3_object: Optional[str] = None,
 ):
 
     LOGGER.info(
@@ -143,12 +144,16 @@ def etl_keywords(
         state_s3_object
     )
     downloaded_data, total_rows = download_data_and_get_total_rows(
-        bq_query_processing,
-        " ".join([keyword_extract_config.query_template,
-                  keyword_extract_config.limit_return_count]),
-        keyword_extract_config.gcp_project,
-        keyword_extract_config.source_dataset,
-        latest_state_value
+        bq_query_processing=bq_query_processing,
+        query_template=" ".join(
+            [
+                str(keyword_extract_config.query_template),
+                keyword_extract_config.limit_return_count
+            ]
+        ),
+        gcp_project=keyword_extract_config.gcp_project,
+        source_dataset=keyword_extract_config.source_dataset,
+        latest_state_value=latest_state_value
     )
     batch_size = keyword_extract_config.batch_size or DEFAULT_BATCH_SIZE
     total_batch_count = get_batch_count(total_rows, batch_size)
@@ -168,9 +173,9 @@ def etl_keywords(
         keyword_extract_config.provenance_value_from_config,
     )
     data_with_extracted_keywords = add_extracted_keywords(
-        data_with_provenance,
-        keyword_extract_config.text_field,
-        keyword_extract_config.existing_keywords_field,
+        record_list=data_with_provenance,
+        text_field=keyword_extract_config.text_field,
+        existing_keyword_field=keyword_extract_config.existing_keywords_field,
         keyword_extractor=keyword_extractor
     )
 
@@ -249,7 +254,10 @@ def current_timestamp_as_string():
 
 
 def download_data_and_get_total_rows(
-        bq_query_processing, query_template, gcp_project, source_dataset,
+        bq_query_processing,
+        query_template,
+        gcp_project,
+        source_dataset,
         latest_state_value
 ) -> Tuple[Iterable[dict], int]:
 
@@ -264,8 +272,8 @@ def download_data_and_get_total_rows(
 
 def add_provenance_source_type(
         record_list,
-        provenance_fieldname_in_source_data: str = None,
-        provenance_value_from_config: str = None
+        provenance_fieldname_in_source_data: Optional[str] = None,
+        provenance_value_from_config: Optional[str] = None
 ):
     for record in record_list:
         record[SOURCE_TYPE_FIELD_NAME_IN_DESTINATION_TABLE] = (
@@ -283,7 +291,7 @@ def add_timestamp(record_list, timestamp_field_name, timestamp_as_string):
 
 def get_latest_state(
         record_list,
-        timestamp_field_name: str = None
+        timestamp_field_name: Optional[str] = None
 ):
     latest_timestamp = None
     if timestamp_field_name:
@@ -313,7 +321,7 @@ def write_to_jsonl_file(
             write_file.write("\n")
 
 
-def iter_get_batches(iterator: Iterator[T], size: int) -> Iterable[T]:
+def iter_get_batches(iterator: Iterator[T], size: int) -> Iterable[Iterable[T]]:
     while True:
         chunk = []
         for _ in range(size):
@@ -359,8 +367,8 @@ def parse_keyword_list(keywords_str: str, separator: str = ","):
 def add_extracted_keywords(
         record_list: Iterable[dict],
         text_field: str,
-        existing_keyword_field: str,
         keyword_extractor: KeywordExtractor,
+        existing_keyword_field: Optional[str] = None,
         existing_keyword_split_pattern: str = ",",
         extracted_keyword_field_name: str = "extracted_keywords",
 ):

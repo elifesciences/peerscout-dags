@@ -20,8 +20,10 @@ def test_all_dag_integrity(dag_file):
     mod_spec = importlib.util.spec_from_file_location(
         module_name, module_path)
 
-    module = importlib.util.module_from_spec(mod_spec)
+    assert mod_spec is not None
+    assert mod_spec.loader is not None
 
+    module = importlib.util.module_from_spec(mod_spec)
     mod_spec.loader.exec_module(module)
 
     dag_objects = [

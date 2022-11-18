@@ -2,6 +2,9 @@
 # pylint: disable=too-many-arguments,too-many-instance-attributes
 
 
+from typing import Optional
+
+
 class MultiKeywordExtractConfig:
     def __init__(
             self,
@@ -35,14 +38,14 @@ class KeywordExtractConfig:
     def __init__(
             self,
             config: dict,
-            gcp_project: str = None,
-            destination_table: str = None,
-            query_template: str = None,
-            limit_count_value: int = None,
-            spacy_language_model: str = None,
-            import_timestamp_field_name: str = None
+            gcp_project: Optional[str] = None,
+            destination_table: Optional[str] = None,
+            query_template: Optional[str] = None,
+            limit_count_value: Optional[int] = None,
+            spacy_language_model: Optional[str] = None,
+            import_timestamp_field_name: Optional[str] = None
     ):
-        self.pipeline_id = config.get("pipelineID")
+        self.pipeline_id = config["pipelineID"]
         self.default_start_timestamp = config.get(
             "defaultStartTimestamp"
         )
@@ -79,7 +82,7 @@ class KeywordExtractConfig:
             "destinationTable"
         )
         self.query_template = query_template or config.get("queryTemplate")
-        self.text_field = config.get("textField")
+        self.text_field = config["textField"]
         self.state_timestamp_field = config.get("stateTimestampField")
         self.existing_keywords_field = config.get("existingKeywordsField")
         self.id_field = config.get("idField")
@@ -90,7 +93,7 @@ class KeywordExtractConfig:
             )
         )
         self.table_write_append = (
-            True if config.get("tableWriteAppend").lower() == "true"
+            True if config["tableWriteAppend"].lower() == "true"
             else False
         )
         limit_count = limit_count_value or config.get(

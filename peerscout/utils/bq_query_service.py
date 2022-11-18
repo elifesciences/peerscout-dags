@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, Union
+from typing import Iterable, Optional, Union
 
 from google.cloud import bigquery
 
@@ -19,7 +19,7 @@ class BqQueryResult:
 # pylint: disable=too-few-public-methods
 class BqQuery:
 
-    def __init__(self, project_name: str = None):
+    def __init__(self, project_name: Optional[str] = None):
         self.bigquery_client = bigquery.Client(project=project_name)
 
     def simple_query(
@@ -27,8 +27,8 @@ class BqQuery:
             query_template: str,
             gcp_project: str,
             dataset: str,
-            table: str = None,
-            latest_state_value: str = None
+            table: Optional[str] = None,
+            latest_state_value: Optional[str] = None
     ) -> Union[BqQueryResult, Iterable[dict]]:
         _query = query_template.format(
             project=gcp_project, dataset=dataset, table=table,
