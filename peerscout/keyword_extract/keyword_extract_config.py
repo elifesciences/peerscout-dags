@@ -45,7 +45,7 @@ class KeywordExtractConfig:
             spacy_language_model: Optional[str] = None,
             import_timestamp_field_name: Optional[str] = None
     ):
-        self.pipeline_id = config.get("pipelineID")
+        self.pipeline_id = config["pipelineID"]
         self.default_start_timestamp = config.get(
             "defaultStartTimestamp"
         )

@@ -115,9 +115,9 @@ def get_batch_count(total_count: int, batch_size: int) -> int:
 def etl_keywords(
         keyword_extract_config: KeywordExtractConfig,
         timestamp_as_string: str,
+        data_pipelines_state: dict,
         state_s3_bucket: Optional[str] = None,
         state_s3_object: Optional[str] = None,
-        data_pipelines_state: Optional[dict] = None,
 ):
 
     LOGGER.info(
