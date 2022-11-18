@@ -63,9 +63,7 @@ def get_yaml_file_as_dict(file_location: str) -> dict:
 
 
 def get_data_config(**kwargs):
-    conf_file_path = os.getenv(
-        EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME
-    )
+    conf_file_path = os.environ[EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME]
     data_config_dict = get_yaml_file_as_dict(
         conf_file_path
     )
