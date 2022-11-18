@@ -19,6 +19,9 @@ echo "running pylint"
 PYLINTHOME=/tmp/datahub-dags-pylint \
  pylint dags/ tests/ peerscout/ --init-hook="import sys; sys.setrecursionlimit(1500)"
 
+echo "running mypy"
+mypy --check-untyped-defs peerscout dags tests
+
 echo "running unit tests"
 pytest tests/unit_test/ -p no:cacheprovider -s --disable-warnings
 
