@@ -57,7 +57,8 @@ class AirflowAPI:
         """
 
         return requests.get(
-            f"{self.airflow_url}/api/experimental/dags/{dag_id}/paused/false"
+            f"{self.airflow_url}/api/experimental/dags/{dag_id}/paused/false",
+            timeout=10
         )
 
     def pause_dag(self, dag_id):
@@ -66,7 +67,8 @@ class AirflowAPI:
         :return:
         """
         return requests.get(
-            f"{self.airflow_url}/api/experimental/dags/{dag_id}/paused/true"
+            f"{self.airflow_url}/api/experimental/dags/{dag_id}/paused/true",
+            timeout=10
         )
 
     def trigger_dag(self, dag_id, conf=None):
@@ -91,7 +93,8 @@ class AirflowAPI:
         :return:
         """
         return requests.get(
-            f"{self.airflow_url}/api/experimental/dags/{dag_id}/dag_runs/{execution_date}"
+            f"{self.airflow_url}/api/experimental/dags/{dag_id}/dag_runs/{execution_date}",
+            timeout=10
         )
 
     def is_dag_running(self, dag_id, execution_date):
