@@ -24,7 +24,6 @@ class AirflowAPI:
         airflow_port = os.getenv("AIRFLOW_PORT", "8080")
         self.airflow_url = f"http://{airflow_host}:{airflow_port}"
 
-    # pylint: disable=no-self-use
     def send_request(self, url, method="GET", json_param=None):
         """
         :param url:
