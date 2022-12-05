@@ -8,4 +8,4 @@ google-cloud-bigquery==3.4.0
 cattrs>=22.1.0
 cloudpickle==2.2.0
 dateparser==1.1.4
-bigquery-schema-generator==1.5
+bigquery-schema-generator==1.5.1
