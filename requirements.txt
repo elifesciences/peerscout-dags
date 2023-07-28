@@ -4,8 +4,8 @@ boto3==1.24.59
 botocore<1.27.60, >=1.27.59
 aiobotocore==2.4.0
 pyarrow==10.0.1
-google-cloud-bigquery==3.4.0
+google-cloud-bigquery==3.6.0
 cattrs>=22.1.0
-cloudpickle==2.2.0
+cloudpickle==2.2.1
 dateparser==1.1.4
-bigquery-schema-generator==1.5
+bigquery-schema-generator==1.5.1
