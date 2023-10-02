@@ -50,7 +50,7 @@ STATE_RESET_VARIABLE_NAME = (
 PEERSCOUT_KEYWORD_EXTRACTION_DAG = DAG(
     dag_id=DAG_ID,
     default_args=get_default_args(),
-    schedule_interval=os.getenv(
+    schedule=os.getenv(
         EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME
     ),
     dagrun_timeout=timedelta(minutes=60),
