@@ -7,6 +7,7 @@ from airflow import DAG
 import airflow
 from airflow.models import Variable
 from airflow.operators.python import PythonOperator
+from airflow.models.baseoperator import DEFAULT_QUEUE
 
 from peerscout.keyword_extract.keyword_extract import (
     etl_keywords,
@@ -29,6 +30,10 @@ EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME = (
 )
 EXTRACT_KEYWORDS_SCHEDULE_INTERVAL_ENV_NAME = (
     "EXTRACT_KEYWORDS_SCHEDULE_INTERVAL"
+)
+
+EXTRACT_KEYWORDS_QUEUE_ENV_NAME = (
+    "EXTRACT_KEYWORDS_QUEUE_ENV"
 )
 
 DEPLOYMENT_ENV = "DEPLOYMENT_ENV"
@@ -164,9 +169,12 @@ def etl_and_update_state(
 
 
 def create_python_task(
-        dag_name, task_id,
-        python_callable, trigger_rule="all_success",
-        retries=0
+        dag_name,
+        task_id,
+        python_callable,
+        trigger_rule="all_success",
+        retries=0,
+        **kwargs
 ):
     return PythonOperator(
         task_id=task_id,
@@ -174,17 +182,29 @@ def create_python_task(
         python_callable=python_callable,
         trigger_rule=trigger_rule,
         retries=retries,
+        **kwargs
+    )
+
+
+def get_queue() -> str:
+    return os.getenv(
+        EXTRACT_KEYWORDS_QUEUE_ENV_NAME,
+        DEFAULT_QUEUE
     )
 
 
 GET_DATA_CONFIG_TASK = create_python_task(
     PEERSCOUT_KEYWORD_EXTRACTION_DAG,
-    "get_data_config", get_data_config, retries=5
+    "get_data_config",
+    get_data_config,
+    retries=5
 )
 ETL_KEYWORD_EXTRACTION_TASK = create_python_task(
     PEERSCOUT_KEYWORD_EXTRACTION_DAG,
     "etl_keyword_extraction_task",
-    etl_extraction_keyword, retries=5
+    etl_extraction_keyword,
+    retries=5,
+    queue=get_queue()
 )
 
 # pylint: disable=pointless-statement
