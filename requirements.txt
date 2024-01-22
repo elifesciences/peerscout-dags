@@ -6,7 +6,7 @@ aiobotocore==2.4.0
 pyarrow==14.0.2
 google-cloud-bigquery==3.12.0
 cattrs>=22.1.0
-cloudpickle==2.2.1
+cloudpickle==3.0.0
 dateparser==1.1.8
 bigquery-schema-generator==1.5.1
 urllib3<1.27, >=1.25.4
