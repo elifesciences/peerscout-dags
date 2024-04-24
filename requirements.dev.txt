@@ -2,6 +2,6 @@ flake8==7.0.0
 pylint==3.0.1
 pytest==7.4.4
 pytest-watch==4.2.0
-mypy==1.8.0
+mypy==1.10.0
 types-PyYAML
 types-requests==2.31.0.2
