@@ -49,7 +49,7 @@ keywordExtractionPipelines:
           SELECT
             manuscript_id, version_id, IFNULL(abstract, "") AS abstract, modified_timestamp,
             ARRAY_TO_STRING(ARRAY(SELECT keyword from UNNEST(keywords)), ', ') AS existing_keyword_csv
-          FROM `{project}.{dataset}.manuscript_version`
+          FROM `{project}.{dataset}.mv_manuscript_version`
           WHERE modified_timestamp > TIMESTAMP '{latest_state_value}'
           ORDER BY modified_timestamp ASC
     # mandatory
