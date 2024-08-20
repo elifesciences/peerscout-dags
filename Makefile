@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
-DOCKER_COMPOSE_CI = docker-compose
-DOCKER_COMPOSE_DEV = docker-compose -f docker-compose.yml -f docker-compose.dev.override.yml
+DOCKER_COMPOSE_CI = docker compose
+DOCKER_COMPOSE_DEV = docker compose -f docker-compose.yml -f docker-compose.dev.override.yml
 DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
 VENV = venv
@@ -140,6 +140,12 @@ airflow-db-migrate:
 
 airflow-initdb:
 	$(DOCKER_COMPOSE) run --rm  webserver db init
+
+
+data-hub-pipelines-run-keyword-extraction:
+	$(DOCKER_COMPOSE) run --rm \
+		data-hub-pipelines \
+		python -m peerscout.cli
 
 
 end2end-test:

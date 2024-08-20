@@ -23,6 +23,11 @@ x-airflow-volumes:
         - ~/.aws/credentials:/tmp/.aws-credentials
         - ./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml:/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
 
+x-airflow-defaults:
+  &x-airflow-defaults
+    volumes: *airflow-volumes
+    environment: *airflow-env
+
 services:
     peerscout-dags:
         environment:
@@ -91,6 +96,17 @@ services:
             bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /home/airflow/.config/gcloud
             && sudo install -D /tmp/.aws-credentials -m 644 --no-target-directory /home/airflow/.aws/credentials
             && ./run_test.sh with-end-to-end"
+
+    data-hub-pipelines:
+        <<: *x-airflow-defaults
+        image:  elifesciences/peerscout-dags
+        environment:
+            - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
+            - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
+            - AWS_CONFIG_FILE=/tmp/.aws-credentials
+            - PYTHONPATH=/home/airflow/.local/lib/python3.8/site-packages
+            - EXTRACT_KEYWORDS_FILE_PATH=/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+        user: 0:0
 
     postgres:
         image: postgres:15
