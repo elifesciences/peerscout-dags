@@ -22,8 +22,7 @@ DEFAULT_DEPLOYMENT_ENV = 'ci'
 
 
 EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME = 'EXTRACT_KEYWORDS_FILE_PATH'
-
-
+EXTRACT_KEYWORDS_MAX_ROWS_ENV_NAME = 'EXTRACT_KEYWORDS_MAX_ROWS'
 SPACY_LANGUAGE_MODEL_ENV_NAME = 'SPACY_LANGUAGE_MODEL'
 
 
@@ -38,6 +37,13 @@ def get_deployment_env() -> str:
 
 def get_spacy_language_model_override() -> Optional[str]:
     return os.getenv(SPACY_LANGUAGE_MODEL_ENV_NAME)
+
+
+def get_max_rows_override() -> Optional[int]:
+    max_rows_str = os.getenv(EXTRACT_KEYWORDS_MAX_ROWS_ENV_NAME)
+    if max_rows_str:
+        return int(max_rows_str)
+    return None
 
 
 def get_data_config() -> dict:
@@ -71,6 +77,8 @@ def main():
     LOGGER.info('timestamp_as_string: %r', timestamp_as_string)
     spacy_language_model_override = get_spacy_language_model_override()
     LOGGER.info('spacy_language_model_override: %r', spacy_language_model_override)
+    max_rows_override = get_max_rows_override()
+    LOGGER.info('max_rows_override: %r', max_rows_override)
     for extract_conf_dict in multi_keyword_extract_conf.keyword_extract_config:
         keyword_extract_config = KeywordExtractConfig(
             extract_conf_dict,
@@ -78,7 +86,8 @@ def main():
             import_timestamp_field_name=(
                 multi_keyword_extract_conf.import_timestamp_field_name
             ),
-            spacy_language_model=spacy_language_model_override
+            spacy_language_model=spacy_language_model_override,
+            limit_count_value=max_rows_override
         )
         LOGGER.info('keyword_extract_config: %r', keyword_extract_config)
         etl_keywords(
