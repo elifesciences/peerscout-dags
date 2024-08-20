@@ -39,6 +39,11 @@ dev-install:
 	$(PIP) install --disable-pip-version-check -r requirements.dev.txt
 	$(PIP) install --disable-pip-version-check -e . --no-deps
 
+
+dev-nlp-model-download-small:
+	$(PYTHON) -m spacy download en_core_web_sm
+
+
 dev-nlp-model-download:
 	$(PYTHON) -m spacy download en_core_web_lg
 	$(PYTHON) -m spacy download en_core_web_md
@@ -84,6 +89,11 @@ dev-watch-slow:
 
 
 dev-test: dev-lint dev-unittest dev-dagtest
+
+
+dev-data-hub-pipelines-run-keyword-extraction:
+	EXTRACT_KEYWORDS_FILE_PATH=dev-config/peerscout-keyword-extraction-data-pipeline-editor-provided-keywords.config.yaml \
+	$(PYTHON) -m peerscout.cli
 
 
 airflow-build:
