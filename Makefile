@@ -172,3 +172,8 @@ dev-env: airflow-start airflow-logs
 
 ci-clean:
 	$(DOCKER_COMPOSE_CI) down -v
+
+
+retag-push-image:
+	docker tag  $(EXISTING_IMAGE_REPO):$(EXISTING_IMAGE_TAG) $(IMAGE_REPO):$(IMAGE_TAG)
+	docker push  $(IMAGE_REPO):$(IMAGE_TAG)
