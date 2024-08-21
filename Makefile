@@ -155,10 +155,6 @@ end2end-test:
 	$(DOCKER_COMPOSE) run --rm  test-client
 	$(MAKE) clean
 
-ci-build-main-image:
-	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
-		build
-
 ci-build-dev:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build-dev
 
