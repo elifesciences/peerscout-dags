@@ -155,6 +155,10 @@ end2end-test:
 	$(DOCKER_COMPOSE) run --rm  test-client
 	$(MAKE) clean
 
+ci-build-main-image:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
+		build
+
 ci-build-dev:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build-dev
 
@@ -172,3 +176,8 @@ dev-env: airflow-start airflow-logs
 
 ci-clean:
 	$(DOCKER_COMPOSE_CI) down -v
+
+
+retag-push-image:
+	docker tag  $(EXISTING_IMAGE_REPO):$(EXISTING_IMAGE_TAG) $(IMAGE_REPO):$(IMAGE_TAG)
+	docker push  $(IMAGE_REPO):$(IMAGE_TAG)

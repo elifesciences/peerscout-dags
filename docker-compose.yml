@@ -37,7 +37,7 @@ services:
             - ./credentials.json:/tmp/credentials.json
         build:
             context: .
-        image: elifesciences/peerscout-dags
+        image: ${IMAGE_REPO}:${IMAGE_TAG}
         command: ''
 
     peerscout-dags-dev:
@@ -50,7 +50,7 @@ services:
             dockerfile: Dockerfile
             args:
                 install_dev: y
-        image:  elifesciences/peerscout-dags-dev
+        image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
         command: /bin/sh -c exit 0
         entrypoint: []
 
@@ -60,12 +60,12 @@ services:
         environment: *airflow-env
         volumes:
             - ./config/webserver_config.py:/opt/airflow/webserver_config.py
-        image:  elifesciences/peerscout-dags-dev
+        image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
         entrypoint: /entrypoint
         command: webserver
 
     scheduler:
-        image:  elifesciences/peerscout-dags-dev
+        image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
         depends_on:
             - postgres
         environment: *airflow-env
@@ -78,7 +78,7 @@ services:
           - redis
           - scheduler
         volumes: *airflow-volumes
-        image: elifesciences/peerscout-dags-dev
+        image: ${IMAGE_REPO}-dev:${IMAGE_TAG}
         entrypoint: /entrypoint
         hostname: worker
         command: >
@@ -87,7 +87,7 @@ services:
             && airflow celery worker"
 
     test-client:
-        image:  elifesciences/peerscout-dags-dev
+        image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
         depends_on:
             - scheduler
             - webserver
@@ -100,7 +100,7 @@ services:
 
     data-hub-pipelines:
         <<: *x-airflow-defaults
-        image:  elifesciences/peerscout-dags
+        image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
         environment:
             - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
             - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
