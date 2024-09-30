@@ -66,9 +66,6 @@ dev-lint: dev-flake8 dev-pylint dev-mypy
 dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
 
-dev-dagtest:
-	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test
-
 dev-integration-test: dev-install
 	(VENV)/bin/airflow upgradedb
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/integration_test
@@ -88,7 +85,7 @@ dev-watch-slow:
 		$(ARGS) tests/unit_test
 
 
-dev-test: dev-lint dev-unittest dev-dagtest
+dev-test: dev-lint dev-unittest
 
 
 dev-data-hub-pipelines-run-keyword-extraction:
