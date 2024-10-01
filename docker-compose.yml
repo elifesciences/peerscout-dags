@@ -2,7 +2,6 @@ version: '3.4'
 
 x-pipeline-env:
     &pipeline-env
-        - LOAD_EX=n
         - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
         - GOOGLE_APPLICATION_CREDENTIALS=/home/airflow/.config/gcloud/credentials.json
         - EXTRACT_KEYWORDS_FILE_PATH=/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
