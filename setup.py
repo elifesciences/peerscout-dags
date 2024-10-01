@@ -13,7 +13,7 @@ setup(
     name='peerscount-dags',
     version='0.0.1',
     install_requires=REQUIRED_PACKAGES,
-    packages=['peerscout_dags'],
+    packages=['peerscout'],
     include_package_data=True,
     description='peerscout dag utils'
 )
