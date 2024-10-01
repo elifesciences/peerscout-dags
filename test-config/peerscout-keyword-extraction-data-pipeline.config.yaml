@@ -30,7 +30,7 @@ keywordExtractionPipelines:
     idField: 'id'
     #importedTimestampFieldName: #
     tableWriteAppend: 'true'
-    limitRowCountValue:  #config element primarily used during test
+    limitRowCountValue: 5  #config element primarily used during test
     spacyLanguageModel: 'en_core_web_lg'
     provenance:
       type: fixedValue #either sourceDataFieldName or fixedValue (DEFAULT)
@@ -60,7 +60,7 @@ keywordExtractionPipelines:
     existingKeywordsField: 'existing_keyword_csv'
     idField: 'version_id'
     tableWriteAppend: 'true'
-    limitRowCountValue:  #config element primarily used during test
+    limitRowCountValue: 5  #config element primarily used during test
     spacyLanguageModel: 'en_core_web_lg'
     provenance:
       type: fixedValue #either sourceDataFieldName or fixedValue (DEFAULT)

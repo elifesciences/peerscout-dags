@@ -13,20 +13,17 @@ export PYTHONOPTIMIZE=
 
 
 echo "running flake8"
-flake8 dags/ tests/ peerscout/
+flake8 tests/ peerscout/
 
 echo "running pylint"
 PYLINTHOME=/tmp/datahub-dags-pylint \
- pylint dags/ tests/ peerscout/ --init-hook="import sys; sys.setrecursionlimit(1500)"
+ pylint tests/ peerscout/ --init-hook="import sys; sys.setrecursionlimit(1500)"
 
 echo "running mypy"
-mypy --check-untyped-defs peerscout dags tests
+mypy --check-untyped-defs peerscout tests
 
 echo "running unit tests"
 pytest tests/unit_test/ -p no:cacheprovider -s --disable-warnings
-
-echo "running dag validation tests"
-pytest tests/dag_validation_test/ -p no:cacheprovider -s --disable-warnings
 
 if [[ $1  &&  $1 == "with-end-to-end" ]]; then
     echo "running end to end tests"

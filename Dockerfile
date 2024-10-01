@@ -33,7 +33,6 @@ COPY requirements.dev.txt ./
 RUN if [ "${install_dev}" = "y" ]; then pip install --disable-pip-version-check --user -r requirements.dev.txt; fi
 
 COPY peerscout ./peerscout
-COPY dags ./dags
 COPY setup.py ./setup.py
 RUN pip install -e . --user --no-dependencies
 

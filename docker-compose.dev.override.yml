@@ -4,7 +4,6 @@ x-airflow-volumes:
     &airflow-volumes
       - ~/.config/gcloud/application_default_credentials.json:/tmp/credentials.json
       - ~/.aws/credentials:/tmp/.aws-credentials
-      - ./dags:/opt/airflow/dags
       - ./peerscout:/home/airflow/peerscout
       - ${PEERSCOUT_DAGS_CONFIG:-./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml}:/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
 

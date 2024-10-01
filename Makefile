@@ -6,7 +6,7 @@ DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
 VENV = venv
 PIP = $(VENV)/bin/pip
-PYTHON = PYTHONPATH=dags $(VENV)/bin/python
+PYTHON = $(VENV)/bin/python
 
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 
@@ -53,21 +53,18 @@ dev-venv: venv-create dev-install dev-nlp-model-download
 
 
 dev-flake8:
-	$(PYTHON) -m flake8 peerscout dags tests
+	$(PYTHON) -m flake8 peerscout tests
 
 dev-pylint:
-	$(PYTHON) -m pylint peerscout dags tests
+	$(PYTHON) -m pylint peerscout tests
 
 dev-mypy:
-	$(PYTHON) -m mypy --check-untyped-defs peerscout dags tests
+	$(PYTHON) -m mypy --check-untyped-defs peerscout tests
 
 dev-lint: dev-flake8 dev-pylint dev-mypy
 
 dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
-
-dev-dagtest:
-	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/dag_validation_test
 
 dev-integration-test: dev-install
 	(VENV)/bin/airflow upgradedb
@@ -88,7 +85,7 @@ dev-watch-slow:
 		$(ARGS) tests/unit_test
 
 
-dev-test: dev-lint dev-unittest dev-dagtest
+dev-test: dev-lint dev-unittest
 
 
 dev-data-hub-pipelines-run-keyword-extraction:
@@ -150,8 +147,6 @@ data-hub-pipelines-run-keyword-extraction:
 
 end2end-test:
 	$(MAKE) clean
-	$(MAKE) airflow-db-migrate
-	$(MAKE) airflow-initdb
 	$(DOCKER_COMPOSE) run --rm  test-client
 	$(MAKE) clean
 

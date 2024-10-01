@@ -53,15 +53,19 @@ def get_data_config() -> dict:
     )
 
 
-def main():
+def get_multi_keyword_extract_config() -> MultiKeywordExtractConfig:
     multi_keyword_extract_conf_dict = get_data_config()
     LOGGER.info('config: %r', multi_keyword_extract_conf_dict)
     dep_env = get_deployment_env()
     LOGGER.info('deployment env: %r', dep_env)
-    multi_keyword_extract_conf = MultiKeywordExtractConfig(
+    return MultiKeywordExtractConfig(
         multi_keyword_extract_conf_dict,
         dep_env
     )
+
+
+def main():
+    multi_keyword_extract_conf = get_multi_keyword_extract_config()
     LOGGER.info('multi_keyword_extract_conf: %r', multi_keyword_extract_conf)
     LOGGER.info(
         'state file path: s3://%s/%s',
