@@ -6,7 +6,7 @@ DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
 VENV = venv
 PIP = $(VENV)/bin/pip
-PYTHON = PYTHONPATH=dags $(VENV)/bin/python
+PYTHON = $(VENV)/bin/python
 
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 
@@ -53,13 +53,13 @@ dev-venv: venv-create dev-install dev-nlp-model-download
 
 
 dev-flake8:
-	$(PYTHON) -m flake8 peerscout dags tests
+	$(PYTHON) -m flake8 peerscout tests
 
 dev-pylint:
-	$(PYTHON) -m pylint peerscout dags tests
+	$(PYTHON) -m pylint peerscout tests
 
 dev-mypy:
-	$(PYTHON) -m mypy --check-untyped-defs peerscout dags tests
+	$(PYTHON) -m mypy --check-untyped-defs peerscout tests
 
 dev-lint: dev-flake8 dev-pylint dev-mypy
 

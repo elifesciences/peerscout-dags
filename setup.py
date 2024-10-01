@@ -7,16 +7,13 @@ from setuptools import (
 
 with open(os.path.join('requirements.txt'), 'r') as f:
     REQUIRED_PACKAGES = f.readlines()
-PACKAGES = find_packages()
 
-PACKAGES = [x for x in PACKAGES
-            if x not in {'dags', 'tests'}]
 
 setup(
     name='peerscount-dags',
     version='0.0.1',
     install_requires=REQUIRED_PACKAGES,
-    packages=PACKAGES,
+    packages=['peerscout_dags'],
     include_package_data=True,
     description='peerscout dag utils'
 )
