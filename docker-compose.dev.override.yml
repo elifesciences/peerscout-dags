@@ -8,19 +8,5 @@ x-airflow-volumes:
       - ${PEERSCOUT_DAGS_CONFIG:-./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml}:/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
 
 services:
-    webserver:
-        ports:
-            - "${PEERSCOUT_DAGS_AIRFLOW_PORT}:8080"
-        volumes: *airflow-volumes
-
-
-    scheduler:
-        volumes: *airflow-volumes
-
-
-    worker:
-        volumes: *airflow-volumes
-
-
     data-hub-pipelines:
         volumes: *airflow-volumes

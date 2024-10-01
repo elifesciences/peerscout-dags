@@ -66,10 +66,6 @@ dev-lint: dev-flake8 dev-pylint dev-mypy
 dev-unittest:
 	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/unit_test
 
-dev-integration-test: dev-install
-	(VENV)/bin/airflow upgradedb
-	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS) tests/integration_test
-
 dev-watch:
 	SPACY_LANGUAGE_EN_MINIMAL=$(PYTEST_WATCH_SPACY_MODEL_MINIMAL) \
 	SPACY_LANGUAGE_EN_FULL=$(PYTEST_WATCH_SPACY_MODEL_FULL) \
@@ -104,39 +100,12 @@ airflow-dev-shell:
 	$(AIRFLOW_DOCKER_COMPOSE) run --rm peerscout-dags-dev bash
 
 
-airflow-print-url:
-	@echo "airflow url: http://localhost:$(PEERSCOUT_DAGS_AIRFLOW_PORT)"
-
-
-airflow-scheduler-exec:
-	$(AIRFLOW_DOCKER_COMPOSE) exec scheduler bash
-
-
-airflow-logs:
-	$(AIRFLOW_DOCKER_COMPOSE) logs -f scheduler webserver worker
-
-
-airflow-start:
-	$(AIRFLOW_DOCKER_COMPOSE) up worker webserver
-	$(MAKE) airflow-print-url
-
-
-airflow-stop:
-	$(AIRFLOW_DOCKER_COMPOSE) down
-
-
 build: airflow-build
 
 build-dev: airflow-dev-build
 
 clean:
 	$(DOCKER_COMPOSE) down -v
-
-airflow-db-migrate:
-	$(DOCKER_COMPOSE) run --rm  webserver db migrate
-
-airflow-initdb:
-	$(DOCKER_COMPOSE) run --rm  webserver db init
 
 
 data-hub-pipelines-run-keyword-extraction:
@@ -166,8 +135,6 @@ ci-test-including-end2end: build-dev
 ci-end2end-test-logs:
 	$(DOCKER_COMPOSE_CI) exec worker bash -c \
 		'cat logs/Extract_Keywords_From_Corpus/etl_keyword_extraction_task/*/*.log'
-
-dev-env: airflow-start airflow-logs
 
 ci-clean:
 	$(DOCKER_COMPOSE_CI) down -v
