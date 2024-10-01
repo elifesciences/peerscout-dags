@@ -5,7 +5,7 @@
 ### Build the Image
 
 ```bash
-make airflow-build
+make build-dev
 ```
 
 ### Run the Pipeline

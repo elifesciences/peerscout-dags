@@ -84,20 +84,14 @@ dev-data-hub-pipelines-run-keyword-extraction:
 	$(PYTHON) -m peerscout.cli
 
 
-airflow-build:
+build:
 	$(DOCKER_COMPOSE) build peerscout-dags
 
-airflow-dev-build:
+build-dev:
 	$(DOCKER_COMPOSE) build peerscout-dags-dev
 
-
-airflow-dev-shell:
+shell-dev:
 	$(DOCKER_COMPOSE) run --rm peerscout-dags-dev bash
-
-
-build: airflow-build
-
-build-dev: airflow-dev-build
 
 clean:
 	$(DOCKER_COMPOSE) down -v
