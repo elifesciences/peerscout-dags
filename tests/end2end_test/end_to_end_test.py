@@ -1,42 +1,20 @@
-import os
 import logging
-import yaml
 from peerscout.utils.bq_query_service import BqQuery
 from peerscout.utils.s3_data_service import (
     delete_s3_object,
     download_s3_yaml_object_as_json
 )
 from peerscout.keyword_extract.keyword_extract_config import (
-    KeywordExtractConfig,
-    MultiKeywordExtractConfig
+    KeywordExtractConfig
 )
 
-from peerscout.cli import main
+from peerscout.cli import main, get_multi_keyword_extract_config
 
 LOGGER = logging.getLogger(__name__)
 
-EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME = (
-    "EXTRACT_KEYWORDS_FILE_PATH"
-)
-
-
-def get_pipeline_config() -> MultiKeywordExtractConfig:
-    conf_file_path = os.environ[EXTRACT_KEYWORDS_CONFIG_FILE_PATH_ENV_NAME]
-    dep_env = (
-        os.getenv(
-            "DEPLOYMENT_ENV"
-        )
-    )
-    LOGGER.info('conf_file_path: %s', conf_file_path)
-    with open(conf_file_path, 'r', encoding="UTF-8") as yaml_file:
-        return MultiKeywordExtractConfig(
-            yaml.safe_load(yaml_file),
-            dep_env
-        )
-
 
 def test_dag_runs_data_imported():
-    multi_pipeline_config = get_pipeline_config()
+    multi_pipeline_config = get_multi_keyword_extract_config()
     project_name = multi_pipeline_config.gcp_project
     state_file_bucket = multi_pipeline_config.state_file_bucket_name
     state_file_object = multi_pipeline_config.state_file_object_name
