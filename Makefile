@@ -13,11 +13,6 @@ NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 PYTEST_WATCH_SPACY_MODEL_MINIMAL = en_core_web_sm
 PYTEST_WATCH_SPACY_MODEL_FULL = en_core_web_md
 
-PEERSCOUT_DAGS_AIRFLOW_PORT = $(shell bash -c 'source .env && echo $$PEERSCOUT_DAGS_AIRFLOW_PORT')
-
-AIRFLOW_DOCKER_COMPOSE = PEERSCOUT_DAGS_AIRFLOW_PORT="$(PEERSCOUT_DAGS_AIRFLOW_PORT)" \
-	$(DOCKER_COMPOSE)
-
 
 venv-clean:
 	@if [ -d "$(VENV)" ]; then \
@@ -90,14 +85,14 @@ dev-data-hub-pipelines-run-keyword-extraction:
 
 
 airflow-build:
-	$(AIRFLOW_DOCKER_COMPOSE) build peerscout-dags
+	$(DOCKER_COMPOSE) build peerscout-dags
 
 airflow-dev-build:
-	$(AIRFLOW_DOCKER_COMPOSE) build peerscout-dags-dev
+	$(DOCKER_COMPOSE) build peerscout-dags-dev
 
 
 airflow-dev-shell:
-	$(AIRFLOW_DOCKER_COMPOSE) run --rm peerscout-dags-dev bash
+	$(DOCKER_COMPOSE) run --rm peerscout-dags-dev bash
 
 
 build: airflow-build
