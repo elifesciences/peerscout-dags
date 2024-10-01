@@ -1,23 +1,23 @@
 version: '3.4'
 
-x-airflow-env:
-    &airflow-env
-    - LOAD_EX=n
-    - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
-    - GOOGLE_APPLICATION_CREDENTIALS=/home/airflow/.config/gcloud/credentials.json
-    - EXTRACT_KEYWORDS_FILE_PATH=/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
-    - EXTRACT_KEYWORDS_MAX_ROWS=${EXTRACT_KEYWORDS_MAX_ROWS}
+x-pipeline-env:
+    &pipeline-env
+        - LOAD_EX=n
+        - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
+        - GOOGLE_APPLICATION_CREDENTIALS=/home/airflow/.config/gcloud/credentials.json
+        - EXTRACT_KEYWORDS_FILE_PATH=/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+        - EXTRACT_KEYWORDS_MAX_ROWS=${EXTRACT_KEYWORDS_MAX_ROWS}
 
-x-airflow-volumes:
-    &airflow-volumes
+x-pipeline-volumes:
+    &pipeline-volumes
         - ${GOOGLE_APPLICATION_CREDENTIALS:-~/.config/gcloud/application_default_credentials.json}:/tmp/credentials.json
         - ~/.aws/credentials:/tmp/.aws-credentials
         - ./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml:/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
 
-x-airflow-defaults:
-  &x-airflow-defaults
-    volumes: *airflow-volumes
-    environment: *airflow-env
+x-pipeline-defaults:
+    &pipeline-defaults
+        volumes: *pipeline-volumes
+        environment: *pipeline-env
 
 services:
     peerscout-dags:
@@ -46,15 +46,15 @@ services:
 
     test-client:
         image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
-        environment: *airflow-env
-        volumes: *airflow-volumes
+        environment: *pipeline-env
+        volumes: *pipeline-volumes
         command: >
             bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /home/airflow/.config/gcloud
             && sudo install -D /tmp/.aws-credentials -m 644 --no-target-directory /home/airflow/.aws/credentials
             && ./run_test.sh with-end-to-end"
 
     data-hub-pipelines:
-        <<: *x-airflow-defaults
+        <<: *pipeline-defaults
         image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
         environment:
             - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}

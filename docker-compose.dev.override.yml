@@ -1,7 +1,7 @@
 version: '3.4'
 
-x-airflow-volumes:
-    &airflow-volumes
+x-pipeline-volumes:
+    &pipeline-volumes
       - ~/.config/gcloud/application_default_credentials.json:/tmp/credentials.json
       - ~/.aws/credentials:/tmp/.aws-credentials
       - ./peerscout:/home/airflow/peerscout
@@ -9,4 +9,4 @@ x-airflow-volumes:
 
 services:
     data-hub-pipelines:
-        volumes: *airflow-volumes
+        volumes: *pipeline-volumes
