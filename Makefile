@@ -147,8 +147,6 @@ data-hub-pipelines-run-keyword-extraction:
 
 end2end-test:
 	$(MAKE) clean
-	$(MAKE) airflow-db-migrate
-	$(MAKE) airflow-initdb
 	$(DOCKER_COMPOSE) run --rm  test-client
 	$(MAKE) clean
 
