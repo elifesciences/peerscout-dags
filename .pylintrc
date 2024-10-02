@@ -5,6 +5,3 @@ disable=
     too-many-arguments,
     too-many-public-methods
 
-[IMPORTS]
-known-third-party=
-    airflow
