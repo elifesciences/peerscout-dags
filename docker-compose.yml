@@ -3,15 +3,15 @@ version: '3.4'
 x-pipeline-env:
     &pipeline-env
         - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
-        - GOOGLE_APPLICATION_CREDENTIALS=/home/airflow/.config/gcloud/credentials.json
-        - EXTRACT_KEYWORDS_FILE_PATH=/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+        - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/credentials.json
+        - EXTRACT_KEYWORDS_FILE_PATH=/peerscout/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
         - EXTRACT_KEYWORDS_MAX_ROWS=${EXTRACT_KEYWORDS_MAX_ROWS}
 
 x-pipeline-volumes:
     &pipeline-volumes
-        - ${GOOGLE_APPLICATION_CREDENTIALS:-~/.config/gcloud/application_default_credentials.json}:/tmp/credentials.json
-        - ~/.aws/credentials:/tmp/.aws-credentials
-        - ./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml:/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+        - ${GOOGLE_APPLICATION_CREDENTIALS:-~/.config/gcloud/application_default_credentials.json}:/root/.config/gcloud/credentials.json
+        - ~/.aws/credentials:/root/.aws/credentials
+        - ./test-config/peerscout-keyword-extraction-data-pipeline.config.yaml:/peerscout/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
 
 x-pipeline-defaults:
     &pipeline-defaults
@@ -21,9 +21,9 @@ x-pipeline-defaults:
 services:
     peerscout-dags:
         environment:
-            GOOGLE_APPLICATION_CREDENTIALS: /tmp/credentials.json
+            GOOGLE_APPLICATION_CREDENTIALS: /root/.config/gcloud/credentials.json
         volumes:
-            - ./credentials.json:/tmp/credentials.json
+            - ./credentials.json:/root/.config/gcloud/credentials.json
         build:
             context: .
         image: ${IMAGE_REPO}:${IMAGE_TAG}
@@ -33,7 +33,7 @@ services:
         environment:
             - DEPLOYMENT_ENV=ci
         volumes:
-            - ./credentials.json:/tmp/credentials.json
+            - ./credentials.json:/root/.config/gcloud/credentials.json
         build:
             context: .
             dockerfile: Dockerfile
@@ -48,18 +48,15 @@ services:
         environment: *pipeline-env
         volumes: *pipeline-volumes
         command: >
-            bash -c "sudo install -D /tmp/credentials.json -m 644 -t  /home/airflow/.config/gcloud
-            && sudo install -D /tmp/.aws-credentials -m 644 --no-target-directory /home/airflow/.aws/credentials
-            && ./run_test.sh with-end-to-end"
+            bash -c "./run_test.sh with-end-to-end"
 
     data-hub-pipelines:
         <<: *pipeline-defaults
         image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
         environment:
             - DEPLOYMENT_ENV=${PEERSCOUT_DAGS_DEPLOYMENT_ENV}
-            - GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
-            - AWS_CONFIG_FILE=/tmp/.aws-credentials
-            - PYTHONPATH=/home/airflow/.local/lib/python3.8/site-packages
-            - EXTRACT_KEYWORDS_FILE_PATH=/home/airflow/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
+            - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/credentials.json
+            - AWS_CONFIG_FILE=/root/.aws/credentials
+            - EXTRACT_KEYWORDS_FILE_PATH=/peerscout/app-config/peerscout-keyword/peerscout-keyword-data-pipeline.config.yaml
             - EXTRACT_KEYWORDS_MAX_ROWS=${EXTRACT_KEYWORDS_MAX_ROWS}
         user: 0:0

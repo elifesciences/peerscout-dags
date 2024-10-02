@@ -1,18 +1,11 @@
-FROM apache/airflow:2.7.1-python3.8
+FROM python:3.8-slim
 ARG install_dev=n
 
 USER root
 
-RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
+ENV PIP_NO_CACHE_DIR=1
 
-RUN apt-get update \
-  && apt-get install sudo gcc g++ -yqq \
-  && rm -rf /var/lib/apt/lists/*
-
-RUN usermod -aG sudo airflow
-RUN echo "airflow ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
-USER airflow
+WORKDIR /peerscout
 
 COPY requirements.build.txt ./
 RUN pip install --disable-pip-version-check -r requirements.build.txt
@@ -28,7 +21,6 @@ RUN if [ "${install_dev}" = "y" ]; then python -m spacy download en_core_web_sm;
 COPY requirements.txt ./
 RUN pip install --disable-pip-version-check -r requirements.txt
 
-ENV PATH /home/airflow/.local/bin:$PATH
 COPY requirements.dev.txt ./
 RUN if [ "${install_dev}" = "y" ]; then pip install --disable-pip-version-check --user -r requirements.dev.txt; fi
 
@@ -38,8 +30,3 @@ RUN pip install -e . --user --no-dependencies
 
 COPY tests ./tests
 COPY .flake8 .pylintrc mypy.ini run_test.sh ./
-
-RUN mkdir -p $AIRFLOW_HOME/serve
-RUN ln -s $AIRFLOW_HOME/logs $AIRFLOW_HOME/serve/log
-
-ENTRYPOINT []
