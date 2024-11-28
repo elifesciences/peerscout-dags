@@ -3,6 +3,10 @@ ARG install_dev=n
 
 USER root
 
+RUN apt-get update \
+  && apt-get install gcc \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV PIP_NO_CACHE_DIR=1
 
 WORKDIR /peerscout
