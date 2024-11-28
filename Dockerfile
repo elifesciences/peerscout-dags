@@ -4,7 +4,7 @@ ARG install_dev=n
 USER root
 
 RUN apt-get update \
-  && apt-get install --assume-yes --quiet --quiet gcc \
+  && apt-get install --assume-yes --quiet --quiet gcc g++ \
   && rm -rf /var/lib/apt/lists/*
 
 ENV PIP_NO_CACHE_DIR=1
